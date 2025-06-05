@@ -1,0 +1,15 @@
+api_platform:
+    title: Hello API Platform
+    version: 1.0.0
+    # defaults:
+    #     stateless: true
+    #     cache_headers:
+    #         vary: ['Content-Type', 'Authorization', 'Origin']
+    mapping:
+        paths: ['%kernel.project_dir%/src/Entity']
+    # Format response 
+    formats:
+        jsonld: ['application/ld+json']
+        json: ['application/json']  # Activation explicite du JSON
+    patch_formats:
+        json: ['application/json']  # Important pour les opérations PATCH
