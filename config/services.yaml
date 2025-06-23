@@ -28,3 +28,7 @@ services:
 
     doctrine.annotation_reader:
         alias: annotation_reader
+    
+    App\Service\ClaimUserDbService:
+        arguments:
+            $claimUserDbConnection: '@doctrine.dbal.claim_user_db_connection'
