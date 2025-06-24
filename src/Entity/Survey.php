@@ -4,8 +4,10 @@ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\QueryParameter;
 use App\Controller\GetClaimsByUserController;
+use App\Controller\GetClaimDetailsWithSurveyController;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -21,6 +23,11 @@ use Doctrine\ORM\Mapping as ORM;
             uriTemplate: '/list/claims_user',
             controller: GetClaimsByUserController::class,
             parameters: [ 'email' => new QueryParameter()],
+        ), 
+        new Get(
+            uriTemplate: '/claim/details_with_survey',
+            controller: GetClaimDetailsWithSurveyController::class,
+            parameters: [ 'id' => new QueryParameter()]
         )
     ]
 )]

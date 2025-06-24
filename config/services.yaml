@@ -32,3 +32,7 @@ services:
     App\Service\ClaimUserDbService:
         arguments:
             $claimUserDbConnection: '@doctrine.dbal.claim_user_db_connection'
+    
+    App\Service\ClaimDetailsWithSurveyService:
+        arguments:
+            $claimDetailsWithSurveyConnection: '@doctrine.dbal.default_connection'

@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jun 22, 2025 at 11:52 PM
+-- Generation Time: Jun 23, 2025 at 12:25 PM
 -- Server version: 9.1.0
--- PHP Version: 8.2.26
+-- PHP Version: 8.3.14
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -20,6 +20,70 @@ SET time_zone = "+00:00";
 --
 -- Database: `surveyor_db`
 --
+
+DELIMITER $$
+--
+-- Procedures
+--
+DROP PROCEDURE IF EXISTS `GetClaimDetailsWithSurvey`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetClaimDetailsWithSurvey` (IN `p_claim_id` INT)   BEGIN
+    DECLARE claim_exists INT;
+    
+    -- Check if the claim exists
+    SELECT COUNT(*) INTO claim_exists FROM user_claim_db.claims WHERE id = p_claim_id;
+   
+   SELECT claim_exists AS 'Requête générée';
+    
+    IF claim_exists = 0 THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Claim introuvable.';
+    END IF;
+    
+    -- Main query
+    SELECT
+        CASE WHEN ST.status_name = 'completed' THEN 
+            (SELECT JSON_OBJECT(
+                'date_of_survey', SI.date_of_survey,
+                'invoice_number', SI.invoice_number,
+                'survey_type', SI.survey_type,
+                'eor_value', SI.eor_value,
+                'pre_accident_valeur', SI.pre_accident_valeur,
+                'wrech_value', SI.wrech_value,
+                'excess_applicable', SI.excess_applicable,
+                'showroom_price', SI.showroom_price
+            )
+            FROM survey_information SI
+            INNER JOIN survey S ON S.id = SI.verification_id
+            WHERE S.claim_id = CL.number
+            LIMIT 1)
+        ELSE NULL END AS survey_information,
+        
+        CASE WHEN ST.status_name = 'completed' THEN 
+            (SELECT JSON_OBJECT(
+                'claim_name', CL.name,
+                'date_received', CL.received_date,
+                'ageing', DATEDIFF(CURRENT_DATE, CL.received_date),
+                'registration_number', CL.registration_number,
+                'mobile_number', CL.phone,
+                'make', VI.make,
+                'model', VI.model,
+                'chasisi_no', VI.chasisi_no,
+                'vehicle_no', VI.vehicle_no,
+                'condition_of_vehicle', VI.condition_of_vehicle
+            )
+            FROM vehicle_information VI
+            INNER JOIN survey S ON S.id = VI.verification_id
+            WHERE S.claim_id = CL.id
+            LIMIT 1)
+        ELSE NULL END AS vehicle_information
+        
+    FROM user_claim_db.claims CL
+    INNER JOIN user_claim_db.assignment SA ON CL.id = SA.claims_id
+    INNER JOIN user_claim_db.status ST ON SA.status_id = ST.id
+    WHERE CL.id = p_claim_id;
+END$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -56,6 +120,22 @@ CREATE TABLE IF NOT EXISTS `documents` (
   `attachements` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_documents_survey_information1_idx` (`survey_information_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `draft_document_lists_test`
+--
+
+DROP TABLE IF EXISTS `draft_document_lists_test`;
+CREATE TABLE IF NOT EXISTS `draft_document_lists_test` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `draft_survey_informations_id` int NOT NULL,
+  `attachements` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
 -- --------------------------------------------------------
@@ -135,24 +215,6 @@ CREATE TABLE IF NOT EXISTS `picture_of_domage_car` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `status`
---
-
-DROP TABLE IF EXISTS `status`;
-CREATE TABLE IF NOT EXISTS `status` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `status_code` varchar(45) NOT NULL,
-  `status_name` varchar(45) NOT NULL,
-  `description` text,
-  `update_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `status_code_UNIQUE` (`status_code`),
-  UNIQUE KEY `status_name_UNIQUE` (`status_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `survey`
 --
 
@@ -162,10 +224,16 @@ CREATE TABLE IF NOT EXISTS `survey` (
   `claim_id` int NOT NULL,
   `surveyor_id` int NOT NULL,
   `current_step` varchar(45) DEFAULT NULL,
-  `status_id` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `fk_survey_status1_idx` (`status_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+  `status_id` int DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Dumping data for table `survey`
+--
+
+INSERT INTO `survey` (`id`, `claim_id`, `surveyor_id`, `current_step`, `status_id`) VALUES
+(1, 1, 1, 'step1', 1);
 
 -- --------------------------------------------------------
 
@@ -219,7 +287,14 @@ CREATE TABLE IF NOT EXISTS `vehicle_information` (
   `point_of_impact` text,
   PRIMARY KEY (`id`),
   KEY `fk_vehicle_information_verification1_idx` (`verification_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Dumping data for table `vehicle_information`
+--
+
+INSERT INTO `vehicle_information` (`id`, `verification_id`, `make`, `model`, `cc`, `fuel_type`, `transmission`, `engime_no`, `chasisi_no`, `vehicle_no`, `color`, `odometer_reading`, `is_the_vehicle_total_loss`, `condition_of_vehicle`, `place_of_survey`, `point_of_impact`) VALUES
+(1, 1, 'suzuki', 'swift sport', 1200, 'test', 'tra 2', '445212', 9856, '45 JN 22', 'Rouge', 1522, 0, 'good', 'Quatre bornes', 'Back');
 
 --
 -- Constraints for dumped tables
@@ -260,12 +335,6 @@ ALTER TABLE `part_detail`
 --
 ALTER TABLE `picture_of_domage_car`
   ADD CONSTRAINT `fk_picture_of_domage_car_survey_information1` FOREIGN KEY (`survey_information_id`) REFERENCES `survey_information` (`id`);
-
---
--- Constraints for table `survey`
---
-ALTER TABLE `survey`
-  ADD CONSTRAINT `fk_survey_status1` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`);
 
 --
 -- Constraints for table `survey_information`
