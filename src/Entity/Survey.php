@@ -7,7 +7,7 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\QueryParameter;
 use App\Controller\GetClaimsByUserController;
-use App\Controller\GetClaimDetailsWithSurveyController;
+use App\Controller\GetClaimDetailsController;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -26,11 +26,12 @@ use Doctrine\ORM\Mapping as ORM;
         ), 
         new Get(
             uriTemplate: '/claim/details_with_survey',
-            controller: GetClaimDetailsWithSurveyController::class,
-            parameters: [ 'id' => new QueryParameter()]
+            controller: GetClaimDetailsController::class,
+            parameters: [ 'p_claim_number' => new QueryParameter()]
         )
     ]
 )]
+
 class Survey
 {
     /**

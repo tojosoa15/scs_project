@@ -15,8 +15,6 @@ class GetClaimsByUserController extends AbstractController
 
     public function __invoke(Request $request): JsonResponse
     {
-        // return new JsonResponse('test');
-
         $params = $request->query->all();
 
         if (empty($params['email'])) {
