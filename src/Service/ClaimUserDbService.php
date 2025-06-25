@@ -13,6 +13,9 @@ class ClaimUserDbService
         $this->connection = $claimUserDbConnection;
     }
 
+    /**
+     * Liste des claims d'un utilisateur (dashboard)
+     */
     public function callGetListByUser(array $params): array
     {
         $sql = "CALL GetListByUser(?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -27,6 +30,19 @@ class ClaimUserDbService
         $stmt->bindValue(7, $params['search_num']);
         $stmt->bindValue(8, $params['search_reg_num']);
         $stmt->bindValue(9, $params['search_phone']);
+        
+        return $stmt->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
+     * Information utilisateur pour visualiser et gerer profile
+     */
+    public function callGetUserProfile(array $params): array
+    {
+        $sql = "CALL GetUserProfile(?)";
+        
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['p_email_address']);
         
         return $stmt->executeQuery()->fetchAllAssociative();
     }

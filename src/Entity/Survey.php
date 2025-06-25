@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\QueryParameter;
 use App\Controller\GetClaimsByUserController;
 use App\Controller\GetClaimDetailsController;
+use App\Controller\GetUserProfileController;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -23,11 +24,18 @@ use Doctrine\ORM\Mapping as ORM;
             uriTemplate: '/list/claims_user',
             controller: GetClaimsByUserController::class,
             parameters: [ 'email' => new QueryParameter()],
-        ), 
+        ),
+        // Détail d'un claim 
         new Get(
             uriTemplate: '/claim/details_with_survey',
             controller: GetClaimDetailsController::class,
             parameters: [ 'p_claim_number' => new QueryParameter()]
+        ),
+        // Profile utilisateur
+        new Get(
+            uriTemplate: '/profile_user',
+            controller: GetUserProfileController::class,
+            parameters: [ 'p_email_address' => new QueryParameter()]
         )
     ]
 )]
