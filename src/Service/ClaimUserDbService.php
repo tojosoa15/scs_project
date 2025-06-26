@@ -46,4 +46,18 @@ class ClaimUserDbService
         
         return $stmt->executeQuery()->fetchAllAssociative();
     }
+
+    /**
+     * Retourne tous les claims
+     */
+    public function callGetAllClaims(array $params) : array 
+    {
+        $sql = "CALL GetAllClaims(?, ?)";
+
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['page'], \PDO::PARAM_INT);
+        $stmt->bindValue(2, $params['page_size'], \PDO::PARAM_INT);
+        
+        return $stmt->executeQuery()->fetchAllAssociative();
+    }
 }

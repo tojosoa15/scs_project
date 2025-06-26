@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Entity;
+namespace App\Entity\Surveyor;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -37,6 +37,35 @@ class Documents
      * })
      */
     private $surveyInformation;
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getAttachements(): ?string
+    {
+        return $this->attachements;
+    }
+
+    public function setAttachements(?string $attachements): static
+    {
+        $this->attachements = $attachements;
+
+        return $this;
+    }
+
+    public function getSurveyInformation(): ?SurveyInformation
+    {
+        return $this->surveyInformation;
+    }
+
+    public function setSurveyInformation(?SurveyInformation $surveyInformation): static
+    {
+        $this->surveyInformation = $surveyInformation;
+
+        return $this;
+    }
 
 
 }

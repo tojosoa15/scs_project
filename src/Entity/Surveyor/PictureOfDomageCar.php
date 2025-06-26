@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Entity;
+namespace App\Entity\Surveyor;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -37,6 +37,35 @@ class PictureOfDomageCar
      * })
      */
     private $surveyInformation;
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getPath(): ?string
+    {
+        return $this->path;
+    }
+
+    public function setPath(string $path): static
+    {
+        $this->path = $path;
+
+        return $this;
+    }
+
+    public function getSurveyInformation(): ?SurveyInformation
+    {
+        return $this->surveyInformation;
+    }
+
+    public function setSurveyInformation(?SurveyInformation $surveyInformation): static
+    {
+        $this->surveyInformation = $surveyInformation;
+
+        return $this;
+    }
 
 
 }
