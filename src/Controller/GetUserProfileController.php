@@ -13,6 +13,12 @@ class GetUserProfileController extends AbstractController
 {
     public function __construct(private ClaimUserDbService $claimUserDbService) {}
 
+    /**
+     * Get user profile information by email address.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function __invoke(Request $request): JsonResponse
     {
         $formatResult   = [];
@@ -32,7 +38,7 @@ class GetUserProfileController extends AbstractController
 
             foreach ($results as $res) {
                 $formatResult = [
-                    'account_informations'  => [
+                    'account_information'  => [
                         'business_name'                 => $res['business_name'],
                         'business_registration_number'  => $res['business_registration_number'],
                         'business_address'              => $res['business_address'],
@@ -42,19 +48,23 @@ class GetUserProfileController extends AbstractController
                         'email_address'                 => $res['email_address'],
                         'website'                       => $res['website']
                     ],
-                    'financial_informations' => [
+                    'financial_information' => [
                         'vat_number'                    => $res['vat_number'],
                         'tax_identification_number'     => $res['tax_identification_number'],
                         'bank_name'                     => $res['bank_name'],
                         'bank_account_number'           => $res['bank_account_number'],
                         'swift_code'                    => $res['swift_code']
                     ],
-                    'administrative_setting' => [
+                    'administrative_settings' => [
                         'primary_contact_name'      => $res['primary_contact_name'],
                         'primary_contact_post'      => $res['primary_contact_post'],
                         'notification'              => $res['notification'],
                         'administrative_updated_at' => $res['administrative_updated_at']
-                    ]
+                    ],
+                    'security_settings' => [
+                        'password'      => $res['password'],
+                        'backup_email'  => $res['backup_email']
+                    ],
                 ];
             }
 
@@ -68,8 +78,14 @@ class GetUserProfileController extends AbstractController
         }
     }
 
+    /**
+     * Utilisateur par role
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function getUserByRole(Request $request) : JsonResponse {
-          $params         = $request->query->all();
+          $params   = $request->query->all();
 
         if (empty($params['role_id'])) {
             return new JsonResponse(
@@ -81,6 +97,102 @@ class GetUserProfileController extends AbstractController
         try {
             $results = $this->claimUserDbService->callGetUserByRole([
                 'role_id' => $params['role_id']
+            ]);
+
+            return new JsonResponse($results);
+
+        } catch (\Exception $e) {
+            return new JsonResponse(
+                ['error' => $e->getMessage()],
+                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /** 
+     * Mise à jour du site web de l'utilisateur
+     * 
+     *  @param Request $request
+     *  @return JsonResponse
+     */
+    public function updateAdminSetting(Request $request) : JsonResponse {
+        $params = $request->query->all();
+
+      if (empty($params['p_email_address'])) {
+          return new JsonResponse(
+              ['error' => 'p_email_address parameter is required'],
+              JsonResponse::HTTP_BAD_REQUEST
+          );
+      }
+
+      try {
+          $results = $this->claimUserDbService->callUpdateAdminSetting([
+              'p_email_address'         => $params['p_email_address'],
+              'p_primary_contact_name'  => $params['p_primary_contact_name'],
+              'p_primary_contact_post'  => $params['p_primary_contact_post'],
+              'p_notification'          => $params['p_notification'],
+          ]);
+
+          return new JsonResponse($results);
+
+      } catch (\Exception $e) {
+          return new JsonResponse(
+              ['error' => $e->getMessage()],
+              JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+          );
+      }
+    }
+
+    /**
+     * Mise à jour du site web de l'utilisateur
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function updateUserPassword(Request $request) : JsonResponse {
+        $params = $request->query->all();
+
+        if (empty($params['p_email_address'])) {
+            return new JsonResponse(
+                ['error' => 'p_email_address parameter is required'],
+                JsonResponse::HTTP_BAD_REQUEST
+            );
+        }
+
+        try {
+            $results = $this->claimUserDbService->callUpdateUserPassword([
+                'p_email_address' => $params['p_email_address'],
+                'p_new_password'  => $params['p_new_password']
+            ]);
+
+            return new JsonResponse($results);
+
+        } catch (\Exception $e) {
+            return new JsonResponse(
+                ['error' => $e->getMessage()],
+                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * Test existance mail pour la réinitialisation du mot de passe oublié
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function forgotPassword(Request $request) : JsonResponse {
+        $params = $request->query->all();
+
+        if (empty($params['p_email_address'])) {
+            return new JsonResponse(
+                ['error' => 'p_email_address parameter is required'],
+                JsonResponse::HTTP_BAD_REQUEST
+            );
+        }
+        try {
+            $results = $this->claimUserDbService->callForgotPassword([
+                'p_email_address' => $params['p_email_address']
             ]);
 
             return new JsonResponse($results);

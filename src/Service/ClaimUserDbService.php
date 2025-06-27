@@ -15,6 +15,9 @@ class ClaimUserDbService
 
     /**
      * Liste des claims d'un utilisateur (dashboard)
+     * 
+     * @param array $params
+     * @return array
      */
     public function callGetListByUser(array $params): array
     {
@@ -36,6 +39,9 @@ class ClaimUserDbService
 
     /**
      * Information utilisateur pour visualiser et gerer profile
+     * 
+     * @param array $params
+     * @return array
      */
     public function callGetUserProfile(array $params): array
     {
@@ -49,6 +55,9 @@ class ClaimUserDbService
 
     /**
      * Retourne tous les claims
+     * 
+     * @param array $params
+     * @return array
      */
     public function callGetAllClaims(array $params) : array 
     {
@@ -63,6 +72,9 @@ class ClaimUserDbService
 
     /**
      * Retourne tous les roles
+     * 
+     * @param array $params
+     * @return array
      */
     public function callAllRoles(array $params) : array 
     {
@@ -77,6 +89,9 @@ class ClaimUserDbService
 
     /**
      * Retourne les utilisateur par role
+     * 
+     * @param array $params
+     * @return array
      */
     public function callGetUserByRole(array $params) : array {
         $sql = "CALL GetUserByRole(?)";
@@ -85,5 +100,78 @@ class ClaimUserDbService
         $stmt->bindValue(1, $params['role_id']);
         
         return $stmt->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
+     * Mise à jour du site web de l'utilisateur
+     * 
+     * @param array $params
+     * @return array
+     */
+    public function callUpdateUserWebsite(array $params) : array
+    {
+        $sql = "CALL UpdateUserWebsite(?, ?)";
+
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['p_email_address']);
+        $stmt->bindValue(2, $params['p_new_website']);
+
+        return $stmt->executeQuery()->fetchAllAssociative();
+        
+    }
+
+    /**
+     * Mise à jour des paramètres administratifs
+     * 
+     * @param array $params
+     * @return array
+     */
+    public function callUpdateAdminSetting(array $params) : array
+    {
+        $sql = "CALL UpdateAdminSettings(?, ?, ?, ?)";
+
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['p_email_address']);
+        $stmt->bindValue(2, $params['p_primary_contact_name'] ?? null);
+        $stmt->bindValue(3, $params['p_primary_contact_post'] ?? null);
+        $stmt->bindValue(4, $params['p_notification'] ?? null);
+
+        return $stmt->executeQuery()->fetchAllAssociative();
+        
+    }
+
+    /**
+     * Mise à jour du mot de passe utilisateur
+     * 
+     * @param array $params
+     * @return array
+     */
+    public function callUpdateUserPassword(array $params) : array
+    {
+        $sql = "CALL UpdateUserPassword(?, ?)";
+
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['p_email_address']);
+        $stmt->bindValue(2, $params['p_new_password'] ?? null);
+
+        return $stmt->executeQuery()->fetchAllAssociative();
+        
+    }
+
+    /**
+     * Vérifie si l'email existe pour la récupération de mot de passe
+     * 
+     * @param array $params
+     * @return array
+     */
+    public function callForgotPassword(array $params) : array
+    {
+        $sql = "CALL ChekEmailExists(?)";
+
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['p_email_address']);
+
+        return $stmt->executeQuery()->fetchAllAssociative();
+        
     }
 }

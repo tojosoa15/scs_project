@@ -4,8 +4,10 @@ namespace App\Entity\ClaimUser;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\QueryParameter;
 use App\Controller\GetUserProfileController;
+use App\Controller\UpdateUserWebsiteController;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -27,8 +29,40 @@ use Doctrine\ORM\Mapping as ORM;
             uriTemplate: '/user_by_role',
             controller: GetUserProfileController::class. '::getUserByRole',
             parameters: [ 'role_id' => new QueryParameter()]
+        ),
+        new Patch(
+            uriTemplate: '/update/user_website',
+            controller: UpdateUserWebsiteController::class,
+            parameters: [ 
+                'p_email_address'   => new QueryParameter(),  
+                'p_new_website'     => new QueryParameter()
+            ]
+        ),
+        new Patch(
+            uriTemplate: '/update/admin_setting',
+            controller: GetUserProfileController::class. '::updateAdminSetting',
+            parameters: [ 
+                'p_email_address'           => new QueryParameter(),  
+                'p_primary_contact_name'    => new QueryParameter(),
+                'p_primary_contact_post'    => new QueryParameter(),
+                'p_notification'            => new QueryParameter(),
+            ]
+            ),
+        new Patch(
+            uriTemplate: '/update/users_password',
+            controller: GetUserProfileController::class. '::updateUserPassword',
+            parameters: [ 
+                'p_email_address'   => new QueryParameter(),  
+                'p_new_password'    => new QueryParameter(),
+            ]
+        ),
+        new Get(
+            uriTemplate: '/forgot_password',
+            controller: GetUserProfileController::class. '::forgotPassword',
+            parameters: [ 
+                'p_email_address'   => new QueryParameter()
+            ]
         )
-
     ]
 )]
 class Users
