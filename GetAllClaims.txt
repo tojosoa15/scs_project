@@ -1,0 +1,39 @@
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllClaims`(
+    IN `p_page` INT, 
+    IN `p_page_size` INT
+)   
+BEGIN
+    DECLARE v_order_by VARCHAR(1000);
+    DECLARE v_offset INT;
+    DECLARE v_sql VARCHAR(4000);
+    
+    SET p_page = GREATEST(IFNULL(p_page, 1), 1); -- Garantit au moins 1
+    SET p_page_size = GREATEST(IFNULL(p_page_size, 10), 10); -- Garantit au moins 10
+
+    SET v_order_by = '';
+    SET v_offset = (p_page - 1) * p_page_size;
+
+    -- Construction de la requête
+    SET v_sql = CONCAT('
+        SELECT 
+            CL.id AS claim_id,
+            CL.received_date,
+            CL.number,
+            CL.name,
+            CL.registration_number,
+            CL.ageing,
+            CL.phone,
+            ST.status_name AS status_name
+        FROM claims CL
+        INNER JOIN status ST ON CL.status_id = ST.id
+        ', v_order_by, '
+        LIMIT ', v_offset, ', ', p_page_size);
+    
+    -- Exécution de la requête
+    SET @sql = v_sql;
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+END$$
+DELIMITER ;

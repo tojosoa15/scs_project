@@ -20,9 +20,15 @@ use Doctrine\ORM\Mapping as ORM;
         // Profile utilisateur
         new Get(
             uriTemplate: '/profile_user',
-            controller: GetUserProfileController::class,
+            controller: GetUserProfileController::class. '::__invoke',
             parameters: [ 'p_email_address' => new QueryParameter()]
+        ), 
+        new Get(
+            uriTemplate: '/user_by_role',
+            controller: GetUserProfileController::class. '::getUserByRole',
+            parameters: [ 'role_id' => new QueryParameter()]
         )
+
     ]
 )]
 class Users

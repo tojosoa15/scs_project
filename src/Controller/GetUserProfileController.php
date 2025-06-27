@@ -67,4 +67,29 @@ class GetUserProfileController extends AbstractController
             );
         }
     }
+
+    public function getUserByRole(Request $request) : JsonResponse {
+          $params         = $request->query->all();
+
+        if (empty($params['role_id'])) {
+            return new JsonResponse(
+                ['error' => 'Id parameter is required'],
+                JsonResponse::HTTP_BAD_REQUEST
+            );
+        }
+
+        try {
+            $results = $this->claimUserDbService->callGetUserByRole([
+                'role_id' => $params['role_id']
+            ]);
+
+            return new JsonResponse($results);
+
+        } catch (\Exception $e) {
+            return new JsonResponse(
+                ['error' => $e->getMessage()],
+                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }

@@ -2,7 +2,9 @@
 
 namespace App\Entity\ClaimUser;
 
-use Doctrine\Common\Collections\ArrayCollection;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\GetCollection;
+use App\Controller\GetRolesController;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -13,6 +15,15 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="roles", uniqueConstraints={@ORM\UniqueConstraint(name="role_code_UNIQUE", columns={"role_code"}), @ORM\UniqueConstraint(name="role_name_UNIQUE", columns={"role_name"})})
  * @ORM\Entity
  */
+#[ApiResource(
+    operations: [
+        // Liste claim d'un utilisateur
+        new GetCollection(
+            uriTemplate: '/list/user_roles',
+            controller: GetRolesController::class
+        )
+    ]
+)]
 class Roles
 {
     /**

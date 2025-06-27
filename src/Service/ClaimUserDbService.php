@@ -60,4 +60,30 @@ class ClaimUserDbService
         
         return $stmt->executeQuery()->fetchAllAssociative();
     }
+
+    /**
+     * Retourne tous les roles
+     */
+    public function callAllRoles(array $params) : array 
+    {
+        $sql = "CALL GetAllRoles(?, ?)";
+
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['page'], \PDO::PARAM_INT);
+        $stmt->bindValue(2, $params['page_size'], \PDO::PARAM_INT);
+        
+        return $stmt->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
+     * Retourne les utilisateur par role
+     */
+    public function callGetUserByRole(array $params) : array {
+        $sql = "CALL GetUserByRole(?)";
+
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['role_id']);
+        
+        return $stmt->executeQuery()->fetchAllAssociative();
+    }
 }

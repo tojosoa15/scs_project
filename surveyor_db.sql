@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jun 23, 2025 at 12:25 PM
+-- Generation Time: Jun 26, 2025 at 11:07 PM
 -- Server version: 9.1.0
--- PHP Version: 8.3.14
+-- PHP Version: 8.2.26
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -25,62 +25,68 @@ DELIMITER $$
 --
 -- Procedures
 --
-DROP PROCEDURE IF EXISTS `GetClaimDetailsWithSurvey`$$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `GetClaimDetailsWithSurvey` (IN `p_claim_id` INT)   BEGIN
-    DECLARE claim_exists INT;
-    
-    -- Check if the claim exists
-    SELECT COUNT(*) INTO claim_exists FROM user_claim_db.claims WHERE id = p_claim_id;
-   
-   SELECT claim_exists AS 'Requête générée';
-    
-    IF claim_exists = 0 THEN
-        SIGNAL SQLSTATE '45000' 
+DROP PROCEDURE IF EXISTS `GetClaimDetails`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetClaimDetails` (IN `p_claim_number` VARCHAR(100))   BEGIN
+    DECLARE v_exists INT DEFAULT 0;
+
+    -- Vérifier que le claim existe
+    SELECT COUNT(*) INTO v_exists
+    FROM user_claim_db.claims
+    WHERE number = p_claim_number;
+
+    IF v_exists = 0 THEN
+        SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Claim introuvable.';
     END IF;
-    
-    -- Main query
+
+    -- Sélectionner les détails du véhicule d'abord, ensuite survey, ensuite documents
     SELECT
-        CASE WHEN ST.status_name = 'completed' THEN 
-            (SELECT JSON_OBJECT(
-                'date_of_survey', SI.date_of_survey,
-                'invoice_number', SI.invoice_number,
-                'survey_type', SI.survey_type,
-                'eor_value', SI.eor_value,
-                'pre_accident_valeur', SI.pre_accident_valeur,
-                'wrech_value', SI.wrech_value,
-                'excess_applicable', SI.excess_applicable,
-                'showroom_price', SI.showroom_price
-            )
-            FROM survey_information SI
-            INNER JOIN survey S ON S.id = SI.verification_id
-            WHERE S.claim_id = CL.number
-            LIMIT 1)
-        ELSE NULL END AS survey_information,
-        
-        CASE WHEN ST.status_name = 'completed' THEN 
-            (SELECT JSON_OBJECT(
-                'claim_name', CL.name,
-                'date_received', CL.received_date,
-                'ageing', DATEDIFF(CURRENT_DATE, CL.received_date),
-                'registration_number', CL.registration_number,
-                'mobile_number', CL.phone,
-                'make', VI.make,
-                'model', VI.model,
-                'chasisi_no', VI.chasisi_no,
-                'vehicle_no', VI.vehicle_no,
-                'condition_of_vehicle', VI.condition_of_vehicle
-            )
-            FROM vehicle_information VI
-            INNER JOIN survey S ON S.id = VI.verification_id
-            WHERE S.claim_id = CL.id
-            LIMIT 1)
-        ELSE NULL END AS vehicle_information
-        
+        -- Vehicle Information
+        CL.number AS claim_number,
+        ST.status_name AS status_name,
+        CL.name AS name,
+        CL.received_date,
+        DATEDIFF(CURDATE(), CL.received_date) AS ageing,
+        CL.registration_number,
+        CL.phone AS mobile_number,
+        VI.make,
+        VI.model,
+        VI.chasisi_no,
+        VI.vehicle_no,
+        VI.condition_of_vehicle,
+
+        -- Survey Information
+        SI.date_of_survey,
+        SI.invoice_number,
+        SI.survey_type,
+        SI.eor_value,
+        SI.pre_accident_valeur,
+        SI.wrech_value,
+        SI.excess_applicable,
+        SI.showroom_price,
+
+        -- Documents
+        (
+            SELECT GROUP_CONCAT(D.attachements SEPARATOR ', ')
+            FROM surveyor_db.documents D
+            INNER JOIN surveyor_db.survey S2
+                ON S2.id = D.survey_information_id
+            WHERE S2.claim_number = CL.number
+        ) AS document_names
+
     FROM user_claim_db.claims CL
-    INNER JOIN user_claim_db.assignment SA ON CL.id = SA.claims_id
-    INNER JOIN user_claim_db.status ST ON SA.status_id = ST.id
-    WHERE CL.id = p_claim_id;
+    INNER JOIN user_claim_db.assignment SA
+        ON CL.id = SA.claims_id
+    INNER JOIN user_claim_db.status ST
+        ON SA.status_id = ST.id
+    LEFT JOIN surveyor_db.survey S
+        ON S.claim_number = CL.number
+    LEFT JOIN surveyor_db.survey_information SI
+        ON SI.verification_id = S.id
+    LEFT JOIN surveyor_db.vehicle_information VI
+        ON VI.verification_id = S.id
+    WHERE CL.number = p_claim_number
+    LIMIT 1;
 END$$
 
 DELIMITER ;
@@ -120,22 +126,6 @@ CREATE TABLE IF NOT EXISTS `documents` (
   `attachements` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_documents_survey_information1_idx` (`survey_information_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `draft_document_lists_test`
---
-
-DROP TABLE IF EXISTS `draft_document_lists_test`;
-CREATE TABLE IF NOT EXISTS `draft_document_lists_test` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `draft_survey_informations_id` int NOT NULL,
-  `attachements` varchar(255) DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
 -- --------------------------------------------------------
@@ -221,10 +211,10 @@ CREATE TABLE IF NOT EXISTS `picture_of_domage_car` (
 DROP TABLE IF EXISTS `survey`;
 CREATE TABLE IF NOT EXISTS `survey` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `claim_id` int NOT NULL,
   `surveyor_id` int NOT NULL,
   `current_step` varchar(45) DEFAULT NULL,
   `status_id` int DEFAULT NULL,
+  `claim_number` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3;
 
@@ -232,8 +222,8 @@ CREATE TABLE IF NOT EXISTS `survey` (
 -- Dumping data for table `survey`
 --
 
-INSERT INTO `survey` (`id`, `claim_id`, `surveyor_id`, `current_step`, `status_id`) VALUES
-(1, 1, 1, 'step1', 1);
+INSERT INTO `survey` (`id`, `surveyor_id`, `current_step`, `status_id`, `claim_number`) VALUES
+(1, 1, 'step1', 1, 'M0119921\r\n');
 
 -- --------------------------------------------------------
 

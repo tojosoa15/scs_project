@@ -1,0 +1,23 @@
+DELIMITER $$
+CREATE PROCEDURE `GetUserByRole`(IN p_role_id INT)
+BEGIN
+    -- Vérifie que l'ID du rôle est valide
+    SET p_role_id = IFNULL(p_role_id, 1); -- Valeur par défaut 1 si NULL
+    
+    SELECT 
+        u.id AS user_id,
+        ai.business_name,
+        ai.email_address ,
+        r.role_name
+    FROM 
+        `users` AS u 
+	LEFT JOIN
+		account_informations ai ON u.id = ai.users_id
+    LEFT JOIN 
+        user_roles AS ur ON u.id = ur.users_id 
+    LEFT JOIN 
+        roles AS r ON ur.roles_id = r.id 
+    WHERE 
+        r.id = p_role_id;
+END$$
+DELIMITER ;

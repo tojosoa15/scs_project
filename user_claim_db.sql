@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jun 23, 2025 at 12:25 PM
+-- Generation Time: Jun 26, 2025 at 11:07 PM
 -- Server version: 9.1.0
--- PHP Version: 8.3.14
+-- PHP Version: 8.2.26
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -25,6 +25,72 @@ DELIMITER $$
 --
 -- Procedures
 --
+DROP PROCEDURE IF EXISTS `GetAllClaims`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllClaims` (IN `p_page` INT, IN `p_page_size` INT)   BEGIN
+    DECLARE v_order_by VARCHAR(1000);
+    DECLARE v_offset INT;
+    DECLARE v_sql VARCHAR(4000);
+    
+    SET p_page = GREATEST(IFNULL(p_page, 1), 1); -- Garantit au moins 1
+    SET p_page_size = GREATEST(IFNULL(p_page_size, 10), 10); -- Garantit au moins 10
+
+    SET v_order_by = '';
+    SET v_offset = (p_page - 1) * p_page_size;
+
+    -- Construction de la requête
+    SET v_sql = CONCAT('
+        SELECT 
+            CL.id AS claim_id,
+            CL.received_date,
+            CL.number,
+            CL.name,
+            CL.registration_number,
+            CL.ageing,
+            CL.phone,
+            ST.status_name AS status_name,
+            CL.affected
+        FROM claims CL
+        INNER JOIN status ST ON CL.status_id = ST.id
+        ', v_order_by, '
+        LIMIT ', v_offset, ', ', p_page_size);
+    
+    -- Exécution de la requête
+    SET @sql = v_sql;
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetAllRoles`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllRoles` (IN `p_page` INT, IN `p_page_size` INT)   BEGIN
+    DECLARE v_order_by VARCHAR(1000);
+    DECLARE v_offset INT;
+    DECLARE v_sql VARCHAR(4000);
+    
+    SET p_page = GREATEST(IFNULL(p_page, 1), 1); -- Garantit au moins 1
+    SET p_page_size = GREATEST(IFNULL(p_page_size, 10), 10); -- Garantit au moins 10
+
+    SET v_order_by = '';
+    SET v_offset = (p_page - 1) * p_page_size;
+
+    -- Construction de la requête
+    SET v_sql = CONCAT('
+        SELECT 
+            id, 
+			role_code,
+			role_name,
+			description
+        FROM roles
+        ', v_order_by, '
+        LIMIT ', v_offset, ', ', p_page_size);
+    
+    -- Exécution de la requête
+    SET @sql = v_sql;
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+END$$
+
 DROP PROCEDURE IF EXISTS `GetListByUser`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `GetListByUser` (IN `p_email` VARCHAR(255), IN `p_status` VARCHAR(255), IN `p_search_name` VARCHAR(255), IN `p_sort_by` VARCHAR(50), IN `p_page` INT, IN `p_page_size` INT, IN `p_search_num` VARCHAR(255), IN `p_search_reg_num` VARCHAR(255), IN `p_search_phone` VARCHAR(255))   BEGIN
     DECLARE v_where TEXT;
@@ -71,11 +137,12 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetListByUser` (IN `p_email` VARCHA
             CL.registration_number,
             CL.ageing,
             CL.phone,
-            A.status_id AS status_name
+            ST.status_name AS status_name
         FROM claims CL
         INNER JOIN assignment A ON CL.id = A.claims_id
         INNER JOIN users US ON US.id = A.users_id
         INNER JOIN account_informations ACI ON ACI.users_id = US.id
+        INNER JOIN status ST ON A.status_id = ST.id
         ', v_where, v_order_by, '
         LIMIT ', v_offset, ', ', p_page_size);
 
@@ -87,6 +154,60 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetListByUser` (IN `p_email` VARCHA
     PREPARE stmt FROM @sql;
     EXECUTE stmt;
     DEALLOCATE PREPARE stmt;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetUserByRole`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetUserByRole` (IN `p_role_id` INT)   BEGIN
+    -- Vérifie que l'ID du rôle est valide
+    SET p_role_id = IFNULL(p_role_id, 1); -- Valeur par défaut 1 si NULL
+    
+    SELECT 
+        u.id AS user_id,
+        ai.business_name,
+        ai.email_address ,
+        r.role_name
+    FROM 
+        `users` AS u 
+	LEFT JOIN
+		account_informations ai ON u.id = ai.users_id
+    LEFT JOIN 
+        user_roles AS ur ON u.id = ur.users_id 
+    LEFT JOIN 
+        roles AS r ON ur.roles_id = r.id 
+    WHERE 
+        r.id = p_role_id;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetUserProfile`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetUserProfile` (IN `p_email_address` VARCHAR(255))   BEGIN
+    SELECT
+        AI.business_name,
+        AI.business_registration_number,
+        AI.business_address,
+        AI.city,
+        AI.postal_code,
+        AI.phone_number,
+        AI.email_address,
+        AI.website,
+        FI.vat_number,
+        FI.tax_identification_number,
+        FI.bank_name,
+        FI.bank_account_number,
+        FI.swift_code,
+
+        ASG.primary_contact_name,
+        ASG.primary_contact_post,
+        ASG.notification,
+        ASG.updated_at AS administrative_updated_at
+
+    FROM user_claim_db.users U
+    LEFT JOIN user_claim_db.account_informations AI
+        ON U.id = AI.users_id
+    LEFT JOIN user_claim_db.financial_informations FI
+        ON U.id = FI.users_id
+    LEFT JOIN user_claim_db.administrative_settings ASG
+        ON U.id = ASG.users_id
+    WHERE AI.email_address = p_email_address;
 END$$
 
 DELIMITER ;
@@ -113,7 +234,7 @@ CREATE TABLE IF NOT EXISTS `account_informations` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `email_address_UNIQUE` (`email_address`),
   UNIQUE KEY `users_id_UNIQUE` (`users_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Dumping data for table `account_informations`
@@ -122,7 +243,11 @@ CREATE TABLE IF NOT EXISTS `account_informations` (
 INSERT INTO `account_informations` (`id`, `users_id`, `business_name`, `business_registration_number`, `business_address`, `city`, `postal_code`, `phone_number`, `email_address`, `password`, `website`) VALUES
 (1, 1, 'Brondon', '48 AG 23', 'Squard Orchard', 'Quatre Bornes', '7000', '56589857', 'tojo@gmail.com', '123456', 'www.tojo.com'),
 (2, 2, 'Christofer', '1 JN 24', 'La Louis', 'Quatre Bornes', '7120', '57896532', 'rene@gmail.com', '123456', 'www.rene.com'),
-(3, 3, 'Kierra', '94 NOV 06', 'Moka', 'Saint Pierre', '7520', '54789512', 'raharison@gmail.com', '123456', 'www.raharison.com');
+(3, 3, 'Kierra', '94 NOV 06', 'Moka', 'Saint Pierre', '7520', '54789512', 'raharison@gmail.com', '123456', 'www.raharison.com'),
+(4, 4, 'Surveyor 2', 'Surveyor 2', 'addr Surveyor 2', 'Quatre bornes', '7200', '55678923', 'surveyor2@gmail.com', '123456', 'www.surveyor.com'),
+(5, 5, 'Surveyor 3', 'Surveyor 2', 'Addr Surveyor 2', 'Quatre Bornes', '7500', '55897899', 'surveyor3@gmail.com', '123456', 'www.surveyor3.com'),
+(6, 6, 'Garage 1', 'Garage 1', 'Addr Garage 1', 'Quatre bornes', '7200', '45677444', 'garage2@gmail.com', '123456', 'www.garage2.com'),
+(7, 7, 'Spare Part 2', 'Spare Part 2', 'Addr Spare Part 2', 'Quatre bornes', '7200', '34667777', 'sparepart@gmail.com', '123456', 'www.sparepart2.com');
 
 -- --------------------------------------------------------
 
@@ -269,7 +394,17 @@ CREATE TABLE IF NOT EXISTS `roles` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `role_code_UNIQUE` (`role_code`),
   UNIQUE KEY `role_name_UNIQUE` (`role_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Dumping data for table `roles`
+--
+
+INSERT INTO `roles` (`id`, `role_code`, `role_name`, `description`, `updated_at`) VALUES
+(1, 'surveyor', 'Surveyor', 'Utilisateur qui fait la vérificatoin', '2025-06-26 22:08:34'),
+(2, 'garage', 'Garage', 'Utilisateur qui fait la réparation', '2025-06-26 22:08:34'),
+(3, 'spare_part', 'Spare Part', 'Utilisateur qui est le fournisseur des pièces', '2025-06-26 22:09:57'),
+(4, 'car_rentale', 'Car Rentale', 'Utilisateur pour la location voiture', '2025-06-26 22:09:57');
 
 -- --------------------------------------------------------
 
@@ -309,7 +444,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Dumping data for table `users`
@@ -318,7 +453,11 @@ CREATE TABLE IF NOT EXISTS `users` (
 INSERT INTO `users` (`id`, `created_at`, `updated_at`) VALUES
 (1, '2025-06-23 07:54:40', '2025-06-23 07:54:40'),
 (2, '2025-06-23 07:54:46', '2025-06-23 07:54:46'),
-(3, '2025-06-23 07:54:53', '2025-06-23 07:54:53');
+(3, '2025-06-23 07:54:53', '2025-06-23 07:54:53'),
+(4, '2025-06-26 22:49:06', '2025-06-26 22:49:06'),
+(5, '2025-06-26 22:49:14', '2025-06-26 22:49:14'),
+(6, '2025-06-26 22:53:25', '2025-06-26 22:53:25'),
+(7, '2025-06-26 22:53:30', '2025-06-26 22:53:30');
 
 -- --------------------------------------------------------
 
@@ -336,6 +475,19 @@ CREATE TABLE IF NOT EXISTS `user_roles` (
   KEY `fk_user_roles_users1_idx` (`users_id`),
   KEY `fk_user_roles_Roles1` (`roles_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Dumping data for table `user_roles`
+--
+
+INSERT INTO `user_roles` (`users_id`, `roles_id`, `assigned_at`, `is_active`) VALUES
+(1, 1, '2025-06-26 22:47:37', 1),
+(2, 2, '2025-06-26 22:47:37', 1),
+(3, 3, '2025-06-26 22:48:09', 1),
+(4, 1, '2025-06-26 22:53:08', 1),
+(5, 1, '2025-06-26 22:53:08', 1),
+(6, 2, '2025-06-26 22:56:16', 1),
+(7, 3, '2025-06-26 22:56:16', 1);
 
 --
 -- Constraints for dumped tables
