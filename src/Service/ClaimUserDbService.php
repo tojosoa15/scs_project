@@ -174,4 +174,23 @@ class ClaimUserDbService
         return $stmt->executeQuery()->fetchAllAssociative();
         
     }
+
+    /**
+     * Authentification de l'utilisateur
+     * 
+     * @param array $params
+     * @return array
+     */
+    public function callAuthentification(array $params) : array     
+{
+        $sql = "CALL AuthentificateUser(?, ?)";
+
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['p_email_address']);
+        $stmt->bindValue(2, $params['p_password']);
+
+        return $stmt->executeQuery()->fetchAllAssociative();
+        
+    }
+            
 }

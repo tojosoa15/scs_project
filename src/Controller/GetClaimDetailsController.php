@@ -59,11 +59,26 @@ class GetClaimDetailsController extends AbstractController
                         // 'survey_type'       => $res['survey_type'],
                         // 'date_of_survey'    => $res['date_of_survey']
                     ],
+                    'estimate_of_repairs' => [
+                        'part_detail'   =>  [
+                            // 'part_name'     => $res['part_name'],
+                            // 'part_number'   => $res['part_number'],
+                            // 'part_price'    => $res['part_price'],
+                            // 'part_quantity' => $res['part_quantity'],
+                            // 'total_price'   => $res['total_price']
+                        ],
+                        'labour_detail' => [
+                            
+                        ]
+                        // 'estimation_number' => $res['estimation_number'],
+                        // 'estimation_date'   => $res['estimation_date'],
+                        // 'estimation_value'  => $res['estimation_value'],
+                        // 'is_estimation_approved' => $res['is_estimation_approved']
+                    ],
                 ];
             }
 
             return new JsonResponse($resFormat);
-
 
         } catch (\Exception $e) {
             return new JsonResponse(

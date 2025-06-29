@@ -204,4 +204,35 @@ class GetUserProfileController extends AbstractController
             );
         }
     }
+
+    /**
+     * Authentification de l'utilisateur
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function authentification(Request $request) : JsonResponse {
+        $params = (array)json_decode($request->getContent(), true);
+        
+        if (empty($params['p_email_address']) && empty($params['p_password'])) {
+            return new JsonResponse(
+                ['error' => 'p_email_address et p_password parameter is required'],
+                JsonResponse::HTTP_BAD_REQUEST
+            );
+        }
+        try {
+            $results = $this->claimUserDbService->callAuthentification([
+                'p_email_address'   => $params['p_email_address'],
+                'p_password'        => $params['p_password'],
+            ]);
+
+            return new JsonResponse($results);
+
+        } catch (\Exception $e) {
+            return new JsonResponse(
+                ['error' => $e->getMessage()],
+                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }

@@ -5,6 +5,7 @@ namespace App\Entity\ClaimUser;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\QueryParameter;
 use App\Controller\GetUserProfileController;
 use App\Controller\UpdateUserWebsiteController;
@@ -61,6 +62,14 @@ use Doctrine\ORM\Mapping as ORM;
             controller: GetUserProfileController::class. '::forgotPassword',
             parameters: [ 
                 'p_email_address'   => new QueryParameter()
+            ]
+        ),
+        new Post(
+            uriTemplate: '/authentification',
+            controller: GetUserProfileController::class. '::authentification',
+            parameters: [ 
+                'p_email_address'   => new QueryParameter(),
+                'p_password'        => new QueryParameter()
             ]
         )
     ]
