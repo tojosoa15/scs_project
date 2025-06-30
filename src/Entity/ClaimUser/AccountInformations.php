@@ -2,7 +2,13 @@
 
 namespace App\Entity\ClaimUser;
 
+use ApiPlatform\Metadata\Get;
+// use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface; 
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+
 
 /**
  * AccountInformations
@@ -10,7 +16,25 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="account_informations", uniqueConstraints={@ORM\UniqueConstraint(name="email_address_UNIQUE", columns={"email_address"}), @ORM\UniqueConstraint(name="users_id_UNIQUE", columns={"users_id"})})
  * @ORM\Entity
  */
-class AccountInformations
+// #[ApiResource(
+//     operations: [
+//         // new Get(),
+//         // new Post(security: "is_granted('ROLE_ADMIN')"),
+//         // denormalizationContext: ['groups' => ['account_information:write']]
+//         new Post(
+//             uriTemplate: '/api/login',
+//             controller: AuthController::class. '::login',
+//             // parameters: [ 
+//             //     'p_email_address'   => new QueryParameter(),
+//             //     'p_password'        => new QueryParameter()
+//             // ]
+//         )
+//     ],
+//     // normalizationContext: ['groups' => ['account_information:read']],
+// )]
+
+
+class AccountInformations implements UserInterface, PasswordAuthenticatedUserInterface
 {
     /**
      * @var int
@@ -219,5 +243,21 @@ class AccountInformations
         return $this;
     }
 
+    public function getRoles(): array
+    {
+        // Return an array of roles, e.g. ['ROLE_USER']
+        return ['ROLE_USER'];
+    }
+
+    public function eraseCredentials()
+    {   
+        // If you store any temporary, sensitive data on the user, clear it here
+    }
+
+    public function getUserIdentifier(): string
+    {
+        // Return the unique identifier for the user (e.g. email)
+        return $this->emailAddress;
+    }
 
 }

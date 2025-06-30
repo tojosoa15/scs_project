@@ -16,6 +16,7 @@
         "doctrine/doctrine-migrations-bundle": "^3.4",
         "doctrine/orm": "2.16",
         "dompdf/dompdf": "^3.1",
+        "lexik/jwt-authentication-bundle": "^3.1",
         "nelmio/cors-bundle": "^2.5",
         "phpdocumentor/reflection-docblock": "^5.6",
         "phpoffice/phpspreadsheet": "^4.3",

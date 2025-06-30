@@ -220,6 +220,7 @@ class GetUserProfileController extends AbstractController
                 JsonResponse::HTTP_BAD_REQUEST
             );
         }
+        
         try {
             $results = $this->claimUserDbService->callAuthentification([
                 'p_email_address'   => $params['p_email_address'],

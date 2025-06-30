@@ -19,7 +19,7 @@ use Doctrine\ORM\Mapping as ORM;
     operations: [
         // Liste claim d'un utilisateur
         new GetCollection(
-            uriTemplate: '/list/user_roles',
+            uriTemplate: '/api/list/user_roles',
             controller: GetRolesController::class
         )
     ]

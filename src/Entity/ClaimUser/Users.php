@@ -22,17 +22,17 @@ use Doctrine\ORM\Mapping as ORM;
     operations: [
         // Profile utilisateur
         new Get(
-            uriTemplate: '/profile_user',
+            uriTemplate: '/api/profile_user',
             controller: GetUserProfileController::class. '::__invoke',
             parameters: [ 'p_email_address' => new QueryParameter()]
         ), 
         new Get(
-            uriTemplate: '/user_by_role',
+            uriTemplate: '/api/user_by_role',
             controller: GetUserProfileController::class. '::getUserByRole',
             parameters: [ 'role_id' => new QueryParameter()]
         ),
         new Patch(
-            uriTemplate: '/update/user_website',
+            uriTemplate: '/api/update/user_website',
             controller: UpdateUserWebsiteController::class,
             parameters: [ 
                 'p_email_address'   => new QueryParameter(),  
@@ -40,7 +40,7 @@ use Doctrine\ORM\Mapping as ORM;
             ]
         ),
         new Patch(
-            uriTemplate: '/update/admin_setting',
+            uriTemplate: '/api/update/admin_setting',
             controller: GetUserProfileController::class. '::updateAdminSetting',
             parameters: [ 
                 'p_email_address'           => new QueryParameter(),  
@@ -50,7 +50,7 @@ use Doctrine\ORM\Mapping as ORM;
             ]
             ),
         new Patch(
-            uriTemplate: '/update/users_password',
+            uriTemplate: '/api/update/users_password',
             controller: GetUserProfileController::class. '::updateUserPassword',
             parameters: [ 
                 'p_email_address'   => new QueryParameter(),  
@@ -58,14 +58,14 @@ use Doctrine\ORM\Mapping as ORM;
             ]
         ),
         new Get(
-            uriTemplate: '/forgot_password',
+            uriTemplate: '/api/forgot_password',
             controller: GetUserProfileController::class. '::forgotPassword',
             parameters: [ 
                 'p_email_address'   => new QueryParameter()
             ]
         ),
         new Post(
-            uriTemplate: '/authentification',
+            uriTemplate: '/api/authentification',
             controller: GetUserProfileController::class. '::authentification',
             parameters: [ 
                 'p_email_address'   => new QueryParameter(),

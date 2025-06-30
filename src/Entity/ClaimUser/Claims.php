@@ -18,7 +18,7 @@ use Doctrine\ORM\Mapping as ORM;
     operations: [
         // Liste claim d'un utilisateur
         new GetCollection(
-            uriTemplate: '/list/claims_user',
+            uriTemplate: '/api/list/claims_user',
             controller: GetClaimsByUserController::class,
             parameters: [ 'email' => new QueryParameter()],
         )
