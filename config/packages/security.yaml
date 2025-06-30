@@ -31,7 +31,7 @@ security:
             pattern: ^/api
             stateless: true
             jwt: ~
-                # provider: app_user_provider
+            provider: app_user_provider
         # api:
         #     pattern: ^/api
         #     stateless: true

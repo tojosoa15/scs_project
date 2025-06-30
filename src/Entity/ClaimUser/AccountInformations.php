@@ -97,7 +97,7 @@ class AccountInformations implements UserInterface, PasswordAuthenticatedUserInt
     /**
      * @var string|null
      *
-     * @ORM\Column(name="password", type="string", length=250, nullable=true)
+     * @ORM\Column(name="password", type="string", length=250, nullable=false)
      */
     private $password;
 
