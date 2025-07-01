@@ -30,12 +30,15 @@ class GetClaimsByUserController extends AbstractController
                     'page' => (int)($query['page'] ?? 1),
                     'page_size' => (int)($query['page_size'] ?? 10),
                 ]);
-                // $claims = $this->claimRepository->findAll();
-                return new JsonResponse($claims);
+                
+                return new JsonResponse([
+                    'status' => 'success',
+                    'data' => $claims
+                ], JsonResponse::HTTP_OK);
     
             } catch (\Exception $e) {
                 return new JsonResponse(
-                    ['error' => $e->getMessage()],
+                    ['error' => $e->getMessage(), 'message' => 'Claim retrieval failed.'],
                     JsonResponse::HTTP_INTERNAL_SERVER_ERROR
                 );
             }
@@ -53,11 +56,14 @@ class GetClaimsByUserController extends AbstractController
                     'search_phone' => $query['search_phone'] ?? null
                 ]);
     
-                return new JsonResponse($results);
+                return new JsonResponse([
+                    'status' => 'success',
+                    'data' => $results
+                ], JsonResponse::HTTP_OK);
     
             } catch (\Exception $e) {
                 return new JsonResponse(
-                    ['error' => $e->getMessage()],
+                    ['error' => $e->getMessage(), 'message' => 'Claim retrieval failed.'],
                     JsonResponse::HTTP_INTERNAL_SERVER_ERROR
                 );
             }

@@ -78,11 +78,14 @@ class GetClaimDetailsController extends AbstractController
                 ];
             }
 
-            return new JsonResponse($resFormat);
+            return new JsonResponse([
+                'status' => 'success',
+                'data' => $resFormat
+            ], JsonResponse::HTTP_OK);
 
         } catch (\Exception $e) {
             return new JsonResponse(
-                ['error' => $e->getMessage()],
+                ['error' => $e->getMessage(), 'message' => 'Claim retrieval failed.'],
                 JsonResponse::HTTP_INTERNAL_SERVER_ERROR
             );
         }

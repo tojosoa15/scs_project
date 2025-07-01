@@ -68,11 +68,14 @@ class GetUserProfileController extends AbstractController
                 ];
             }
 
-            return new JsonResponse($formatResult);
+            return new JsonResponse([
+                'status'    => 'success',
+                'data'      => $formatResult
+            ], JsonResponse::HTTP_OK);
 
         } catch (\Exception $e) {
             return new JsonResponse(
-                ['error' => $e->getMessage()],
+                ['error' => $e->getMessage(), 'message' => 'Profile retrieval failed.'],
                 JsonResponse::HTTP_INTERNAL_SERVER_ERROR
             );
         }
@@ -99,7 +102,10 @@ class GetUserProfileController extends AbstractController
                 'role_id' => $params['role_id']
             ]);
 
-            return new JsonResponse($results);
+            return new JsonResponse([
+                'status'    => 'success',
+                'data'      => $results
+            ], JsonResponse::HTTP_OK);
 
         } catch (\Exception $e) {
             return new JsonResponse(
@@ -126,14 +132,17 @@ class GetUserProfileController extends AbstractController
       }
 
       try {
-          $results = $this->claimUserDbService->callUpdateAdminSetting([
-              'p_email_address'         => $params['p_email_address'],
-              'p_primary_contact_name'  => $params['p_primary_contact_name'],
-              'p_primary_contact_post'  => $params['p_primary_contact_post'],
-              'p_notification'          => $params['p_notification'],
-          ]);
+            $results = $this->claimUserDbService->callUpdateAdminSetting([
+                'p_email_address'         => $params['p_email_address'],
+                'p_primary_contact_name'  => $params['p_primary_contact_name'],
+                'p_primary_contact_post'  => $params['p_primary_contact_post'],
+                'p_notification'          => $params['p_notification'],
+            ]);
 
-          return new JsonResponse($results);
+            return new JsonResponse([
+                'status'    => 'success',
+                'data'      => $results
+            ], JsonResponse::HTTP_OK);
 
       } catch (\Exception $e) {
           return new JsonResponse(
@@ -165,7 +174,10 @@ class GetUserProfileController extends AbstractController
                 'p_new_password'  => $params['p_new_password']
             ]);
 
-            return new JsonResponse($results);
+            return new JsonResponse([
+                'status'    => 'success',
+                'data'      => $results
+            ], JsonResponse::HTTP_OK);
 
         } catch (\Exception $e) {
             return new JsonResponse(
@@ -195,7 +207,10 @@ class GetUserProfileController extends AbstractController
                 'p_email_address' => $params['p_email_address']
             ]);
 
-            return new JsonResponse($results);
+            return new JsonResponse([
+                'status'    => 'success',
+                'data'      => $results
+            ], JsonResponse::HTTP_OK);
 
         } catch (\Exception $e) {
             return new JsonResponse(
@@ -227,7 +242,10 @@ class GetUserProfileController extends AbstractController
                 'p_password'        => $params['p_password'],
             ]);
 
-            return new JsonResponse($results);
+            return new JsonResponse([
+                'status'    => 'success',
+                'data'      => $results
+            ], JsonResponse::HTTP_OK);
 
         } catch (\Exception $e) {
             return new JsonResponse(

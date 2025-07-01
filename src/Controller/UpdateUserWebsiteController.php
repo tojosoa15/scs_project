@@ -32,12 +32,15 @@ class UpdateUserWebsiteController extends AbstractController
                 'p_new_website'     => $params['p_new_website']
             ]);
             
-            return new JsonResponse($results);
+            return new JsonResponse([
+                'status'    => 'success',
+                'data'      => $results
+            ], JsonResponse::HTTP_OK);
 
 
         } catch (\Exception $e) {
             return new JsonResponse(
-                ['error' => $e->getMessage()],
+                ['error' => $e->getMessage(), 'message' => 'Updated failed.'],
                 JsonResponse::HTTP_INTERNAL_SERVER_ERROR
             );
         }
