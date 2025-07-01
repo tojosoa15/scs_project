@@ -16,7 +16,7 @@ class AuthController extends AbstractController
         return new JsonResponse('teset');
         // Le traitement est géré par json_login
         return $this->json([
-            'message' => 'Utilisez /api/login_check pour obtenir un token JWT'
+            'message' => 'Utilisez /api/auth/login pour obtenir un token JWT'
         ]);
     }
 

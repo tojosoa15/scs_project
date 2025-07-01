@@ -17,14 +17,16 @@ security:
             security: false
 
         login:
-            pattern: ^/api/login
+            pattern: ^/api/auth/login 
             stateless: true
             json_login:
-                check_path: /api/login_check
-                username_path: emailAddress  # Doit matcher le nom du champ dans le JSON
+                check_path: /api/auth/login
+                username_path: email  # Doit matcher le nom du champ dans le JSON
                 password_path: password
                 success_handler: lexik_jwt_authentication.handler.authentication_success
-                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+                # success_handler: App\Security\CustomAuthenticationSuccessHandler
+                # failure_handler: lexik_jwt_authentication.handler.authentication_failure
+                failure_handler: App\Security\CustomAuthenticationFailureHandler
             provider: app_user_provider
 
         api:
@@ -32,17 +34,6 @@ security:
             stateless: true
             jwt: ~
             provider: app_user_provider
-        # api:
-        #     pattern: ^/api
-        #     stateless: true
-        #     provider: app_user_provider
-        #     json_login:
-        #         check_path: /api/login
-        #         username_path: email_address
-        #         password_path: password
-        #         success_handler: lexik_jwt_authentication.handler.authentication_success
-        #         failure_handler: lexik_jwt_authentication.handler.authentication_failure
-        #     jwt: ~
 
     access_control:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }

@@ -245,7 +245,10 @@ class AccountInformations implements UserInterface, PasswordAuthenticatedUserInt
 
     public function getRoles(): array
     {
-        // Return an array of roles, e.g. ['ROLE_USER']
+        if ($this->users && method_exists($this->users, 'getRoleCodes')) {
+            return $this->users->getRoleCodes();
+        }
+
         return ['ROLE_USER'];
     }
 

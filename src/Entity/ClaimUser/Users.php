@@ -175,4 +175,9 @@ class Users
         return $this;
     }
 
+    public function getRoleCodes(): array
+    {
+        return $this->roles->map(fn ($role) => $role->getRoleCode())->toArray();
+    }
+
 }

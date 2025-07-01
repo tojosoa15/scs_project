@@ -29,13 +29,16 @@ class GetRolesController extends AbstractController
                 'page' => (int)($query['page'] ?? 1),
                 'page_size' => (int)($query['page_size'] ?? 10),
             ]);
-            // $claims = $this->claimRepository->findAll();
-            return new JsonResponse($claims);
+            
+            return new JsonResponse([
+                'status' => 'success',
+                'data' => $claims
+            ], JsonResponse::HTTP_OK);
 
         } catch (\Exception $e) {
             return new JsonResponse(
-                ['error' => $e->getMessage()],
-                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+                [   'error' => $e->getMessage(), 'message' => 'Roles retrieval failed.'],
+                    JsonResponse::HTTP_INTERNAL_SERVER_ERROR
             );
         }
     }

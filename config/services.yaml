@@ -36,3 +36,14 @@ services:
     App\Service\ClaimDetailsService:
         arguments:
             $claimDetailsConnection: '@doctrine.dbal.default_connection'
+
+    App\EventListener\JWTCreatedListener:
+        tags:
+            - { name: kernel.event_listener, event: lexik_jwt_authentication.on_jwt_created, method: onJWTCreated }
+
+    App\Security\CustomAuthenticationFailureHandler:
+        tags: ['monolog.logger']
+
+    App\Security\CustomAuthenticationSuccessHandler:
+        autowire: true
+        autoconfigure: true
