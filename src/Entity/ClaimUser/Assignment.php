@@ -2,6 +2,9 @@
 
 namespace App\Entity\ClaimUser;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Post;
+use App\Controller\AffectionClaimController;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -11,6 +14,14 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="assignment", indexes={@ORM\Index(name="fk_assignment_claims1_idx", columns={"claims_id"}), @ORM\Index(name="fk_assignment_status1_idx", columns={"status_id"}), @ORM\Index(name="fk_assignment_users1", columns={"users_id"})})
  * @ORM\Entity
  */
+#[ApiResource(
+    operations: [
+        new Post(
+            uriTemplate: '/api/affection/claim',
+            controller: AffectionClaimController::class
+        )
+    ],
+)]   
 class Assignment
 {
     /**

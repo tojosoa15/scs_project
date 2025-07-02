@@ -181,13 +181,29 @@ class ClaimUserDbService
      * @param array $params
      * @return array
      */
-    public function callAuthentification(array $params) : array     
-{
+    public function callAuthentification(array $params) : array         
+    {
         $sql = "CALL AuthentificateUser(?, ?)";
 
         $stmt = $this->connection->prepare($sql);
         $stmt->bindValue(1, $params['p_email_address']);
         $stmt->bindValue(2, $params['p_password']);
+
+        return $stmt->executeQuery()->fetchAllAssociative();
+        
+    }
+
+    public function callPostAffectionClaim(array $params) : array         
+    {
+        $sql = "CALL InsertAssignment(?, ?, ?, ?, ?, ?)";
+
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['p_claims_id']);
+        $stmt->bindValue(2, $params['p_users_id']);
+        $stmt->bindValue(3, $params['p_assignment_date']);
+        $stmt->bindValue(4, $params['p_assignement_note']);
+        $stmt->bindValue(5, $params['p_status_id']);
+        $stmt->bindValue(6, $params['p_claims_number']);
 
         return $stmt->executeQuery()->fetchAllAssociative();
         
