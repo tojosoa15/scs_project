@@ -44,4 +44,73 @@ class AffectionClaimController extends AbstractController
             );
         }
     }
+
+    /**
+     * Détail affectaion claim
+     * 
+     * @param $request
+     */
+    public function getAssignementById(Request $request) : JsonResponse {
+        $params = $request->query->all();
+
+        if (empty($params['p_claims_number'])) {
+            return new JsonResponse(
+                ['error' => 'p_claims_number parameter is required'],
+                JsonResponse::HTTP_BAD_REQUEST
+            );
+        }
+
+         try {
+            $results = $this->claimUserDbService->callGetAssignmentById($params);
+
+            return new JsonResponse([
+                'status'    => 'success',
+                'data'      => $results
+            ], JsonResponse::HTTP_OK);
+
+        } catch (\Exception $e) {
+            return new JsonResponse(
+                ['error' => $e->getMessage()],
+                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /** 
+     * Mise à jour affectation claim
+     * 
+     *  @param Request $request
+     *  @return JsonResponse
+     */
+    public function updateAssignmentClaim(Request $request) : JsonResponse {
+        $params = $request->query->all();
+
+      if (empty($params['p_claims_number'])) {
+          return new JsonResponse(
+              ['error' => 'p_claims_number parameter is required'],
+              JsonResponse::HTTP_BAD_REQUEST
+          );
+      }
+
+      try {
+            $this->claimUserDbService->callUpdateAssignment([
+                'p_claims_id'           => $params['p_claims_id'],
+                'p_users_id'            => $params['p_users_id'],
+                'p_assignment_date'     => $params['p_assignment_date'],
+                'p_assignement_note'    => $params['p_assignement_note'],
+                'p_status_id'           => $params['p_status_id'],
+                'p_claims_number'       => $params['p_claims_number'],
+            ]);
+
+            return new JsonResponse([
+                'status'    => 'success'
+            ], JsonResponse::HTTP_OK);
+
+      } catch (\Exception $e) {
+          return new JsonResponse(
+              ['error' => $e->getMessage()],
+              JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+          );
+      }
+    }
 }

@@ -208,5 +208,42 @@ class ClaimUserDbService
         return $stmt->executeQuery()->fetchAllAssociative();
         
     }
+
+    /**
+     * Retourne detail affectation
+     * 
+     * @param array $params
+     * @return array
+     */
+    public function callGetAssignmentById(array $params) : array 
+    {
+        $sql = "CALL GetAssignmentById(?)";
+
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['p_claims_number']);
+        
+        return $stmt->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
+     * Modification affectation
+     * 
+     * @param array $params
+     * @return array
+     */
+    public function callUpdateAssignment(array $params) : array 
+    {
+        $sql = "CALL UpdateAssignment(?, ?, ?, ?, ?, ? )";
+
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['p_claims_id']);
+        $stmt->bindValue(2, $params['p_users_id']);
+        $stmt->bindValue(3, $params['p_assignment_date']);
+        $stmt->bindValue(4, $params['p_assignement_note']);
+        $stmt->bindValue(5, $params['p_status_id']);
+        $stmt->bindValue(6, $params['p_claims_number']);
+        
+        return $stmt->executeQuery()->fetchAllAssociative();
+    }
             
 }

@@ -3,7 +3,10 @@
 namespace App\Entity\ClaimUser;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\QueryParameter;
 use App\Controller\AffectionClaimController;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -18,8 +21,26 @@ use Doctrine\ORM\Mapping as ORM;
     operations: [
         new Post(
             uriTemplate: '/api/affection/claim',
-            controller: AffectionClaimController::class
+            controller: AffectionClaimController::class . '::__invoke'
+        ),
+        new Get(
+            uriTemplate: '/api/assignement/by_id',
+            controller: AffectionClaimController::class . '::getAssignementById',
+            parameters: [ 'p_claims_number' => new QueryParameter()]
+        ),
+        new Patch(
+            uriTemplate: 'api/update/affection_claim',
+            controller: AffectionClaimController::class . '::updateAssignmentClaim',
+             parameters: [ 
+                'p_claims_id'           => new QueryParameter(),  
+                'p_users_id'            => new QueryParameter(),
+                'p_assignment_date'     => new QueryParameter(),
+                'p_assignement_note'    => new QueryParameter(),
+                'p_status_id'           => new QueryParameter(),
+                'p_claims_number'       => new QueryParameter(),
+            ]
         )
+
     ],
 )]   
 class Assignment

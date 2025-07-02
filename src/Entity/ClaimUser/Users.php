@@ -48,7 +48,7 @@ use Doctrine\ORM\Mapping as ORM;
                 'p_primary_contact_post'    => new QueryParameter(),
                 'p_notification'            => new QueryParameter(),
             ]
-            ),
+        ),
         new Patch(
             uriTemplate: '/api/update/users_password',
             controller: GetUserProfileController::class. '::updateUserPassword',
