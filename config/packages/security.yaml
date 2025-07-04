@@ -23,8 +23,8 @@ security:
                 check_path: /api/auth/login
                 username_path: email  # Doit matcher le nom du champ dans le JSON
                 password_path: password
-                success_handler: lexik_jwt_authentication.handler.authentication_success
-                # success_handler: App\Security\CustomAuthenticationSuccessHandler
+                # success_handler: lexik_jwt_authentication.handler.authentication_success
+                success_handler: App\Security\CustomAuthenticationSuccessHandler
                 # failure_handler: lexik_jwt_authentication.handler.authentication_failure
                 failure_handler: App\Security\CustomAuthenticationFailureHandler
             provider: app_user_provider

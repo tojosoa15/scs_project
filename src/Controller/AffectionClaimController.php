@@ -50,18 +50,18 @@ class AffectionClaimController extends AbstractController
      * 
      * @param $request
      */
-    public function getAssignementById(Request $request) : JsonResponse {
+    public function getAssignementFilter(Request $request) : JsonResponse {
         $params = $request->query->all();
 
-        if (empty($params['p_claims_number'])) {
-            return new JsonResponse(
-                ['error' => 'p_claims_number parameter is required'],
-                JsonResponse::HTTP_BAD_REQUEST
-            );
-        }
+        // if (empty($params['p_claims_number'])) {
+        //     return new JsonResponse(
+        //         ['error' => 'p_claims_number parameter is required'],
+        //         JsonResponse::HTTP_BAD_REQUEST
+        //     );
+        // }
 
-         try {
-            $results = $this->claimUserDbService->callGetAssignmentById($params);
+        try {
+            $results = $this->claimUserDbService->callGetAssignementFilter($params);
 
             return new JsonResponse([
                 'status'    => 'success',
@@ -94,10 +94,9 @@ class AffectionClaimController extends AbstractController
 
       try {
             $this->claimUserDbService->callUpdateAssignment([
-                'p_claims_id'           => $params['p_claims_id'],
                 'p_users_id'            => $params['p_users_id'],
-                'p_assignment_date'     => $params['p_assignment_date'],
-                'p_assignement_note'    => $params['p_assignement_note'],
+                'p_assignment_date'     => $params['p_assignment_date'] ?? null,
+                'p_assignement_note'    => $params['p_assignement_note'] ?? null,
                 'p_status_id'           => $params['p_status_id'],
                 'p_claims_number'       => $params['p_claims_number'],
             ]);

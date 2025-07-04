@@ -20,27 +20,25 @@ use Doctrine\ORM\Mapping as ORM;
 #[ApiResource(
     operations: [
         new Post(
-            uriTemplate: '/api/affection/claim',
+            uriTemplate: '/api/affectation/claim',
             controller: AffectionClaimController::class . '::__invoke'
         ),
         new Get(
-            uriTemplate: '/api/assignement/by_id',
-            controller: AffectionClaimController::class . '::getAssignementById',
+            uriTemplate: '/api/filter/assignements',
+            controller: AffectionClaimController::class . '::getAssignementFilter',
             parameters: [ 'p_claims_number' => new QueryParameter()]
-        ),
+        ), 
         new Patch(
-            uriTemplate: 'api/update/affection_claim',
+            uriTemplate: 'api/update/affectation',
             controller: AffectionClaimController::class . '::updateAssignmentClaim',
-             parameters: [ 
-                'p_claims_id'           => new QueryParameter(),  
+             parameters: [   
                 'p_users_id'            => new QueryParameter(),
                 'p_assignment_date'     => new QueryParameter(),
                 'p_assignement_note'    => new QueryParameter(),
                 'p_status_id'           => new QueryParameter(),
                 'p_claims_number'       => new QueryParameter(),
             ]
-        )
-
+        )     
     ],
 )]   
 class Assignment

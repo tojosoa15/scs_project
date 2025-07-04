@@ -195,15 +195,14 @@ class ClaimUserDbService
 
     public function callPostAffectionClaim(array $params) : array         
     {
-        $sql = "CALL InsertAssignment(?, ?, ?, ?, ?, ?)";
+        $sql = "CALL InsertAssignment(?, ?, ?, ?, ?)";
 
         $stmt = $this->connection->prepare($sql);
-        $stmt->bindValue(1, $params['p_claims_id']);
-        $stmt->bindValue(2, $params['p_users_id']);
-        $stmt->bindValue(3, $params['p_assignment_date']);
-        $stmt->bindValue(4, $params['p_assignement_note']);
-        $stmt->bindValue(5, $params['p_status_id']);
-        $stmt->bindValue(6, $params['p_claims_number']);
+        $stmt->bindValue(1, $params['p_users_id']);
+        $stmt->bindValue(2, $params['p_assignment_date'] ?? null);
+        $stmt->bindValue(3, $params['p_assignement_note'] ?? null);
+        $stmt->bindValue(4, $params['p_status_id'] ?? null);
+        $stmt->bindValue(5, $params['p_claims_number']);
 
         return $stmt->executeQuery()->fetchAllAssociative();
         
@@ -215,12 +214,15 @@ class ClaimUserDbService
      * @param array $params
      * @return array
      */
-    public function callGetAssignmentById(array $params) : array 
+    public function callGetAssignementFilter(array $params) : array 
     {
-        $sql = "CALL GetAssignmentById(?)";
+        $sql = "CALL GetAssignmentList(?, ?, ?, ?)";
 
         $stmt = $this->connection->prepare($sql);
-        $stmt->bindValue(1, $params['p_claims_number']);
+        $stmt->bindValue(1, $params['p_claims_number'] ?? null);
+        $stmt->bindValue(2, $params['p_status_name'] ?? null);
+        $stmt->bindValue(3, $params['p_role_name'] ?? null);
+        $stmt->bindValue(4, $params['p_business_name'] ?? null);
         
         return $stmt->executeQuery()->fetchAllAssociative();
     }
@@ -233,15 +235,14 @@ class ClaimUserDbService
      */
     public function callUpdateAssignment(array $params) : array 
     {
-        $sql = "CALL UpdateAssignment(?, ?, ?, ?, ?, ? )";
+        $sql = "CALL UpdateAssignment(?, ?, ?, ?, ? )";
 
         $stmt = $this->connection->prepare($sql);
-        $stmt->bindValue(1, $params['p_claims_id']);
-        $stmt->bindValue(2, $params['p_users_id']);
-        $stmt->bindValue(3, $params['p_assignment_date']);
-        $stmt->bindValue(4, $params['p_assignement_note']);
-        $stmt->bindValue(5, $params['p_status_id']);
-        $stmt->bindValue(6, $params['p_claims_number']);
+        $stmt->bindValue(1, $params['p_users_id']);
+        $stmt->bindValue(2, $params['p_assignment_date'] ?? null);
+        $stmt->bindValue(3, $params['p_assignement_note'] ?? null);
+        $stmt->bindValue(4, $params['p_status_id'] ?? null);
+        $stmt->bindValue(5, $params['p_claims_number']);
         
         return $stmt->executeQuery()->fetchAllAssociative();
     }

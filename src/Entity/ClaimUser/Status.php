@@ -2,6 +2,8 @@
 
 namespace App\Entity\ClaimUser;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\GetCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -10,6 +12,11 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="status")
  * @ORM\Entity
  */
+#[ApiResource(
+    operations: [
+        new GetCollection(),    
+    ],
+)]
 class Status
 {
     /**
