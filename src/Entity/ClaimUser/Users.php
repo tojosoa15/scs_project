@@ -50,7 +50,7 @@ use Doctrine\ORM\Mapping as ORM;
             ]
         ),
         new Patch(
-            uriTemplate: '/api/update/users_password',
+            uriTemplate: '/api/auth/reset-password',
             controller: GetUserProfileController::class. '::updateUserPassword',
             parameters: [ 
                 'p_email_address'   => new QueryParameter(),  
@@ -58,7 +58,7 @@ use Doctrine\ORM\Mapping as ORM;
             ]
         ),
         new Get(
-            uriTemplate: '/api/forgot_password',
+            uriTemplate: '/api/auth/forgot-password',
             controller: GetUserProfileController::class. '::forgotPassword',
             parameters: [ 
                 'p_email_address'   => new QueryParameter()

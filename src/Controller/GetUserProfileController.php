@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Service\ClaimUserDbService;
+use App\Service\EmailService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -11,7 +12,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 #[AsController]
 class GetUserProfileController extends AbstractController
 {
-    public function __construct(private ClaimUserDbService $claimUserDbService) {}
+    public function __construct(
+        private ClaimUserDbService $claimUserDbService,
+        private EmailService $emailService
+    ) {}
 
     /**
      * Get user profile information by email address.
@@ -159,7 +163,8 @@ class GetUserProfileController extends AbstractController
      * @return JsonResponse
      */
     public function updateUserPassword(Request $request) : JsonResponse {
-        $params = $request->query->all();
+        // $params = $request->query->all();
+        $params = (array)json_decode($request->getContent(), true);
 
         if (empty($params['p_email_address'])) {
             return new JsonResponse(
@@ -196,6 +201,7 @@ class GetUserProfileController extends AbstractController
     public function forgotPassword(Request $request) : JsonResponse {
         $params = $request->query->all();
 
+        
         if (empty($params['p_email_address'])) {
             return new JsonResponse(
                 ['error' => 'p_email_address parameter is required'],
@@ -204,14 +210,34 @@ class GetUserProfileController extends AbstractController
         }
         
         try {
-            $results = $this->claimUserDbService->callForgotPassword([
+            $data = $this->claimUserDbService->callForgotPassword([
                 'p_email_address' => $params['p_email_address']
             ]);
 
-            return new JsonResponse([
-                'status'    => 'success',
-                'data'      => $results
-            ], JsonResponse::HTTP_OK);
+            // Email n'existe pas
+            if (empty($data[0]['OK'])) {
+                return new JsonResponse(['error' => 'Email introuvable.'], 
+                    JsonResponse::HTTP_NOT_FOUND
+                );
+            }
+
+            // Envoyer email de réinitialisation de mot de passe
+            if (!empty($data[0]['OK']) && $data[0]['OK'] === 'OK') {
+                // Générer un token (simple exemple)
+                $token = bin2hex(random_bytes(32));
+
+                // Génère le lien
+                $resetLink = sprintf('http://localhost:8000/api/auth/reset-password/%s', $token);
+
+                $this->emailService->sendResetPasswordEmail($params['p_email_address'], $resetLink);
+                
+
+                return new JsonResponse([
+                    'status'    => 'success',
+                    'message' => 'Email de réinitialisation envoyé.'
+                ], JsonResponse::HTTP_OK);
+            } 
+
 
         } catch (\Exception $e) {
             return new JsonResponse(
