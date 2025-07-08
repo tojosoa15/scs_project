@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jun 26, 2025 at 11:07 PM
+-- Generation Time: Jul 08, 2025 at 06:56 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.2.26
 
@@ -39,23 +39,21 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetClaimDetails` (IN `p_claim_numbe
         SET MESSAGE_TEXT = 'Claim introuvable.';
     END IF;
 
-    -- Sélectionner les détails du véhicule d'abord, ensuite survey, ensuite documents
+    -- Sélectionner les détails
     SELECT
-        -- Vehicle Information
-        CL.number AS claim_number,
-        ST.status_name AS status_name,
-        CL.name AS name,
+        CL.number          AS claim_number,
+        ST.status_name     AS status_name,
+        CL.name            AS name,
         CL.received_date,
         DATEDIFF(CURDATE(), CL.received_date) AS ageing,
         CL.registration_number,
-        CL.phone AS mobile_number,
+        CL.phone           AS mobile_number,
         VI.make,
         VI.model,
         VI.chasisi_no,
         VI.vehicle_no,
         VI.condition_of_vehicle,
 
-        -- Survey Information
         SI.date_of_survey,
         SI.invoice_number,
         SI.survey_type,
@@ -65,14 +63,25 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetClaimDetails` (IN `p_claim_numbe
         SI.excess_applicable,
         SI.showroom_price,
 
-        -- Documents
-        (
-            SELECT GROUP_CONCAT(D.attachements SEPARATOR ', ')
-            FROM surveyor_db.documents D
-            INNER JOIN surveyor_db.survey S2
-                ON S2.id = D.survey_information_id
-            WHERE S2.claim_number = CL.number
-        ) AS document_names
+        -- Champs des part_detail
+        PD.part_name,
+        PD.supplier,
+        PD.quantity,
+        PD.quality,
+        PD.cost_part,
+        PD.discount_part,
+        PD.part_total,
+
+        -- Champs des labour_detail
+        LD.activity,
+        LD.number_of_hours,
+        LD.hourly_const_labour,
+        LD.discount_labour,
+        LD.vat,
+        LD.labour_total,
+
+        -- Champs des documents
+        D.attachements AS document_name
 
     FROM user_claim_db.claims CL
     INNER JOIN user_claim_db.assignment SA
@@ -85,8 +94,15 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetClaimDetails` (IN `p_claim_numbe
         ON SI.verification_id = S.id
     LEFT JOIN surveyor_db.vehicle_information VI
         ON VI.verification_id = S.id
-    WHERE CL.number = p_claim_number
-    LIMIT 1;
+    LEFT JOIN surveyor_db.estimate_of_repair ER
+        ON S.id = ER.verification_id
+    LEFT JOIN surveyor_db.part_detail PD
+        ON ER.id = PD.estimate_of_repair_id
+    LEFT JOIN surveyor_db.labour_detail LD
+        ON PD.id = LD.part_detail_id
+    LEFT JOIN surveyor_db.documents D
+        ON S.id = D.survey_information_id
+    WHERE CL.number = p_claim_number;
 END$$
 
 DELIMITER ;

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jun 26, 2025 at 11:07 PM
+-- Generation Time: Jul 08, 2025 at 06:56 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.2.26
 
@@ -25,6 +25,53 @@ DELIMITER $$
 --
 -- Procedures
 --
+DROP PROCEDURE IF EXISTS `AuthentificateUser`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AuthentificateUser` (IN `p_email_address` VARCHAR(255), IN `p_password` VARCHAR(255))   BEGIN
+    DECLARE v_exists INT DEFAULT 0;
+    DECLARE v_password_match INT DEFAULT 0;
+
+    -- Vérifier que l'email existe
+    SELECT COUNT(*) INTO v_exists
+    FROM user_claim_db.account_informations
+    WHERE email_address = p_email_address;
+
+    IF v_exists = 0 THEN
+        -- Si l'email est introuvable
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Email introuvable.';
+    ELSE
+        -- Vérifier le mot de passe
+        SELECT COUNT(*) INTO v_password_match
+        FROM user_claim_db.account_informations
+        WHERE email_address = p_email_address
+          AND password = p_password;
+
+        IF v_password_match = 0 THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Mot de passe incorrect.';
+        ELSE
+            -- Récupérer les infos de l'utilisateur
+            SELECT 'ok reussi' as message;
+        END IF;
+    END IF;
+END$$
+
+DROP PROCEDURE IF EXISTS `ChekEmailExists`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `ChekEmailExists` (IN `p_email_address` VARCHAR(255))   BEGIN
+    DECLARE v_exists INT DEFAULT 0;
+
+    SELECT COUNT(*) INTO v_exists
+    FROM user_claim_db.account_informations
+    WHERE email_address = p_email_address;
+
+    IF v_exists = 0 THEN
+        SELECT 'Email introuvable.' AS message;
+    ELSE
+        -- Tu pourras ici éventuellement créer un token et l’envoyer par mail
+        SELECT 'Email existant, envoi du lien de réinitialisation' AS message;
+    END IF;
+END$$
+
 DROP PROCEDURE IF EXISTS `GetAllClaims`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllClaims` (IN `p_page` INT, IN `p_page_size` INT)   BEGIN
     DECLARE v_order_by VARCHAR(1000);
@@ -89,6 +136,56 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllRoles` (IN `p_page` INT, IN `
     PREPARE stmt FROM @sql;
     EXECUTE stmt;
     DEALLOCATE PREPARE stmt;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetAllStatus`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllStatus` ()   BEGIN
+    SELECT * FROM user_claim_db.status;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetAssignmentById`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAssignmentById` (IN `p_claims_number` VARCHAR(255))   BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM user_claim_db.assignment WHERE claims_number = p_claims_number
+    ) THEN
+        SELECT 'Numero de claim introuvable.' AS message;
+    END IF;
+
+    -- Récupérer les données
+    SELECT 
+        A.users_id,
+        A.assignment_date,
+        A.assignement_note,
+        A.status_id, 
+	A.claims_number
+    FROM user_claim_db.assignment A
+    WHERE A.claims_number = p_claims_number;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetAssignmentList`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAssignmentList` (IN `p_claims_number` VARCHAR(100), IN `p_status_name` VARCHAR(45), IN `p_role_name` VARCHAR(45), IN `p_business_name` VARCHAR(150))   BEGIN
+    SELECT
+    	a.users_id,
+        a.claims_number,
+        s.status_name,
+        ai.business_name,
+        GROUP_CONCAT(DISTINCT r.role_name SEPARATOR ', ') AS role_names,
+        a.assignment_date
+    FROM assignment                 AS a
+    LEFT JOIN status                AS s  ON s.id        = a.status_id
+    LEFT JOIN account_informations  AS ai ON ai.users_id = a.users_id
+    LEFT JOIN user_roles            AS ur ON ur.users_id = a.users_id
+    LEFT JOIN roles                 AS r  ON r.id        = ur.roles_id
+    WHERE  (p_claims_number  IS NULL OR p_claims_number  = '' OR a.claims_number   = p_claims_number)
+       AND (p_status_name    IS NULL OR p_status_name    = '' OR s.status_name     = p_status_name)
+       AND (p_role_name      IS NULL OR p_role_name      = '' OR r.role_name       = p_role_name)
+       AND (p_business_name  IS NULL OR p_business_name  = '' OR ai.business_name  = p_business_name)
+    GROUP BY
+        a.claims_number,
+        s.status_name,
+        ai.business_name,
+        a.assignment_date
+    ORDER BY a.assignment_date DESC;
 END$$
 
 DROP PROCEDURE IF EXISTS `GetListByUser`$$
@@ -189,6 +286,9 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetUserProfile` (IN `p_email_addres
         AI.phone_number,
         AI.email_address,
         AI.website,
+        AI.backup_email,
+        AI.password,
+        
         FI.vat_number,
         FI.tax_identification_number,
         FI.bank_name,
@@ -208,6 +308,124 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetUserProfile` (IN `p_email_addres
     LEFT JOIN user_claim_db.administrative_settings ASG
         ON U.id = ASG.users_id
     WHERE AI.email_address = p_email_address;
+END$$
+
+DROP PROCEDURE IF EXISTS `InsertAssignment`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `InsertAssignment` (IN `p_users_id` INT, IN `p_assignment_date` DATETIME, IN `p_assignement_note` TEXT, IN `p_status_id` INT, IN `p_claims_number` VARCHAR(100))   BEGIN
+    IF NOT EXISTS (SELECT 1
+                   FROM   user_claim_db.claims
+                   WHERE  number = p_claims_number) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Réclamation introuvable (claims_id).';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1
+                   FROM   user_claim_db.users
+                   WHERE  id = p_users_id) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Utilisateur introuvable (users_id).';
+    END IF;
+    INSERT INTO user_claim_db.assignment (
+        users_id,
+        assignment_date,
+        assignement_note,
+        status_id,
+        claims_number
+    ) VALUES (
+        p_users_id,
+        p_assignment_date,
+        p_assignement_note,
+        p_status_id,
+        p_claims_number
+    );
+
+    UPDATE user_claim_db.claims
+    SET    affected = 1
+    WHERE  number   = p_claims_number;   -- ou id = p_claims_id selon votre clé
+END$$
+
+DROP PROCEDURE IF EXISTS `UpdateAdminSettings`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `UpdateAdminSettings` (IN `p_email_address` VARCHAR(255), IN `p_primary_contact_name` VARCHAR(100), IN `p_primary_contact_post` VARCHAR(100), IN `p_notification` BOOLEAN)   BEGIN
+    DECLARE v_users_id INT;
+
+    -- Récupérer le users_id
+    SELECT users_id INTO v_users_id
+    FROM user_claim_db.account_informations
+    WHERE email_address = p_email_address
+    LIMIT 1;
+
+    IF v_users_id IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Email introuvable.';
+    END IF;
+
+    -- Mise à jour
+    UPDATE user_claim_db.administrative_settings
+    SET primary_contact_name = p_primary_contact_name,
+        primary_contact_post = p_primary_contact_post,
+        notification = p_notification,
+        updated_at = NOW()
+    WHERE users_id = v_users_id;
+    
+     -- Vérification
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Aucune mise à jour effectuée. Email introuvable ou site déjà à jour.';
+    ELSE
+        SELECT 'Mise à jour réussie' AS message;
+    END IF;
+END$$
+
+DROP PROCEDURE IF EXISTS `UpdateAssignment`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `UpdateAssignment` (IN `p_users_id` INT, IN `p_assignment_date` DATETIME, IN `p_assignement_note` TEXT, IN `p_status_id` INT, IN `p_claims_number` VARCHAR(100))   BEGIN
+    -- Vérifier que l'enregistrement existe
+    IF NOT EXISTS (
+        SELECT 1 FROM user_claim_db.assignment WHERE claims_number = p_claims_number
+    ) THEN 
+        SELECT 'Numero de claim introuvable (claims_number).' AS message;
+    END IF;
+
+
+    UPDATE user_claim_db.assignment
+    SET
+	claims_number = p_claims_number,
+        users_id = p_users_id,
+        assignment_date = NOW(),
+        assignement_note = p_assignement_note,
+        status_id = p_status_id
+    WHERE claims_number = p_claims_number 
+    AND users_id = p_users_id;
+
+END$$
+
+DROP PROCEDURE IF EXISTS `UpdateUserPassword`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `UpdateUserPassword` (IN `p_email_address` VARCHAR(255), IN `p_new_password` VARCHAR(250))   BEGIN
+    UPDATE user_claim_db.account_informations
+    SET password = p_new_password
+    WHERE email_address = p_email_address;
+   
+   -- Vérification
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Aucune mise à jour effectuée. Email introuvable ou site déjà à jour.';
+    ELSE
+        SELECT 'Mise à jour mot de passe réussie' AS message;
+    END IF;
+END$$
+
+DROP PROCEDURE IF EXISTS `UpdateUserWebsite`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `UpdateUserWebsite` (IN `p_email_address` VARCHAR(255), IN `p_new_website` VARCHAR(255))   BEGIN
+    -- Mise à jour du champ website
+    UPDATE user_claim_db.account_informations
+    SET website = p_new_website
+    WHERE email_address = p_email_address;
+
+    -- Vérification
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Aucune mise à jour effectuée. Email introuvable ou site déjà à jour.';
+    ELSE
+        SELECT 'Mise à jour site web réussie' AS message;
+    END IF;
 END$$
 
 DELIMITER ;
@@ -231,6 +449,7 @@ CREATE TABLE IF NOT EXISTS `account_informations` (
   `email_address` varchar(255) NOT NULL,
   `password` varchar(250) DEFAULT NULL,
   `website` varchar(150) DEFAULT NULL,
+  `backup_email` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email_address_UNIQUE` (`email_address`),
   UNIQUE KEY `users_id_UNIQUE` (`users_id`)
@@ -240,14 +459,14 @@ CREATE TABLE IF NOT EXISTS `account_informations` (
 -- Dumping data for table `account_informations`
 --
 
-INSERT INTO `account_informations` (`id`, `users_id`, `business_name`, `business_registration_number`, `business_address`, `city`, `postal_code`, `phone_number`, `email_address`, `password`, `website`) VALUES
-(1, 1, 'Brondon', '48 AG 23', 'Squard Orchard', 'Quatre Bornes', '7000', '56589857', 'tojo@gmail.com', '123456', 'www.tojo.com'),
-(2, 2, 'Christofer', '1 JN 24', 'La Louis', 'Quatre Bornes', '7120', '57896532', 'rene@gmail.com', '123456', 'www.rene.com'),
-(3, 3, 'Kierra', '94 NOV 06', 'Moka', 'Saint Pierre', '7520', '54789512', 'raharison@gmail.com', '123456', 'www.raharison.com'),
-(4, 4, 'Surveyor 2', 'Surveyor 2', 'addr Surveyor 2', 'Quatre bornes', '7200', '55678923', 'surveyor2@gmail.com', '123456', 'www.surveyor.com'),
-(5, 5, 'Surveyor 3', 'Surveyor 2', 'Addr Surveyor 2', 'Quatre Bornes', '7500', '55897899', 'surveyor3@gmail.com', '123456', 'www.surveyor3.com'),
-(6, 6, 'Garage 1', 'Garage 1', 'Addr Garage 1', 'Quatre bornes', '7200', '45677444', 'garage2@gmail.com', '123456', 'www.garage2.com'),
-(7, 7, 'Spare Part 2', 'Spare Part 2', 'Addr Spare Part 2', 'Quatre bornes', '7200', '34667777', 'sparepart@gmail.com', '123456', 'www.sparepart2.com');
+INSERT INTO `account_informations` (`id`, `users_id`, `business_name`, `business_registration_number`, `business_address`, `city`, `postal_code`, `phone_number`, `email_address`, `password`, `website`, `backup_email`) VALUES
+(1, 1, 'Brondon', '48 AG 23', 'Squard Orchard', 'Quatre Bornes', '7000', '56589857', 'tojo@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.test5.com', ''),
+(2, 2, 'Christofer', '1 JN 24', 'La Louis', 'Quatre Bornes', '7120', '57896532', 'rene@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.rene.com', ''),
+(3, 3, 'Kierra', '94 NOV 06', 'Moka', 'Saint Pierre', '7520', '54789512', 'raharison@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.raharison.com', ''),
+(4, 4, 'Surveyor 2', 'Surveyor 2', 'addr Surveyor 2', 'Quatre bornes', '7200', '55678923', 'surveyor2@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.surveyor.com', ''),
+(5, 5, 'Surveyor 3', 'Surveyor 2', 'Addr Surveyor 2', 'Quatre Bornes', '7500', '55897899', 'surveyor3@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.surveyor3.com', ''),
+(6, 6, 'Garage 1', 'Garage 1', 'Addr Garage 1', 'Quatre bornes', '7200', '45677444', 'garage2@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.garage2.com', ''),
+(7, 7, 'Spare Part 2', 'Spare Part 2', 'Addr Spare Part 2', 'Quatre bornes', '7200', '34667777', 'sparepart@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.sparepart2.com', '');
 
 -- --------------------------------------------------------
 
@@ -266,7 +485,14 @@ CREATE TABLE IF NOT EXISTS `administrative_settings` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `users_id_UNIQUE` (`users_id`),
   KEY `fk_administrative_settings_users1_idx` (`users_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Dumping data for table `administrative_settings`
+--
+
+INSERT INTO `administrative_settings` (`id`, `users_id`, `primary_contact_name`, `primary_contact_post`, `notification`, `updated_at`) VALUES
+(1, 1, 'Test contact 77', 'Test contact 55', '0', '2025-06-27 09:50:26');
 
 -- --------------------------------------------------------
 
@@ -291,13 +517,11 @@ CREATE TABLE IF NOT EXISTS `admin_settings_communications` (
 
 DROP TABLE IF EXISTS `assignment`;
 CREATE TABLE IF NOT EXISTS `assignment` (
-  `claims_id` int NOT NULL,
+  `claims_number` varchar(100) NOT NULL,
   `users_id` int NOT NULL,
   `assignment_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `assignement_note` text,
   `status_id` int NOT NULL,
-  PRIMARY KEY (`claims_id`),
-  KEY `fk_assignment_claims1_idx` (`claims_id`),
   KEY `fk_assignment_status1_idx` (`status_id`),
   KEY `fk_assignment_users1` (`users_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
@@ -306,9 +530,10 @@ CREATE TABLE IF NOT EXISTS `assignment` (
 -- Dumping data for table `assignment`
 --
 
-INSERT INTO `assignment` (`claims_id`, `users_id`, `assignment_date`, `assignement_note`, `status_id`) VALUES
-(1, 1, '2025-06-23 09:24:20', 'Test dev', 1),
-(2, 1, '2025-06-23 09:24:20', 'Test encore dev', 4);
+INSERT INTO `assignment` (`claims_number`, `users_id`, `assignment_date`, `assignement_note`, `status_id`) VALUES
+('M0119921', 1, '2025-07-04 11:03:40', NULL, 2),
+('M0119923', 5, '2025-07-03 20:00:00', 'test', 1),
+('M0119921', 6, '2025-07-03 20:00:00', 'Test affectation garage 1', 1);
 
 -- --------------------------------------------------------
 
@@ -330,16 +555,18 @@ CREATE TABLE IF NOT EXISTS `claims` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`),
   KEY `fk_claims_status1_idx` (`status_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Dumping data for table `claims`
 --
 
 INSERT INTO `claims` (`id`, `received_date`, `number`, `name`, `registration_number`, `ageing`, `phone`, `affected`, `status_id`) VALUES
-(1, '2025-06-21', 'M0119921', 'Brandon Philipps', '9559 AG 23', 48, '55487956', 0, 1),
-(2, '2025-06-22', 'M0119922', 'Christofer Curtis', '1 JN 24', 24, '54789632', 0, 1),
-(3, '2025-06-23', 'M0119923', 'Kierra', '95 ZN 15', 18, '58796301', 0, 1);
+(1, '2025-06-29', 'M0119921', 'Brandon Philipps', '9559 AG 23', 120, '55487956', 1, 1),
+(2, '2025-06-30', 'M0119922', 'Christofer Curtis', '1 JN 24', 96, '54789632', 0, 1),
+(3, '2025-06-01', 'M0119923', 'Kierra', '95 ZN 15', 72, '58796301', 1, 1),
+(4, '2025-07-02', 'M0119924', 'Test dev 1', '1525 ZN 45', 48, '48503895', 0, 1),
+(5, '2025-07-03', 'M0119925', 'test dev 3', '1895 JN 24', 24, '55879631', 0, 1);
 
 -- --------------------------------------------------------
 
@@ -419,7 +646,7 @@ CREATE TABLE IF NOT EXISTS `status` (
   `status_name` varchar(45) DEFAULT NULL,
   `description` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Dumping data for table `status`
@@ -429,7 +656,8 @@ INSERT INTO `status` (`id`, `status_code`, `status_name`, `description`) VALUES
 (1, 'new', 'New', 'Première statut des claims après affectatin'),
 (2, 'draft', 'Draft', 'Status pendant intervention d\'un utilisateur'),
 (3, 'in_progress', 'In Progress', 'Status après submit des formulaires'),
-(4, 'completed', 'Completed', 'Status quand le paiement est effectué');
+(4, 'completed', 'Completed', 'Status quand le paiement est effectué'),
+(5, 'rejected', 'Rejected', 'Statut pour rejecter un claim');
 
 -- --------------------------------------------------------
 
@@ -516,7 +744,6 @@ ALTER TABLE `admin_settings_communications`
 -- Constraints for table `assignment`
 --
 ALTER TABLE `assignment`
-  ADD CONSTRAINT `fk_assignment_claims1` FOREIGN KEY (`claims_id`) REFERENCES `claims` (`id`),
   ADD CONSTRAINT `fk_assignment_status1` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`),
   ADD CONSTRAINT `fk_assignment_users1` FOREIGN KEY (`users_id`) REFERENCES `users` (`id`);
 
