@@ -11,7 +11,8 @@ security:
                 property: emailAddress  # Doit matcher le nom exact de la propriété
                 manager_name: claim_user_db
 
-    firewalls:
+    # le firewall gère la sécurisation    
+    firewalls: 
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
@@ -32,9 +33,15 @@ security:
         api:
             pattern: ^/api
             stateless: true
-            jwt: ~
             provider: app_user_provider
+            entry_point: jwt
+            jwt: ~
+            refresh_jwt:
+                check_path: /api/token/refresh
 
+    # l'access_control détermine les permissions d'accès aus URLs
     access_control:
-        - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/auth/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/token/refresh, roles: PUBLIC_ACCESS }
+        # toutes les routes sous /api demandent un token valide (access token) pour être accessibles
         - { path: ^/api,       roles: IS_AUTHENTICATED_FULLY }

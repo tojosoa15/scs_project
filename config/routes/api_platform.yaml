@@ -5,3 +5,6 @@ api_platform:
 
 api_login_check:
     path: /api/auth/login
+
+api_token_refresh:
+    path: /api/token/refresh
