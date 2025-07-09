@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\Post;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface; 
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 
 /**
@@ -117,6 +118,18 @@ class AccountInformations implements UserInterface, PasswordAuthenticatedUserInt
      * })
      */
     private $users;
+
+    /**
+     * Mot de passe en clair temporaire
+     * Non stocké en base
+    */
+    #[Assert\NotBlank(message: "Le mot de passe est obligatoire.")]
+    #[Assert\Length(min: 8, minMessage: "Le mot de passe doit contenir au moins 8 caractères.")]
+    #[Assert\Regex(
+        pattern: "/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/",
+        message: "Le mot de passe doit contenir au moins une minuscule, une majuscule, un chiffre et un caractère spécial."
+    )]
+    private ?string $plainPassword = null;
 
     public function getId(): ?int
     {
@@ -261,6 +274,18 @@ class AccountInformations implements UserInterface, PasswordAuthenticatedUserInt
     {
         // Return the unique identifier for the user (e.g. email)
         return $this->emailAddress;
+    }
+
+    public function getPlainPassword(): ?string
+    {
+        return $this->plainPassword;
+    }
+
+    public function setPlainPassword(?string $plainPassword): self
+    {
+        $this->plainPassword = $plainPassword;
+
+        return $this;
     }
 
 }

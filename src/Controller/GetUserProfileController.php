@@ -2,19 +2,22 @@
 
 namespace App\Controller;
 
+use App\Entity\ClaimUser\AccountInformations;
 use App\Service\ClaimUserDbService;
 use App\Service\EmailService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 #[AsController]
 class GetUserProfileController extends AbstractController
 {
     public function __construct(
         private ClaimUserDbService $claimUserDbService,
-        private EmailService $emailService
+        private EmailService $emailService,
+        private UserPasswordHasherInterface $passwordHashe
     ) {}
 
     /**
@@ -173,10 +176,27 @@ class GetUserProfileController extends AbstractController
             );
         }
 
+        $plainPassword = $params['p_new_password'];
+
+        // Validation simple (à remplacer par validator si besoin)
+        if (strlen($plainPassword) < 8 || !preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/', $plainPassword)) {
+            return new JsonResponse(
+                ['error' => 'Mot de passe invalide. Il doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial.'],
+                JsonResponse::HTTP_BAD_REQUEST
+            );
+        }
+
+        // Crée un user temporaire (obligatoire pour le hashPassword)
+        $user = new AccountInformations();
+        $user->setPlainPassword($plainPassword);
+
+        // Hashe le mot de passe
+        $hashedPassword = $this->passwordHashe->hashPassword($user, $plainPassword);
+
         try {
             $results = $this->claimUserDbService->callUpdateUserPassword([
                 'p_email_address' => $params['p_email_address'],
-                'p_new_password'  => $params['p_new_password']
+                'p_new_password'  => $hashedPassword
             ]);
 
             return new JsonResponse([
