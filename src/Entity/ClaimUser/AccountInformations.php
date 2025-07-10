@@ -17,24 +17,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Table(name="account_informations", uniqueConstraints={@ORM\UniqueConstraint(name="email_address_UNIQUE", columns={"email_address"}), @ORM\UniqueConstraint(name="users_id_UNIQUE", columns={"users_id"})})
  * @ORM\Entity
  */
-// #[ApiResource(
-//     operations: [
-//         // new Get(),
-//         // new Post(security: "is_granted('ROLE_ADMIN')"),
-//         // denormalizationContext: ['groups' => ['account_information:write']]
-//         new Post(
-//             uriTemplate: '/api/login',
-//             controller: AuthController::class. '::login',
-//             // parameters: [ 
-//             //     'p_email_address'   => new QueryParameter(),
-//             //     'p_password'        => new QueryParameter()
-//             // ]
-//         )
-//     ],
-//     // normalizationContext: ['groups' => ['account_information:read']],
-// )]
-
-
 class AccountInformations implements UserInterface, PasswordAuthenticatedUserInterface
 {
     /**

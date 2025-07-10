@@ -12,8 +12,9 @@ class CustomAuthenticationFailureHandler implements AuthenticationFailureHandler
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): JsonResponse
     {
         return new JsonResponse([
-            'code' => 400,
-            'message' => 'Identifiants invalides.',
+            'status'    => 'error',
+            'code'      => 400,
+            'message'   => 'Identifiants invalides.',
         ], 400);
     }
 }

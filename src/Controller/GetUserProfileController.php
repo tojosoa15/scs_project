@@ -219,7 +219,7 @@ class GetUserProfileController extends AbstractController
      * @return JsonResponse
      */
     public function forgotPassword(Request $request) : JsonResponse {
-        $params = $request->query->all();
+        $params = (array)json_decode($request->getContent(), true);
 
         
         if (empty($params['p_email_address'])) {

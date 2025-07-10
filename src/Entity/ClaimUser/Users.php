@@ -57,7 +57,7 @@ use Doctrine\ORM\Mapping as ORM;
                 'p_new_password'    => new QueryParameter(),
             ]
         ),
-        new Get(
+        new Post(
             uriTemplate: '/api/auth/forgot-password',
             controller: GetUserProfileController::class. '::forgotPassword',
             parameters: [ 

@@ -16,7 +16,7 @@ security:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
-
+            
         login:
             pattern: ^/api/auth/login 
             stateless: true
@@ -30,6 +30,13 @@ security:
                 failure_handler: App\Security\CustomAuthenticationFailureHandler
             provider: app_user_provider
 
+
+        public_auth:
+            pattern: ^/api/auth
+            stateless: true
+            security: false 
+
+        
         api:
             pattern: ^/api
             stateless: true
@@ -41,7 +48,9 @@ security:
 
     # l'access_control détermine les permissions d'accès aus URLs
     access_control:
-        - { path: ^/api/auth/login, roles: PUBLIC_ACCESS }
+        # Accès libre à toutes les routes d'authentification (login, register, forgot-password, etc.)
+        - { path: ^/api/auth, roles: PUBLIC_ACCESS }
+        # Accès libre au refresh token
         - { path: ^/api/token/refresh, roles: PUBLIC_ACCESS }
-        # toutes les routes sous /api demandent un token valide (access token) pour être accessibles
-        - { path: ^/api,       roles: IS_AUTHENTICATED_FULLY }
+        # Le reste de l'API requiert un token JWT valide
+        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
