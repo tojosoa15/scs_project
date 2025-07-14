@@ -10,14 +10,19 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 
 #[AsController]
 class GetUserProfileController extends AbstractController
 {
+    
+    
     public function __construct(
         private ClaimUserDbService $claimUserDbService,
         private EmailService $emailService,
-        private UserPasswordHasherInterface $passwordHashe
+        private UserPasswordHasherInterface $passwordHashe,
+        private JWTTokenManagerInterface $jwtManager
     ) {}
 
     /**
@@ -220,45 +225,104 @@ class GetUserProfileController extends AbstractController
      */
     public function forgotPassword(Request $request) : JsonResponse {
         $params = (array)json_decode($request->getContent(), true);
-
+        $email = $params['email'] ?? null;
         
-        if (empty($params['p_email_address'])) {
+        if (empty($email)) {
             return new JsonResponse(
-                ['error' => 'p_email_address parameter is required'],
+                ['error' => 'Email parameter is required'],
                 JsonResponse::HTTP_BAD_REQUEST
             );
         }
         
         try {
             $data = $this->claimUserDbService->callForgotPassword([
-                'p_email_address' => $params['p_email_address']
+                'p_email_address' => $email
             ]);
 
             // Email n'existe pas
-            if (empty($data[0]['OK'])) {
-                return new JsonResponse(['error' => 'Email introuvable.'], 
-                    JsonResponse::HTTP_NOT_FOUND
-                );
+            if (empty($data) || empty($data[0]['email_address'])) {
+                return new JsonResponse(['error' => 'Email introuvable.'], JsonResponse::HTTP_NOT_FOUND);
             }
 
             // Envoyer email de réinitialisation de mot de passe
-            if (!empty($data[0]['OK']) && $data[0]['OK'] === 'OK') {
                 // Générer un token (simple exemple)
-                $token = bin2hex(random_bytes(32));
+                // $token = bin2hex(random_bytes(32));
+                // Création d'un utilisateur temporaire compatible JWT
+            $user = new class(
+                $data[0]['email_address'],
+                $data[0]['business_name'],
+            ) implements UserInterface {
+                private string $email;
+                private string $businessName;
 
-                // Génère le lien
-                $resetLink = sprintf('http://localhost:8000/api/auth/reset-password/%s', $token);
+                public function __construct(
+                    string $email
+                    , string $businessName
+                ) {
+                    $this->email = $email;
+                    $this->businessName = $businessName;
+                }
 
-                $this->emailService->sendResetPasswordEmail($params['p_email_address'], $resetLink);
+                public function getUserIdentifier(): string {
+                    return $this->email;
+                }
+
+                public function getRoles(): array {
+                    return ['test'];
+                }
+
+                public function getBusinessName(): ?string
+                {
+                    return $this->businessName;
+                }
+
+                public function getPassword(): ?string {
+                    return null;
+                }
+
+                public function getSalt(): ?string {
+                    return null;
+                }
+
+                public function getUsername(): string {
+                    return $this->email;
+                }
+
+                public function eraseCredentials(): void {}
+            };
                 
+            // // Génére le token JWT avec expiration 15 min
+            $payload = [
+                // 'email' => $email,
+                'exp' => (new \DateTime('+15 minutes'))->getTimestamp()
+            ];
+    
+            $token = $this->jwtManager->createFromPayload($user, $payload);
 
-                return new JsonResponse([
-                    'status'    => 'success',
-                    'message' => 'Email de réinitialisation envoyé.'
-                ], JsonResponse::HTTP_OK);
-            } 
+            return new JsonResponse([
+                'status'    => 'success',
+                'message' => $token
+            ], JsonResponse::HTTP_OK);
 
+            // Lien avec token
+            // $resetLink = sprintf('http://localhost:8000/api/auth/reset-password?token=%s', $token);
 
+            return new JsonResponse([
+                'status'    => 'success',
+                'message' => $resetLink
+            ], JsonResponse::HTTP_OK);
+
+            // // Génère le lien
+            // $resetLink = sprintf('http://localhost:8000/api/auth/reset-password?email=%s/%s', $email, $token);
+
+            $this->emailService->sendResetPasswordEmail($email, $resetLink);
+            
+
+            return new JsonResponse([
+                'status'    => 'success',
+                'message' => 'Email de réinitialisation envoyé.'
+            ], JsonResponse::HTTP_OK);
+        
         } catch (\Exception $e) {
             return new JsonResponse(
                 ['error' => $e->getMessage()],

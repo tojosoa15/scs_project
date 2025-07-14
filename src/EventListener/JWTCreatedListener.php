@@ -3,25 +3,32 @@
 namespace App\EventListener;
 
 use Lexik\Bundle\JWTAuthenticationBundle\Event\JWTCreatedEvent;
-use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class JWTCreatedListener
+class JWTCreatedListener implements EventSubscriberInterface
 {
+    public static function getSubscribedEvents(): array
+    {
+        return [
+            'lexik_jwt_authentication.on_jwt_created' => 'onJWTCreated',
+        ];
+    }
+
     public function onJWTCreated(JWTCreatedEvent $event): void
     {
-        /** @var \App\Entity\ClaimUser\AccountInformations $user */
         $user = $event->getUser();
 
-        if (!$user instanceof UserInterface) {
+        if (!$user instanceof \App\Entity\AccountInformation) {
             return;
         }
 
         $payload = $event->getData();
 
-        // Ajout d'infos personnalisées
-        $payload['id']              = $user->getId();
-        $payload['roles']           = $user->getRoles(); // Retourne les rôles réels
-        $payload['business_name']   = $user->getBusinessName();
+        // Ajouter des champs personnalisés
+        $payload['id'] = $user->getId();
+        $payload['username'] = $user->getEmail();
+        $payload['business_name'] = $user->getBusinessName();
+        $payload['roles'] = $user->getRoles();
 
         $event->setData($payload);
     }
