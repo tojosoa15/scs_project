@@ -24,7 +24,7 @@ use Doctrine\ORM\Mapping as ORM;
         new Get(
             uriTemplate: '/api/profile_user',
             controller: GetUserProfileController::class. '::__invoke',
-            parameters: [ 'p_email_address' => new QueryParameter()]
+            parameters: [ 'email' => new QueryParameter()]
         ), 
         new Get(
             uriTemplate: '/api/user_by_role',
@@ -35,26 +35,26 @@ use Doctrine\ORM\Mapping as ORM;
             uriTemplate: '/api/update/user_website',
             controller: UpdateUserWebsiteController::class,
             parameters: [ 
-                'p_email_address'   => new QueryParameter(),  
-                'p_new_website'     => new QueryParameter()
+                'email'   => new QueryParameter(),  
+                'newWebsite'     => new QueryParameter()
             ]
         ),
         new Patch(
             uriTemplate: '/api/update/admin_setting',
             controller: GetUserProfileController::class. '::updateAdminSetting',
             parameters: [ 
-                'p_email_address'           => new QueryParameter(),  
-                'p_primary_contact_name'    => new QueryParameter(),
-                'p_primary_contact_post'    => new QueryParameter(),
-                'p_notification'            => new QueryParameter(),
+                'email'                 => new QueryParameter(),  
+                'primaryContactName'    => new QueryParameter(),
+                'primaryContactPost'    => new QueryParameter(),
+                'notification'          => new QueryParameter(),
             ]
         ),
         new Patch(
             uriTemplate: '/api/auth/reset-password',
             controller: GetUserProfileController::class. '::updateUserPassword',
             parameters: [ 
-                'p_email_address'   => new QueryParameter(),  
-                'p_new_password'    => new QueryParameter(),
+                'email'   => new QueryParameter(),  
+                'newPassword'    => new QueryParameter(),
             ]
         ),
         new Post(

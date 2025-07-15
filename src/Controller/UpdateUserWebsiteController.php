@@ -17,19 +17,20 @@ class UpdateUserWebsiteController extends AbstractController
     {
         $resFormat = [];
 
-        $params = $request->query->all();
+        // $params = $request->query->all();
+        $params = (array)json_decode($request->getContent(), true);
 
-        if (empty($params['p_email_address']) && empty($params['p_new_website'])) {
+        if (empty($params['email']) && empty($params['newWebsite'])) {
             return new JsonResponse(
-                ['error' => 'p_email_address and  parameter are required'],
+                ['error' => 'email and newWebsite  parameters are required'],
                 JsonResponse::HTTP_BAD_REQUEST
             );
         }
 
         try {
             $results = $this->claimUserDbService->callUpdateUserWebsite([
-                'p_email_address'   => $params['p_email_address'],
-                'p_new_website'     => $params['p_new_website']
+                'p_email_address'   => $params['email'],
+                'p_new_website'     => $params['newWebsite']
             ]);
             
             return new JsonResponse([

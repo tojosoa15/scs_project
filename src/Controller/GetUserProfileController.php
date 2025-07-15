@@ -36,7 +36,7 @@ class GetUserProfileController extends AbstractController
         $formatResult   = [];
         $params         = $request->query->all();
 
-        if (empty($params['p_email_address'])) {
+        if (empty($params['email'])) {
             return new JsonResponse(
                 ['error' => 'Email parameter is required'],
                 JsonResponse::HTTP_BAD_REQUEST
@@ -45,7 +45,7 @@ class GetUserProfileController extends AbstractController
 
         try {
             $results = $this->claimUserDbService->callGetUserProfile([
-                'p_email_address' => $params['p_email_address']
+                'p_email_address' => $params['email']
             ]);
 
             foreach ($results as $res) {
@@ -134,34 +134,35 @@ class GetUserProfileController extends AbstractController
      *  @return JsonResponse
      */
     public function updateAdminSetting(Request $request) : JsonResponse {
-        $params = $request->query->all();
+        // $params = $request->query->all();
+        $params = (array)json_decode($request->getContent(), true);
 
-      if (empty($params['p_email_address'])) {
-          return new JsonResponse(
-              ['error' => 'p_email_address parameter is required'],
-              JsonResponse::HTTP_BAD_REQUEST
-          );
-      }
+        if (empty($params['email'])) {
+            return new JsonResponse(
+                ['error' => 'email parameter is required'],
+                JsonResponse::HTTP_BAD_REQUEST
+            );
+        }
 
-      try {
-            $results = $this->claimUserDbService->callUpdateAdminSetting([
-                'p_email_address'         => $params['p_email_address'],
-                'p_primary_contact_name'  => $params['p_primary_contact_name'],
-                'p_primary_contact_post'  => $params['p_primary_contact_post'],
-                'p_notification'          => $params['p_notification'],
-            ]);
+        try {
+                $results = $this->claimUserDbService->callUpdateAdminSetting([
+                    'p_email_address'         => $params['email'],
+                    'p_primary_contact_name'  => $params['primaryContactName'],
+                    'p_primary_contact_post'  => $params['primaryContactPost'],
+                    'p_notification'          => $params['notification'],
+                ]);
 
-            return new JsonResponse([
-                'status'    => 'success',
-                'data'      => $results
-            ], JsonResponse::HTTP_OK);
+                return new JsonResponse([
+                    'status'    => 'success',
+                    'data'      => $results
+                ], JsonResponse::HTTP_OK);
 
-      } catch (\Exception $e) {
-          return new JsonResponse(
-              ['error' => $e->getMessage()],
-              JsonResponse::HTTP_INTERNAL_SERVER_ERROR
-          );
-      }
+        } catch (\Exception $e) {
+            return new JsonResponse(
+                ['error' => $e->getMessage()],
+                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
     /**
@@ -174,14 +175,14 @@ class GetUserProfileController extends AbstractController
         // $params = $request->query->all();
         $params = (array)json_decode($request->getContent(), true);
 
-        if (empty($params['p_email_address'])) {
+        if (empty($params['email'])) {
             return new JsonResponse(
-                ['error' => 'p_email_address parameter is required'],
+                ['error' => 'email parameter is required'],
                 JsonResponse::HTTP_BAD_REQUEST
             );
         }
 
-        $plainPassword = $params['p_new_password'];
+        $plainPassword = $params['newPassword'];
 
         // Validation simple (à remplacer par validator si besoin)
         if (strlen($plainPassword) < 8 || !preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/', $plainPassword)) {
@@ -200,7 +201,7 @@ class GetUserProfileController extends AbstractController
 
         try {
             $results = $this->claimUserDbService->callUpdateUserPassword([
-                'p_email_address' => $params['p_email_address'],
+                'p_email_address' => $params['email'],
                 'p_new_password'  => $hashedPassword
             ]);
 
@@ -299,18 +300,18 @@ class GetUserProfileController extends AbstractController
     
             $token = $this->jwtManager->createFromPayload($user, $payload);
 
-            return new JsonResponse([
-                'status'    => 'success',
-                'message' => $token
-            ], JsonResponse::HTTP_OK);
+            // return new JsonResponse([
+            //     'status'    => 'success',
+            //     'message' => $token
+            // ], JsonResponse::HTTP_OK);
 
             // Lien avec token
-            // $resetLink = sprintf('http://localhost:8000/api/auth/reset-password?token=%s', $token);
+            $resetLink = sprintf('http://localhost:8000/api/auth/reset-password?token=%s', $token);
 
-            return new JsonResponse([
-                'status'    => 'success',
-                'message' => $resetLink
-            ], JsonResponse::HTTP_OK);
+            // return new JsonResponse([
+            //     'status'    => 'success',
+            //     'message' => $resetLink
+            // ], JsonResponse::HTTP_OK);
 
             // // Génère le lien
             // $resetLink = sprintf('http://localhost:8000/api/auth/reset-password?email=%s/%s', $email, $token);
