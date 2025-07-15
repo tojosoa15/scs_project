@@ -12,6 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[AsController]
 class GetUserProfileController extends AbstractController
@@ -224,7 +225,7 @@ class GetUserProfileController extends AbstractController
      * @param Request $request
      * @return JsonResponse
      */
-    public function forgotPassword(Request $request) : JsonResponse {
+    public function forgotPassword(Request $request, UrlGeneratorInterface $urlGenerator) : JsonResponse {
         $params = (array)json_decode($request->getContent(), true);
         $email = $params['email'] ?? null;
         
@@ -306,17 +307,18 @@ class GetUserProfileController extends AbstractController
             // ], JsonResponse::HTTP_OK);
 
             // Lien avec token
-            $resetLink = sprintf('http://localhost:8000/api/auth/reset-password?token=%s', $token);
+            $url = $urlGenerator->generate(
+                '_api_/api/auth/forgot-password_post',
+                ['token' => $token],
+                UrlGeneratorInterface::ABSOLUTE_URL
+            );
 
             // return new JsonResponse([
             //     'status'    => 'success',
-            //     'message' => $resetLink
+            //     'message'   => $url
             // ], JsonResponse::HTTP_OK);
 
-            // // Génère le lien
-            // $resetLink = sprintf('http://localhost:8000/api/auth/reset-password?email=%s/%s', $email, $token);
-
-            $this->emailService->sendResetPasswordEmail($email, $resetLink);
+            $this->emailService->sendResetPasswordEmail($email, $url);
             
 
             return new JsonResponse([
