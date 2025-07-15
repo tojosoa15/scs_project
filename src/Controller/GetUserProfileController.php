@@ -307,18 +307,24 @@ class GetUserProfileController extends AbstractController
             // ], JsonResponse::HTTP_OK);
 
             // Lien avec token
-            $url = $urlGenerator->generate(
-                '_api_/api/auth/forgot-password_post',
-                ['token' => $token],
-                UrlGeneratorInterface::ABSOLUTE_URL
-            );
+            // $url = $urlGenerator->generate(
+            //     'api_auth_reset_password', // 👈 le nom que tu as défini
+            //     ['token' => $token],
+            //     UrlGeneratorInterface::ABSOLUTE_URL
+            // );
+            $url = $request->headers->get('Origin');
+
+            $resetLink = sprintf($url . '/auth/reset-password?token=%s', $token);
 
             // return new JsonResponse([
             //     'status'    => 'success',
-            //     'message'   => $url
+            //     'message' => $resetLink
             // ], JsonResponse::HTTP_OK);
 
-            $this->emailService->sendResetPasswordEmail($email, $url);
+            // // Génère le lien
+            // $resetLink = sprintf('http://localhost:8000/api/auth/reset-password?email=%s/%s', $email, $token);
+
+            $this->emailService->sendResetPasswordEmail($email, $resetLink);
             
 
             return new JsonResponse([
