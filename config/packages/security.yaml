@@ -43,8 +43,8 @@ security:
             provider: app_user_provider
             entry_point: jwt
             jwt: ~
-            # refresh_jwt:
-            #     check_path: /api/token/refresh
+            refresh_jwt:
+                check_path: /api/token/refresh
 
     # l'access_control détermine les permissions d'accès aus URLs
     access_control:

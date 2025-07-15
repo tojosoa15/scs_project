@@ -49,19 +49,29 @@ use Doctrine\ORM\Mapping as ORM;
                 'notification'          => new QueryParameter(),
             ]
         ),
+        // forgot-password
+        new Post(
+            uriTemplate: '/api/auth/forgot-password',
+            controller: GetUserProfileController::class. '::forgotPassword',
+            parameters: [ 
+                'email'   => new QueryParameter()
+            ]
+        ),
+        // Verify-reset-token
+        new Get(
+            uriTemplate: '/api/auth/verify-reset-password',
+            controller: GetUserProfileController::class. '::verifyResetPassword',
+            parameters: [ 
+                'token'   => new QueryParameter()
+            ]
+        ),
+        // Reset-password
         new Patch(
             uriTemplate: '/api/auth/reset-password',
             controller: GetUserProfileController::class. '::updateUserPassword',
             parameters: [ 
                 'email'   => new QueryParameter(),  
                 'newPassword'    => new QueryParameter(),
-            ]
-        ),
-        new Post(
-            uriTemplate: '/api/auth/forgot-password',
-            controller: GetUserProfileController::class. '::forgotPassword',
-            parameters: [ 
-                'email'   => new QueryParameter()
             ]
         ),
         new Post(

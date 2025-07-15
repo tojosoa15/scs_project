@@ -47,3 +47,8 @@ services:
     App\Security\CustomAuthenticationSuccessHandler:
         autowire: true
         autoconfigure: true
+
+    App\Controller\Auth\TokenRefreshController:
+        autowire: true
+        autoconfigure: true
+        public: true

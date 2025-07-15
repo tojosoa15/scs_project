@@ -12,18 +12,19 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTDecodeFailureException;
+use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
 
 #[AsController]
 class GetUserProfileController extends AbstractController
 {
     
-    
     public function __construct(
         private ClaimUserDbService $claimUserDbService,
         private EmailService $emailService,
         private UserPasswordHasherInterface $passwordHashe,
-        private JWTTokenManagerInterface $jwtManager
+        private JWTTokenManagerInterface $jwtManager,
+        private JWTEncoderInterface $jwtDecoder
     ) {}
 
     /**
@@ -101,7 +102,7 @@ class GetUserProfileController extends AbstractController
      * @return JsonResponse
      */
     public function getUserByRole(Request $request) : JsonResponse {
-          $params   = $request->query->all();
+        $params   = $request->query->all();
 
         if (empty($params['role_id'])) {
             return new JsonResponse(
@@ -167,7 +168,7 @@ class GetUserProfileController extends AbstractController
     }
 
     /**
-     * Mise à jour du site web de l'utilisateur
+     * Mise à jour du password de l'utilisateur
      *
      * @param Request $request
      * @return JsonResponse
@@ -225,7 +226,7 @@ class GetUserProfileController extends AbstractController
      * @param Request $request
      * @return JsonResponse
      */
-    public function forgotPassword(Request $request, UrlGeneratorInterface $urlGenerator) : JsonResponse {
+    public function forgotPassword(Request $request) : JsonResponse {
         $params = (array)json_decode($request->getContent(), true);
         $email = $params['email'] ?? null;
         
@@ -301,28 +302,9 @@ class GetUserProfileController extends AbstractController
     
             $token = $this->jwtManager->createFromPayload($user, $payload);
 
-            // return new JsonResponse([
-            //     'status'    => 'success',
-            //     'message' => $token
-            // ], JsonResponse::HTTP_OK);
-
-            // Lien avec token
-            // $url = $urlGenerator->generate(
-            //     'api_auth_reset_password', // 👈 le nom que tu as défini
-            //     ['token' => $token],
-            //     UrlGeneratorInterface::ABSOLUTE_URL
-            // );
             $url = $request->headers->get('Origin');
 
             $resetLink = sprintf($url . '/auth/reset-password?token=%s', $token);
-
-            // return new JsonResponse([
-            //     'status'    => 'success',
-            //     'message' => $resetLink
-            // ], JsonResponse::HTTP_OK);
-
-            // // Génère le lien
-            // $resetLink = sprintf('http://localhost:8000/api/auth/reset-password?email=%s/%s', $email, $token);
 
             $this->emailService->sendResetPasswordEmail($email, $resetLink);
             
@@ -372,6 +354,45 @@ class GetUserProfileController extends AbstractController
                 ['error' => $e->getMessage()],
                 JsonResponse::HTTP_INTERNAL_SERVER_ERROR
             );
+        }
+    }
+
+    /**
+     * Verifier expiratoin token avant reset password
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function verifyResetPassword(Request $request) : JsonResponse {
+        $token = $request->query->get('token');
+
+        if (!$token) {
+            return new JsonResponse(['error' => 'Token manquant.'], 400);
+        }
+
+        try {
+            $data = $this->jwtDecoder->decode($token);
+
+            // return new JsonResponse(['status' => 'ok', 'email' => $data]);
+
+            // Vérification expiration manuelle (facultatif, déjà gérée en interne)
+            if (isset($data['exp']) && time() > $data['exp']) {
+                return new JsonResponse(['error' => 'Token expiré.'], 403);
+            }
+
+            // À ce stade, le token est OK, tu peux continuer...
+            // $email = $data['email'];
+            // $userId = $data['id'];
+            // $businessName = $data['business_name'];
+
+            return new JsonResponse([
+                'status' => 'ok', 
+                'code' => 200,
+                'token' => $token
+            ]);
+
+        } catch (JWTDecodeFailureException $e) {
+            return new JsonResponse(['error' => 'Token invalide.'], 401);
         }
     }
 }

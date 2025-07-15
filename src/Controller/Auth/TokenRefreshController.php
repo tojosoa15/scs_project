@@ -7,39 +7,42 @@ use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
-/**
- * @Route("/auth/refresh-token", name="custom_refresh_token", methods={"POST"})
- */
 class TokenRefreshController
 {
-    public function __invoke(
-        Request $request,
+    private EntityManagerInterface $em;
+    private JWTTokenManagerInterface $jwtManager;
+    private UserProviderInterface $userProvider;
+
+    public function __construct(
         EntityManagerInterface $em,
-        UserProviderInterface $userProvider,
-        JWTTokenManagerInterface $jwtManager
-    ): JsonResponse {
+        JWTTokenManagerInterface $jwtManager,
+        UserProviderInterface $userProvider
+    ) {
+        $this->em = $em;
+        $this->jwtManager = $jwtManager;
+        $this->userProvider = $userProvider;
+    }
+
+    public function __invoke(Request $request): JsonResponse
+    {
         $data = $request->toArray();
-        $refreshToken = $data['refresh_token'] ?? null;
+        $refreshToken = $data['refresh_tokens'] ?? null;
 
         if (!$refreshToken) {
-            return new JsonResponse(['message' => 'Missing refresh_token'], 401);
+            return new JsonResponse(['message' => 'Paramètre `refresh_tokens` manquant.'], 401);
         }
 
-        // Chercher le token en base
-        $refreshTokenObj = $em->getRepository(RefreshTokens::class)->find($refreshToken);
+        $refreshTokenObj = $this->em->getRepository(RefreshTokens::class)->find($refreshToken);
 
         if (!$refreshTokenObj || !$refreshTokenObj->isValid()) {
             return new JsonResponse(['message' => 'Invalid or expired refresh token'], 401);
         }
 
-        // Récupérer l'utilisateur associé au token
-        $user = $userProvider->loadUserByIdentifier($refreshTokenObj->getUsername());
+        $user = $this->userProvider->loadUserByIdentifier($refreshTokenObj->getUsername());
 
-        // Générer le nouveau JWT
-        $accessToken = $jwtManager->create($user);
+        $accessToken = $this->jwtManager->create($user);
 
         return new JsonResponse([
             'accessToken' => $accessToken,
