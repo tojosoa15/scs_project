@@ -40,12 +40,30 @@ class GetUserProfileController extends AbstractController
 
         if (empty($params['email'])) {
             return new JsonResponse(
-                ['error' => 'Email parameter is required'],
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_BAD_REQUEST,
+                    'message'   => 'Email parameter is required.',
+                ],
                 JsonResponse::HTTP_BAD_REQUEST
             );
         }
 
         try {
+             $data = $this->claimUserDbService->callForgotPassword([
+                'p_email_address' => $params['email']
+            ]);
+
+            // Email n'existe pas
+            if (empty($data) || empty($data[0]['email_address'])) {
+                return new JsonResponse(
+                    [
+                        'status'    => 'error',
+                        'cod'       => JsonResponse::HTTP_NOT_FOUND,
+                        'message'   => 'Email not found.'
+                    ], JsonResponse::HTTP_NOT_FOUND);
+            }
+
             $results = $this->claimUserDbService->callGetUserProfile([
                 'p_email_address' => $params['email']
             ]);
@@ -84,12 +102,18 @@ class GetUserProfileController extends AbstractController
 
             return new JsonResponse([
                 'status'    => 'success',
+                'code'      => JsonResponse::HTTP_OK,
+                'message'   => 'Successful user information.',
                 'data'      => $formatResult
             ], JsonResponse::HTTP_OK);
 
         } catch (\Exception $e) {
             return new JsonResponse(
-                ['error' => $e->getMessage(), 'message' => 'Profile retrieval failed.'],
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                    'message'   => $e->getMessage()
+                ],
                 JsonResponse::HTTP_INTERNAL_SERVER_ERROR
             );
         }
@@ -106,7 +130,11 @@ class GetUserProfileController extends AbstractController
 
         if (empty($params['role_id'])) {
             return new JsonResponse(
-                ['error' => 'Id parameter is required'],
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_BAD_REQUEST,
+                    'message'   => 'Role parameter is required.',
+                ],
                 JsonResponse::HTTP_BAD_REQUEST
             );
         }
@@ -118,12 +146,18 @@ class GetUserProfileController extends AbstractController
 
             return new JsonResponse([
                 'status'    => 'success',
+                'code'      => JsonResponse::HTTP_OK,
+                'message'   => '',
                 'data'      => $results
             ], JsonResponse::HTTP_OK);
 
         } catch (\Exception $e) {
             return new JsonResponse(
-                ['error' => $e->getMessage()],
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                    'message'   => $e->getMessage()
+                ],
                 JsonResponse::HTTP_INTERNAL_SERVER_ERROR
             );
         }
@@ -141,7 +175,11 @@ class GetUserProfileController extends AbstractController
 
         if (empty($params['email'])) {
             return new JsonResponse(
-                ['error' => 'email parameter is required'],
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_BAD_REQUEST,
+                    'message'   => 'Email parameter is required.',
+                ],
                 JsonResponse::HTTP_BAD_REQUEST
             );
         }
@@ -155,13 +193,19 @@ class GetUserProfileController extends AbstractController
                 ]);
 
                 return new JsonResponse([
-                    'status'    => 'success',
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_OK,
+                    'message'   => 'Successful Administrative settings modification.',
                     'data'      => $results
                 ], JsonResponse::HTTP_OK);
 
         } catch (\Exception $e) {
             return new JsonResponse(
-                ['error' => $e->getMessage()],
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                    'message'   => $e->getMessage()
+                ],
                 JsonResponse::HTTP_INTERNAL_SERVER_ERROR
             );
         }
@@ -179,7 +223,11 @@ class GetUserProfileController extends AbstractController
 
         if (empty($params['email'])) {
             return new JsonResponse(
-                ['error' => 'email parameter is required'],
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_BAD_REQUEST,
+                    'message'   => 'Email parameter is required'
+                ],
                 JsonResponse::HTTP_BAD_REQUEST
             );
         }
@@ -189,7 +237,11 @@ class GetUserProfileController extends AbstractController
         // Validation simple (à remplacer par validator si besoin)
         if (strlen($plainPassword) < 8 || !preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/', $plainPassword)) {
             return new JsonResponse(
-                ['error' => 'Mot de passe invalide. Il doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial.'],
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_BAD_REQUEST,
+                    'message'   => 'Your password should: Have at least 1 uppercase letter, Have at least 1 number,  .'
+                ],
                 JsonResponse::HTTP_BAD_REQUEST
             );
         }
@@ -209,12 +261,18 @@ class GetUserProfileController extends AbstractController
 
             return new JsonResponse([
                 'status'    => 'success',
+                'code'      => JsonResponse::HTTP_OK,
+                'message'   => 'Successful password change.',
                 'data'      => $results
             ], JsonResponse::HTTP_OK);
 
         } catch (\Exception $e) {
             return new JsonResponse(
-                ['error' => $e->getMessage()],
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                    'message'   => $e->getMessage()
+                ],
                 JsonResponse::HTTP_INTERNAL_SERVER_ERROR
             );
         }
@@ -232,7 +290,11 @@ class GetUserProfileController extends AbstractController
         
         if (empty($email)) {
             return new JsonResponse(
-                ['error' => 'Email parameter is required'],
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_BAD_REQUEST,
+                    'message'   => 'Email parameter is required'
+                ],
                 JsonResponse::HTTP_BAD_REQUEST
             );
         }
@@ -244,7 +306,12 @@ class GetUserProfileController extends AbstractController
 
             // Email n'existe pas
             if (empty($data) || empty($data[0]['email_address'])) {
-                return new JsonResponse(['error' => 'Email introuvable.'], JsonResponse::HTTP_NOT_FOUND);
+                return new JsonResponse(
+                    [
+                        'status'    => 'error',
+                        'cod'       => JsonResponse::HTTP_NOT_FOUND,
+                        'message'   => 'Email not found.'
+                    ], JsonResponse::HTTP_NOT_FOUND);
             }
 
             // Envoyer email de réinitialisation de mot de passe
@@ -304,19 +371,24 @@ class GetUserProfileController extends AbstractController
 
             $url = $request->headers->get('Origin');
 
-            $resetLink = sprintf($url . '/auth/reset-password?token=%s', $token);
+            $resetLink = sprintf('%s/auth/reset-password?email=%s&token=%s', $url, $email, $token);
 
             $this->emailService->sendResetPasswordEmail($email, $resetLink);
             
 
             return new JsonResponse([
                 'status'    => 'success',
-                'message' => 'Email de réinitialisation envoyé.'
+                'code'      => JsonResponse::HTTP_OK,
+                'message'   => 'Reset email sent.'
             ], JsonResponse::HTTP_OK);
         
         } catch (\Exception $e) {
             return new JsonResponse(
-                ['error' => $e->getMessage()],
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                    'message'   => $e->getMessage()
+                ],
                 JsonResponse::HTTP_INTERNAL_SERVER_ERROR
             );
         }
@@ -392,7 +464,14 @@ class GetUserProfileController extends AbstractController
             ]);
 
         } catch (JWTDecodeFailureException $e) {
-            return new JsonResponse(['error' => 'Token invalide.'], 401);
+            return new JsonResponse(
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                    'message'   => $e->getMessage()
+                ],
+                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
     }
 }

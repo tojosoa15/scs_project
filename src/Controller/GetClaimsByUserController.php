@@ -24,46 +24,59 @@ class GetClaimsByUserController extends AbstractController
     {
         $params = $request->query->all();
 
-        if (empty($params['email'])) {
-            try {
-                $claims = $this->claimUserDbService->callGetAllClaims([
-                    'page' => (int)($query['page'] ?? 1),
-                    'page_size' => (int)($query['page_size'] ?? 10),
+        // Liste des claims par utilisateurs
+        if (!empty($params['email'])) {
+              try {
+                $results = $this->claimUserDbService->callGetListByUser([
+                    'p_email'           => $params['email'],
+                    'p_status'          => $params['status'] ?? null,
+                    'p_search_name'     => $query['search_name'] ?? null,
+                    'p_sort_by'         => $query['sort_by'] ?? 'date',
+                    'p_page'            => (int)($query['page'] ?? 1),
+                    'p_page_size'       => (int)($query['page_size'] ?? 10),
+                    'p_search_num'      => $query['search_num'] ?? null,
+                    'p_search_reg_num'  => $query['search_reg_num'] ?? null,
+                    'p_search_phone'    => $query['search_phone'] ?? null
                 ]);
-                
+    
                 return new JsonResponse([
-                    'status' => 'success',
-                    'data' => $claims
+                    'status'    => 'success',
+                    'code'      => JsonResponse::HTTP_OK,
+                    'message'   => 'Successful claim list.',
+                    'data'      => $results
                 ], JsonResponse::HTTP_OK);
     
             } catch (\Exception $e) {
                 return new JsonResponse(
-                    ['error' => $e->getMessage(), 'message' => 'Claim retrieval failed.'],
+                    [
+                        'status' =>  'error',
+                        'code'  => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                        'message' => $e->getMessage()
+                    ],
                     JsonResponse::HTTP_INTERNAL_SERVER_ERROR
                 );
             }
         } else {
             try {
-                $results = $this->claimUserDbService->callGetListByUser([
-                    'email' => $params['email'],
-                    'f_status' => $params['f_status'] ?? null,
-                    'search_name' => $query['search_name'] ?? null,
-                    'sort_by' => $query['sort_by'] ?? 'date',
-                    'page' => (int)($query['page'] ?? 1),
+                $claims = $this->claimUserDbService->callGetAllClaims([
+                    'page'      => (int)($query['page'] ?? 1),
                     'page_size' => (int)($query['page_size'] ?? 10),
-                    'search_num' => $query['search_num'] ?? null,
-                    'search_reg_num' => $query['search_reg_num'] ?? null,
-                    'search_phone' => $query['search_phone'] ?? null
                 ]);
-    
+                
                 return new JsonResponse([
-                    'status' => 'success',
-                    'data' => $results
+                    'status'    => 'success',
+                    'code'      => JsonResponse::HTTP_OK,
+                    'message'   => 'Successful claim list.',
+                    'data'      => $claims
                 ], JsonResponse::HTTP_OK);
     
             } catch (\Exception $e) {
                 return new JsonResponse(
-                    ['error' => $e->getMessage(), 'message' => 'Claim retrieval failed.'],
+                    [
+                        'status'    => 'error',
+                        'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                        'message'   => $e->getMessage()
+                    ],
                     JsonResponse::HTTP_INTERNAL_SERVER_ERROR
                 );
             }

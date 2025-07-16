@@ -20,7 +20,17 @@ use Doctrine\ORM\Mapping as ORM;
         new GetCollection(
             uriTemplate: '/api/list/claims_user',
             controller: GetClaimsByUserController::class,
-            parameters: [ 'email' => new QueryParameter()],
+            parameters: [ 
+                'email'             => new QueryParameter(),
+                'status'            => new QueryParameter(),
+                'search_name'       => new QueryParameter(),
+                'sort_by'           => new QueryParameter(),
+                'page'              => new QueryParameter(),
+                'page_size'         => new QueryParameter(),
+                'search_num'        => new QueryParameter(),
+                'search_reg_num'    => new QueryParameter(),
+                'search_phone'      => new QueryParameter(),
+            ],
         )
     ]
 )]
