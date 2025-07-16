@@ -58,7 +58,7 @@ use Doctrine\ORM\Mapping as ORM;
             ]
         ),
         // Verify-reset-token
-        new Get(
+        new Post(
             uriTemplate: '/api/auth/verify-reset-password',
             controller: GetUserProfileController::class. '::verifyResetPassword',
             parameters: [ 

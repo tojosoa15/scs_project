@@ -25,7 +25,7 @@ class ClaimUserDbService
         
         $stmt = $this->connection->prepare($sql);
         $stmt->bindValue(1, $params['p_email']);
-        $stmt->bindValue(2, $params['f_status'] ?? null);
+        $stmt->bindValue(2, $params['p_status'] ?? null);
         $stmt->bindValue(3, $params['p_search_name']);
         $stmt->bindValue(4, $params['p_sort_by']);
         $stmt->bindValue(5, $params['p_page'], \PDO::PARAM_INT);
