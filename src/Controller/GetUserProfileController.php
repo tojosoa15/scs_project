@@ -438,14 +438,15 @@ class GetUserProfileController extends AbstractController
     public function verifyResetPassword(Request $request) : JsonResponse {
         // $token = $request->query->get('token');
         $query = (array)json_decode($request->getContent(), true);
-
         
-        if (!$query) {
+        $token =  $query['token'];
+        
+        if (!$token) {
             return new JsonResponse(['error' => 'Token manquant.'], 400);
         }
 
         try {
-            $data = $this->jwtDecoder->decode($query['token']);
+            $data = $this->jwtDecoder->decode($token);
 
             // return new JsonResponse(['status' => 'ok', 'email' => $data]);
 
