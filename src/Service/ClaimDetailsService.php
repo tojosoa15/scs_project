@@ -15,10 +15,11 @@ class ClaimDetailsService
 
     public function callGetClaimDetails(array $params): array
     {
-        $sql = "CALL GetClaimDetails(?)";
+        $sql = "CALL GetClaimDetails(?, ?)";
         
         $stmt = $this->connection->prepare($sql);
         $stmt->bindValue(1, $params['p_claim_number']);
+        $stmt->bindValue(2, $params['p_email']);
 
         
         return $stmt->executeQuery()->fetchAllAssociative();

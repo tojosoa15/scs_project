@@ -22,7 +22,7 @@ use Doctrine\ORM\Mapping as ORM;
     operations: [
         // Profile utilisateur
         new Get(
-            uriTemplate: '/api/profile_user',
+            uriTemplate: '/api/profile',
             controller: GetUserProfileController::class. '::__invoke',
             parameters: [ 'email' => new QueryParameter()]
         ), 
@@ -74,12 +74,13 @@ use Doctrine\ORM\Mapping as ORM;
                 'newPassword'    => new QueryParameter(),
             ]
         ),
+        // Change-password
         new Post(
-            uriTemplate: '/api/authentification',
-            controller: GetUserProfileController::class. '::authentification',
+            uriTemplate: '/api/change-passaword',
+            controller: GetUserProfileController::class. '::updateUserPassword',
             parameters: [ 
-                'p_email_address'   => new QueryParameter(),
-                'p_password'        => new QueryParameter()
+                'email'   => new QueryParameter(),  
+                'newPassword'    => new QueryParameter(),
             ]
         )
     ]

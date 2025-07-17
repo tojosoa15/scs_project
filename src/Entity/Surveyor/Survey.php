@@ -20,7 +20,10 @@ use Doctrine\ORM\Mapping as ORM;
         new Get(
             uriTemplate: '/api/claim/details_with_survey',
             controller: GetClaimDetailsController::class,
-            parameters: [ 'p_claim_number' => new QueryParameter()]
+            parameters: [ 
+                'claim_number'  => new QueryParameter(),
+                'email'         => new QueryParameter()
+            ]
         )
     ]
 )]

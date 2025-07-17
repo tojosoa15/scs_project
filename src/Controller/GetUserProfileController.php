@@ -193,7 +193,7 @@ class GetUserProfileController extends AbstractController
                 ]);
 
                 return new JsonResponse([
-                    'status'    => 'error',
+                    'status'    => 'success',
                     'code'      => JsonResponse::HTTP_OK,
                     'message'   => 'Successful Administrative settings modification.',
                     'data'      => $results
@@ -436,9 +436,8 @@ class GetUserProfileController extends AbstractController
      * @return JsonResponse
      */
     public function verifyResetPassword(Request $request) : JsonResponse {
-        // $token = $request->query->get('token');
         $query = (array)json_decode($request->getContent(), true);
-        
+
         $token =  $query['token'];
         
         if (!$token) {
@@ -454,11 +453,6 @@ class GetUserProfileController extends AbstractController
             if (isset($data['exp']) && time() > $data['exp']) {
                 return new JsonResponse(['error' => 'Token expiré.'], 403);
             }
-
-            // À ce stade, le token est OK, tu peux continuer...
-            // $email = $data['email'];
-            // $userId = $data['id'];
-            // $businessName = $data['business_name'];
 
             return new JsonResponse([
                 'status' => 'ok', 
