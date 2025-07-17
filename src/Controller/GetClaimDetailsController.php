@@ -60,30 +60,36 @@ class GetClaimDetailsController extends AbstractController
                         // 'details_url' => '/claim/details_with_survey?id=' . $res['id']
                     ],
                     'survey_information' => [
-                        'garage'            => $res['garage'],
-                        'garage_address'            => $res['garage_address'],
+                        'garage'                => $res['garage'],
+                        'garage_address'        => $res['garage_address'],
                         'garage_contact_number' => $res['garage_contact_number'],
-                        'eor_value'         => $res['eor_value'],
-                        'invoice_number'    => $res['invoice_number'],
-                        'survey_type'       => $res['survey_type'],
-                        'date_of_survey'    => $res['date_of_survey']
+                        'eor_value'             => $res['eor_value'],
+                        'invoice_number'        => $res['invoice_number'],
+                        'survey_type'           => $res['survey_type'],
+                        'date_of_survey'        => $res['date_of_survey']
                     ],
-                    // 'estimate_of_repairs' => [
-                    //     'part_detail'   =>  [
-                    //         'part_name'     => $res['part_name'],
-                    //         'part_number'   => $res['part_number'],
-                    //         'part_price'    => $res['part_price'],
-                    //         'part_quantity' => $res['part_quantity'],
-                    //         'total_price'   => $res['total_price']
-                    //     ],
-                    //     'labour_detail' => [
-                            
-                    //     ],
-                    //     'estimation_number' => $res['estimation_number'],
-                    //     'estimation_date'   => $res['estimation_date'],
-                    //     'estimation_value'  => $res['estimation_value'],
-                    //     'is_estimation_approved' => $res['is_estimation_approved']
-                    // ],
+                    'estimate_of_repairs' => [
+                        'part_detail'   =>  [
+                            'part_name'     => $res['part_name'],
+                            'quantity'      => $res['quantity'],
+                            'supplier'      => $res['supplier'],
+                            'quality'       => $res['quality'],
+                            'cost_part'     => $res['cost_part'],
+                            'discount_part' => $res['discount_part'],
+                            'vat_part'      => $res['vat_part'],
+                            'part_total'    => $res['part_total']
+                        ],
+                        'labour_detail' => [
+                            'eor_or_surveyor'       => $res['eor_or_surveyor'],
+                            'activity'              => $res['activity'],
+                            'number_of_hours'       => $res['number_of_hours'],
+                            'hourly_const_labour'   => $res['hourly_const_labour'],
+                            'discount_labour'       => $res['discount_labour'],
+                            'vat_part'              => $res['vat_part'],
+                            'labour_total'          => $res['labour_total']
+                        ],
+                        'remarks'   => $res['remarks']
+                    ]
                 ];
             }
 
