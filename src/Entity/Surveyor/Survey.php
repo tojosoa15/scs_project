@@ -4,6 +4,7 @@ namespace App\Entity\Surveyor;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\QueryParameter;
 use App\Controller\GetClaimDetailsController;
 use Doctrine\ORM\Mapping as ORM;
@@ -19,7 +20,27 @@ use Doctrine\ORM\Mapping as ORM;
         // Détail d'un claim 
         new Get(
             uriTemplate: '/api/claim/details_with_survey',
-            controller: GetClaimDetailsController::class,
+            controller: GetClaimDetailsController::class . '::__invoke',
+            parameters: [ 
+                'claim_number'  => new QueryParameter(),
+                'email'         => new QueryParameter()
+            ]
+        ),
+        // Surveyor report
+        new Post(
+            uriTemplate: '/api/surveyor_report',
+            controller: GetClaimDetailsController::class . '::surveyorReport',
+            parameters: [ 
+                'claims_no'     => new QueryParameter(),
+                'surveyor_id'   => new QueryParameter(),
+                'status'        => new QueryParameter(),
+                'current_step'  => new QueryParameter()
+            ]
+        ),
+        // Résumé verification
+        new Get(
+            uriTemplate: '/api/report_summary',
+            controller: GetClaimDetailsController::class . '::reportSummary',
             parameters: [ 
                 'claim_number'  => new QueryParameter(),
                 'email'         => new QueryParameter()

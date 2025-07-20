@@ -23,12 +23,12 @@ use Doctrine\ORM\Mapping as ORM;
         // Profile utilisateur
         new Get(
             uriTemplate: '/api/profile',
-            controller: GetUserProfileController::class. '::__invoke',
+            controller: GetUserProfileController::class . '::__invoke',
             parameters: [ 'email' => new QueryParameter()]
         ), 
         new Get(
             uriTemplate: '/api/user_by_role',
-            controller: GetUserProfileController::class. '::getUserByRole',
+            controller: GetUserProfileController::class . '::getUserByRole',
             parameters: [ 'role_id' => new QueryParameter()]
         ),
         new Patch(
@@ -41,7 +41,7 @@ use Doctrine\ORM\Mapping as ORM;
         ),
         new Patch(
             uriTemplate: '/api/update/admin_setting',
-            controller: GetUserProfileController::class. '::updateAdminSetting',
+            controller: GetUserProfileController::class . '::updateAdminSetting',
             parameters: [ 
                 'email'                 => new QueryParameter(),  
                 'primaryContactName'    => new QueryParameter(),
@@ -52,7 +52,7 @@ use Doctrine\ORM\Mapping as ORM;
         // forgot-password
         new Post(
             uriTemplate: '/api/auth/forgot-password',
-            controller: GetUserProfileController::class. '::forgotPassword',
+            controller: GetUserProfileController::class . '::forgotPassword',
             parameters: [ 
                 'email'   => new QueryParameter()
             ]
@@ -60,7 +60,7 @@ use Doctrine\ORM\Mapping as ORM;
         // Verify-reset-token
         new Post(
             uriTemplate: '/api/auth/verify-reset-token',
-            controller: GetUserProfileController::class. '::verifyResetPassword',
+            controller: GetUserProfileController::class . '::verifyResetPassword',
             parameters: [ 
                 'token'   => new QueryParameter()
             ]
@@ -68,7 +68,7 @@ use Doctrine\ORM\Mapping as ORM;
         // Reset-password
         new Patch(
             uriTemplate: '/api/auth/reset-password',
-            controller: GetUserProfileController::class. '::updateUserPassword',
+            controller: GetUserProfileController::class . '::updateUserPassword',
             parameters: [ 
                 'email'   => new QueryParameter(),  
                 'newPassword'    => new QueryParameter(),
@@ -77,7 +77,7 @@ use Doctrine\ORM\Mapping as ORM;
         // Change-password
         new Post(
             uriTemplate: '/api/change-passaword',
-            controller: GetUserProfileController::class. '::updateUserPassword',
+            controller: GetUserProfileController::class . '::updateUserPassword',
             parameters: [ 
                 'email'   => new QueryParameter(),  
                 'newPassword'    => new QueryParameter(),

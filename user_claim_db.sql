@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jul 08, 2025 at 06:56 AM
+-- Generation Time: Jul 20, 2025 at 08:53 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.2.26
 
@@ -60,6 +60,7 @@ DROP PROCEDURE IF EXISTS `ChekEmailExists`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `ChekEmailExists` (IN `p_email_address` VARCHAR(255))   BEGIN
     DECLARE v_exists INT DEFAULT 0;
 
+    -- Vérifie si l'utilisateur existe
     SELECT COUNT(*) INTO v_exists
     FROM user_claim_db.account_informations
     WHERE email_address = p_email_address;
@@ -67,8 +68,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `ChekEmailExists` (IN `p_email_addre
     IF v_exists = 0 THEN
         SELECT 'Email introuvable.' AS message;
     ELSE
-        -- Tu pourras ici éventuellement créer un token et l’envoyer par mail
-        SELECT 'Email existant, envoi du lien de réinitialisation' AS message;
+        -- Retourne l'utilisateur concerné
+        SELECT *
+        FROM user_claim_db.account_informations
+        WHERE email_address = p_email_address;
     END IF;
 END$$
 
@@ -194,59 +197,84 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetListByUser` (IN `p_email` VARCHA
     DECLARE v_order_by TEXT;
     DECLARE v_offset INT;
     DECLARE v_sql TEXT;
-    
-    -- Définir les valeurs par défaut avec validation
+
+    -- Set default values with validation
     SET p_email = IFNULL(p_email, '');
     SET p_status = IFNULL(p_status, '');
     SET p_search_name = IFNULL(p_search_name, '');
     SET p_sort_by = IFNULL(p_sort_by, 'date');
-    SET p_page = GREATEST(IFNULL(p_page, 1), 1); -- Garantit au moins 1
-    SET p_page_size = GREATEST(IFNULL(p_page_size, 10), 10); -- Garantit au moins 1
+    SET p_page = GREATEST(IFNULL(p_page, 1), 1);
+    SET p_page_size = GREATEST(IFNULL(p_page_size, 10), 10);
     SET p_search_num = IFNULL(p_search_num, '');
     SET p_search_reg_num = IFNULL(p_search_reg_num, '');
     SET p_search_phone = IFNULL(p_search_phone, '');
 
-    -- Vérification de l'email
+    -- Validate email
     IF p_email = '' THEN
-        SIGNAL SQLSTATE '45000' 
-        SET MESSAGE_TEXT = 'Email est un paramètre obligatoire';
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'L''email est un paramètre obligatoire et ne peut pas être vide.';
     END IF;
 
-    -- Vérification que l'utilisateur existe
+    -- Check if user exists
     IF NOT EXISTS (SELECT 1 FROM account_informations WHERE email_address = p_email) THEN
-        SIGNAL SQLSTATE '45000' 
-        SET MESSAGE_TEXT = 'Aucun utilisateur trouvé avec cet email';
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Aucun utilisateur trouvé avec cet email.';
     END IF;
 
+    -- Initialize WHERE clause
     SET v_where = ' WHERE 1=1 ';
-    SET v_order_by = '';
+
+    -- Apply dynamic filters
+    IF p_status <> '' THEN
+        SET v_where = CONCAT(v_where, ' AND ST.status_name = ', QUOTE(p_status));
+    END IF;
+    IF p_search_name <> '' THEN
+        SET v_where = CONCAT(v_where, ' AND CL.name LIKE ''%', p_search_name, '%''');
+    END IF;
+    IF p_search_num <> '' THEN
+        SET v_where = CONCAT(v_where, ' AND CL.number LIKE ''%', p_search_num, '%''');
+    END IF;
+    IF p_search_reg_num <> '' THEN
+        SET v_where = CONCAT(v_where, ' AND CL.registration_number LIKE ''%', p_search_reg_num, '%''');
+    END IF;
+    IF p_search_phone <> '' THEN
+        SET v_where = CONCAT(v_where, ' AND CL.phone LIKE ''%', p_search_phone, '%''');
+    END IF;
+
+    -- Filter by user (email)
+    SET v_where = CONCAT(v_where, ' AND ACI.email_address = ', QUOTE(p_email));
+
+    -- Sorting logic
+    IF p_sort_by = 'status' THEN
+        SET v_order_by = ' ORDER BY ST.status_name ASC';
+    ELSEIF p_sort_by = 'received_date' THEN
+        SET v_order_by = ' ORDER BY CL.received_date DESC';
+    ELSE
+        SET v_order_by = ' ORDER BY CL.ageing DESC';
+    END IF;
+
+    -- Calculate offset
     SET v_offset = (p_page - 1) * p_page_size;
 
-    -- [Le reste de votre code reste inchangé jusqu'à la construction de la requête]
-
-    -- Construction de la requête
+    -- Construct the query
     SET v_sql = CONCAT('
-        SELECT 
-            CL.id AS claim_id,
+        SELECT
             CL.received_date,
             CL.number,
             CL.name,
             CL.registration_number,
             CL.ageing,
             CL.phone,
-            ST.status_name AS status_name
+            ST.status_name
         FROM claims CL
-        INNER JOIN assignment A ON CL.id = A.claims_id
+        INNER JOIN assignment A ON CL.number = A.claims_number
         INNER JOIN users US ON US.id = A.users_id
         INNER JOIN account_informations ACI ON ACI.users_id = US.id
         INNER JOIN status ST ON A.status_id = ST.id
         ', v_where, v_order_by, '
         LIMIT ', v_offset, ', ', p_page_size);
 
-    -- Afficher la requête pour débogage
-    -- SELECT v_sql AS 'Requête générée';
-    
-    -- Exécution de la requête
+    -- Execute the query
     SET @sql = v_sql;
     PREPARE stmt FROM @sql;
     EXECUTE stmt;
@@ -460,9 +488,9 @@ CREATE TABLE IF NOT EXISTS `account_informations` (
 --
 
 INSERT INTO `account_informations` (`id`, `users_id`, `business_name`, `business_registration_number`, `business_address`, `city`, `postal_code`, `phone_number`, `email_address`, `password`, `website`, `backup_email`) VALUES
-(1, 1, 'Brondon', '48 AG 23', 'Squard Orchard', 'Quatre Bornes', '7000', '56589857', 'tojo@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.test5.com', ''),
-(2, 2, 'Christofer', '1 JN 24', 'La Louis', 'Quatre Bornes', '7120', '57896532', 'rene@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.rene.com', ''),
-(3, 3, 'Kierra', '94 NOV 06', 'Moka', 'Saint Pierre', '7520', '54789512', 'raharison@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.raharison.com', ''),
+(1, 1, 'Brondon', '48 AG 23', 'Squard Orchard', 'Quatre Bornes', '7000', '56589857', 'tojo@gmail.com', '$2y$12$BmZJWVGAOaYWv3l8y.PycO5O6YoW9QVie5WBILre.qmhb8/e3teRS', 'www.tojo.com', ''),
+(2, 2, 'Christofer', '1 JN 24', 'La Louis', 'Quatre Bornes', '7120', '57896532', 'valentinmagde@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.rene.com', ''),
+(3, 3, 'Kierra', '94 NOV 06', 'Moka', 'Saint Pierre', '7520', '54789512', 'rene@gmail.com', '$2y$12$xhQSKfQWXosSbZCgfA3uAO6zD4CopXh9HrglAgUJFyRJuKCESOaN2', 'www.raharison.com', ''),
 (4, 4, 'Surveyor 2', 'Surveyor 2', 'addr Surveyor 2', 'Quatre bornes', '7200', '55678923', 'surveyor2@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.surveyor.com', ''),
 (5, 5, 'Surveyor 3', 'Surveyor 2', 'Addr Surveyor 2', 'Quatre Bornes', '7500', '55897899', 'surveyor3@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.surveyor3.com', ''),
 (6, 6, 'Garage 1', 'Garage 1', 'Addr Garage 1', 'Quatre bornes', '7200', '45677444', 'garage2@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.garage2.com', ''),
@@ -532,7 +560,7 @@ CREATE TABLE IF NOT EXISTS `assignment` (
 
 INSERT INTO `assignment` (`claims_number`, `users_id`, `assignment_date`, `assignement_note`, `status_id`) VALUES
 ('M0119921', 1, '2025-07-04 11:03:40', NULL, 2),
-('M0119923', 5, '2025-07-03 20:00:00', 'test', 1),
+('M0119923', 1, '2025-07-03 20:00:00', 'test', 1),
 ('M0119921', 6, '2025-07-03 20:00:00', 'Test affectation garage 1', 1);
 
 -- --------------------------------------------------------
