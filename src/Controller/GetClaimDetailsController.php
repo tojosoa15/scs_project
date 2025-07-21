@@ -282,14 +282,12 @@ class GetClaimDetailsController extends AbstractController
                 'p_email'           => $params['email']
             ]);
 
-            // return new JsonResponse($results);
-
             foreach ($results as $res) {
                 $resFormat = [
                     'claim_number'  => $res['claim_number'],
                     'status_name'   => $res['status_name'],
                     'general_informatin' => [
-                        // 'name'                      => $res['name'],
+                        'name'                      => $res['name'],
                         'make'                      => $res['make'],
                         'model'                     => $res['model'],
                         'condition_of_vehicle'      => $res['condition_of_vehicle'],    
