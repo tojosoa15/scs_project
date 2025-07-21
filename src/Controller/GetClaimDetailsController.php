@@ -282,12 +282,14 @@ class GetClaimDetailsController extends AbstractController
                 'p_email'           => $params['email']
             ]);
 
-              foreach ($results as $res) {
+            // return new JsonResponse($results);
+
+            foreach ($results as $res) {
                 $resFormat = [
                     'claim_number'  => $res['claim_number'],
                     'status_name'   => $res['status_name'],
                     'general_informatin' => [
-                        'name'                      => $res['name'],
+                        // 'name'                      => $res['name'],
                         'make'                      => $res['make'],
                         'model'                     => $res['model'],
                         'condition_of_vehicle'      => $res['condition_of_vehicle'],    
@@ -334,10 +336,10 @@ class GetClaimDetailsController extends AbstractController
                             // 'number_of_hours'       => $res['number_of_hours'],
                         ],
                         'grand_tatal'   => [
-                            'cost_total'        => (float)$res['cost_part'] + (float)$res['hourly_const_labour'],
-                            'discount_total'    => (float)$res['discount_part'] + (float)$res['discount_labour'],
-                            'vat_total'         => (float)$res['vat_part'] + (float)$res['vat_labour'],
-                            'total'             => (float)$res['part_total'] + (float)$res['labour_total']
+                            'cost_total'        => $res['cost_total'],//(float)$res['cost_part'] + (float)$res['hourly_const_labour'],
+                            'discount_total'    => $res['discount_total'],//(float)$res['discount_part'] + (float)$res['discount_labour'],
+                            'vat_total'         => $res['vat_total'],//(float)$res['vat_part'] + (float)$res['vat_labour'],
+                            'total'             => $res['total']//(float)$res['part_total'] + (float)$res['labour_total']
                         ],
                     ]
                 ];
