@@ -91,7 +91,7 @@ class GetUserProfileController extends AbstractController
                         'primary_contact_name'      => $res['primary_contact_name'],
                         'primary_contact_post'      => $res['primary_contact_post'],
                         'notification'              => $res['notification'],
-                        'administrative_updated_at' => $res['administrative_updated_at']
+                        'communication_methods'     => $res['communication_methods']
                     ],
                     'security_settings' => [
                         'password'      => $res['password'],
