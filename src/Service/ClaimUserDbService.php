@@ -247,5 +247,17 @@ class ClaimUserDbService
         
         return $stmt->executeQuery()->fetchAllAssociative();
     }
+
+    /**
+     * Retourne la liste des methodes de communication
+     */
+    public function callGetMethodCommunication() : array 
+    {
+        $sql = "CALL GetMethodCommunication()";
+
+        $stmt = $this->connection->prepare($sql);
+        
+        return $stmt->executeQuery()->fetchAllAssociative();
+    }
             
 }
