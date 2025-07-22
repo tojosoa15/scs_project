@@ -197,7 +197,7 @@ class GetUserProfileController extends AbstractController
                     'status'    => 'success',
                     'code'      => JsonResponse::HTTP_OK,
                     'message'   => 'Successful Administrative settings modification.',
-                    'data'      => $results
+                    // 'data'      => $results
                 ], JsonResponse::HTTP_OK);
 
         } catch (\Exception $e) {

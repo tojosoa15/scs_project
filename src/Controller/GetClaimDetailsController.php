@@ -225,7 +225,7 @@ class GetClaimDetailsController extends AbstractController
         
 
         try {
-            $result = $this->claimDetailsService->callSpVerificationProcessSurveyor([
+            $this->claimDetailsService->callSpVerificationProcessSurveyor([
                 'p_claim_number'    => $params['claim_number'],
                 'p_surveyor_id'     => $params['surveyor_id'],
                 'p_status'          => $params['status'],
