@@ -47,6 +47,7 @@ use Doctrine\ORM\Mapping as ORM;
                 'primaryContactName'    => new QueryParameter(),
                 'primaryContactPost'    => new QueryParameter(),
                 'notification'          => new QueryParameter(),
+                'methodNames'           => new QueryParameter(),
             ]
         ),
         // forgot-password

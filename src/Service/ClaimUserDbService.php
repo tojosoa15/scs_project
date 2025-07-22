@@ -128,13 +128,14 @@ class ClaimUserDbService
      */
     public function callUpdateAdminSetting(array $params) : array
     {
-        $sql = "CALL UpdateAdminSettings(?, ?, ?, ?)";
+        $sql = "CALL UpdateAdminSettings(?, ?, ?, ?, ?)";
 
         $stmt = $this->connection->prepare($sql);
         $stmt->bindValue(1, $params['p_email_address']);
         $stmt->bindValue(2, $params['p_primary_contact_name'] ?? null);
         $stmt->bindValue(3, $params['p_primary_contact_post'] ?? null);
         $stmt->bindValue(4, $params['p_notification'] ?? null);
+        $stmt->bindValue(5, $params['p_method_names'] ?? null);
 
         return $stmt->executeQuery()->fetchAllAssociative();
         

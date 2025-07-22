@@ -190,6 +190,7 @@ class GetUserProfileController extends AbstractController
                     'p_primary_contact_name'  => $params['primaryContactName'],
                     'p_primary_contact_post'  => $params['primaryContactPost'],
                     'p_notification'          => $params['notification'],
+                    'p_method_names'          => $params['methodNames'],
                 ]);
 
                 return new JsonResponse([
