@@ -48,7 +48,7 @@ class Assignment
      *
      * @ORM\Column(name="assignment_date", type="datetime", nullable=true, options={"default"="CURRENT_TIMESTAMP"})
      */
-    private $assignmentDate = 'CURRENT_TIMESTAMP';
+    private $assignmentDate = null;
 
     /**
      * @var string|null

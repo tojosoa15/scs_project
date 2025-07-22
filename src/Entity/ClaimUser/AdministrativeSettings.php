@@ -68,7 +68,7 @@ class AdministrativeSettings
      * @ORM\ManyToMany(targetEntity="CommunicationMethods", inversedBy="adminSetting")
      * @ORM\JoinTable(name="admin_settings_communications",
      *   joinColumns={
-     *     @ORM\JoinColumn(name="admin_setting_id", referencedColumnName="users_id")
+     *     @ORM\JoinColumn(name="admin_setting_id", referencedColumnName="id")
      *   },
      *   inverseJoinColumns={
      *     @ORM\JoinColumn(name="method_id", referencedColumnName="id")

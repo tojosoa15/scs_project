@@ -45,6 +45,8 @@ security:
             jwt: ~
             refresh_jwt:
                 check_path: /api/token/refresh
+            custom_authenticators:
+                - App\Security\JWTTokenAuthenticator
 
     # l'access_control détermine les permissions d'accès aus URLs
     access_control:

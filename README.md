@@ -115,3 +115,13 @@ DIA RESULTAT AZO AM REFRESH TOKEN TOKONY :
     "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3NTIwOTk0NTcsImV4cCI6MTc1MjEwNjY1Nywicm9sZXMiOlsic3VydmV5b3IiXSwidXNlcm5hbWUiOiJ0b2pvQGdtYWlsLmNvbSIsImlkIjoxLCJidXNpbmVzc19uYW1lIjoiQnJvbmRvbiJ9.Unl_ivSAvVeo_McLLM81MHRJJFyO_DW_pwQUoDkvUGO20ow4rj4Ia_4fuEoh4Ly-ekgzlabYXz4v8EUrqQCLDUh9wJp1kQQriiVL-ZraR81bu3vloCsxBjF2V4ZnQZjufiO63gaGaAmEuBlxGcV-b8jW61N_SNkF67wnPoNBKCHuUjjAjxi4T14lenUP03-GcDkZBwKg749W2l0P-dKkPwhOxrF_nj14r9B9ZPEqOpP76ZYDUZcxvTR4OU8vlm6E8DZtqhmhx77VWc9ZUmEUQu1nzq6OHTO9_8DVS7VsdVAvBmlfm45wYiztWttnH-UBXc1Z-n4rwFcT5pfCEmYWyzAwozvIGADauPwaVzFoAnCkcAYmMeyhrTdZIXf9mCV8Gh8_siiq2fcolyCfuRlU_gCEt45wm_b2Th6lFl-hq6rRn40Mw6jpMQB6D2pGFhgduBhgEuN_mpwja4AKvBnt62GIxKqAAe7p0y-JI32-izZ399Xktyd36uxS24g5SAajCIfEsBsw3xkfUTX2xwnUEbqOSa9CwBOFKIZl_Bz79yq3l0pn_Xjbk4e-dfJV62907iea-TW7Y4rKHCZWrwheVW7qjn4PLKryXTHjD-0lsj79X_RnJV0v_HbVUkuwH4PNPR9-I3aP4T69feFb5GLqo4EgVTM7ev7T36QGcSpkOfE",
     "refresh_tokens": "7e47660f4b114deda9e6569e6419c261f5c818de91624a0f30430763cf5e146279530225d4d854e5d9c2c4b9955e322561570a23e814c856af6c2333e003ca88"
 }
+
+===============================
+LOGOUT
+------
+Blacklist token
+
+php bin/console doctrine:migrations:diff --em=claim_user_db
+php bin/console doctrine:migrations:migrate --em=claim_user_db
+   ou
+php bin/console doctrine:schema:update --force --em=claim_user_db
