@@ -117,7 +117,6 @@ class ClaimUserDbService
         $stmt->bindValue(2, $params['p_new_website']);
 
         return $stmt->executeQuery()->fetchAllAssociative();
-        
     }
 
     /**
@@ -138,7 +137,6 @@ class ClaimUserDbService
         $stmt->bindValue(5, $params['p_method_names'] ?? null);
 
         return $stmt->executeQuery()->fetchAllAssociative();
-        
     }
 
     /**
@@ -156,7 +154,6 @@ class ClaimUserDbService
         $stmt->bindValue(2, $params['p_new_password'] ?? null);
 
         return $stmt->executeQuery()->fetchAllAssociative();
-        
     }
 
     /**
@@ -172,8 +169,7 @@ class ClaimUserDbService
         $stmt = $this->connection->prepare($sql);
         $stmt->bindValue(1, $params['p_email_address']);
 
-        return $stmt->executeQuery()->fetchAllAssociative();
-        
+        return $stmt->executeQuery()->fetchAllAssociative();   
     }
 
     /**
@@ -190,8 +186,7 @@ class ClaimUserDbService
         $stmt->bindValue(1, $params['p_email_address']);
         $stmt->bindValue(2, $params['p_password']);
 
-        return $stmt->executeQuery()->fetchAllAssociative();
-        
+        return $stmt->executeQuery()->fetchAllAssociative(); 
     }
 
     public function callPostAffectionClaim(array $params) : array         
@@ -206,7 +201,6 @@ class ClaimUserDbService
         $stmt->bindValue(5, $params['p_claims_number']);
 
         return $stmt->executeQuery()->fetchAllAssociative();
-        
     }
 
     /**
@@ -258,6 +252,25 @@ class ClaimUserDbService
         $stmt = $this->connection->prepare($sql);
         
         return $stmt->executeQuery()->fetchAllAssociative();
+    }
+
+     /**
+     * Mise à jour security setting utilisateur
+     * 
+     * @param array $params
+     * @return array
+     */
+    public function callUpdateUserSecurity(array $params) : array
+    {
+        $sql = "CALL UpdateSecuritySetting(?, ?, ?)";
+
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['p_email_address']);
+        $stmt->bindValue(2, $params['p_new_password'] ?? null);
+        $stmt->bindValue(3, $params['p_new_backup_email'] ?? null);
+
+        return $stmt->executeQuery()->fetchAllAssociative();
+        
     }
             
 }

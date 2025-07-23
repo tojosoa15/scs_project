@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jul 20, 2025 at 08:53 PM
+-- Generation Time: Jul 23, 2025 at 07:49 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.2.26
 
@@ -467,7 +467,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `SpVerificationProcessSurveyor` (IN 
     END IF;
 
     -- Tu peux faire un SELECT de retour ici si tu veux
-     SELECT 'Mise à jour verification réussie' AS message;
+    SELECT 'Mise à jour verification réussie' AS message;
 END$$
 
 DELIMITER ;
@@ -561,7 +561,7 @@ CREATE TABLE IF NOT EXISTS `labour_detail` (
   `number_of_hours` int NOT NULL,
   `hourly_const_labour` float NOT NULL,
   `discount_labour` float NOT NULL,
-  `vat_labour` enum('0','15') CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
+  `vat_labour` varchar(255) NOT NULL,
   `labour_total` float DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_labour_detail_part_detail1_idx` (`part_detail_id`)
@@ -591,7 +591,7 @@ CREATE TABLE IF NOT EXISTS `part_detail` (
   `quality` varchar(45) NOT NULL,
   `cost_part` float NOT NULL,
   `discount_part` float NOT NULL,
-  `vat_part` enum('0','15') CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
+  `vat_part` varchar(255) NOT NULL,
   `part_total` float DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_part_detail_estimate_of_repair1_idx` (`estimate_of_repair_id`)
@@ -654,12 +654,15 @@ INSERT INTO `refresh_tokens` (`refresh_token`, `username`, `valid`) VALUES
 ('7663e756-a58e-4fa1-98fb-2cbf2776acb8', 'rene@gmail.com', '2025-08-17 10:48:52'),
 ('809b53a5-9afd-49a1-9c54-fad92090cf1f', 'valentinmagde@gmail.com', '2025-08-11 10:59:07'),
 ('80ea5930-35e0-4c06-9c4d-e63bdc117fe1', 'rene@gmail.com', '2025-08-10 10:36:37'),
+('84095067-18ae-4817-8608-95dbf29993b1', 'rene@gmail.com', '2025-08-22 06:15:04'),
 ('867287b0-899f-4fdd-9337-1df29b8e6a01', 'rene@gmail.com', '2025-08-10 11:07:53'),
 ('8a6d45d718f9506bde2a7cddad03f2251075e872b18210bc2ada44f2cde50e94d7b3472127e46611555faadc39a0f8b4f8245f00e0ffc95f58e776a9b45b5051', 'rene@gmail.com', '2025-08-10 10:49:47'),
 ('8b62ac6b-29a9-4697-82e2-2361a1d254ef', 'rene@gmail.com', '2025-08-10 10:34:52'),
 ('94ddf92f-9e36-4ff3-90f4-5fc1f259632b', 'rene@gmail.com', '2025-08-16 10:03:10'),
+('9f63d5d1-ad09-45b5-aae8-035804a56ff4', 'rene@gmail.com', '2025-08-23 06:44:51'),
 ('ba8618e5-8895-4ae8-9138-8213a3ffe674', 'valentinmagde@gmail.com', '2025-08-10 10:19:58'),
 ('be98df6a-8251-47f1-828d-2f0909f39e45', 'rene@gmail.com', '2025-08-16 07:56:37'),
+('bff7ec0b-8eb4-4e4e-b080-1ede23058245', 'rene@gmail.com', '2025-08-22 10:02:39'),
 ('c0a8fa04-9fd1-4ccd-ba8d-652119112e08', 'rene@gmail.com', '2025-08-17 09:39:37'),
 ('cd9bdbc7-bdf2-403f-99c0-3b6f3b1d9959', 'rene@gmail.com', '2025-08-17 07:24:18'),
 ('cf821452-4f7c-47cd-b46f-2aea6b1b9fd3', 'valentinmagde@gmail.com', '2025-08-11 10:59:54'),
@@ -671,6 +674,7 @@ INSERT INTO `refresh_tokens` (`refresh_token`, `username`, `valid`) VALUES
 ('f1a30243-1ad1-461d-a545-0bd6be41ab8b', 'rene@gmail.com', '2025-08-10 11:47:03'),
 ('f382bd94-c6a8-4363-8f3b-776862de59c1', 'rene@gmail.com', '2025-08-20 19:32:27'),
 ('f700a981-4b89-47b9-bd40-8da07766a7b8', 'rene@gmail.com', '2025-08-10 10:52:59'),
+('f724a2fa-6513-44e9-947b-fc90cd889cd3', 'rene@gmail.com', '2025-08-22 08:21:24'),
 ('f85264ae-9cf4-476b-8553-3781df976369', 'rene@gmail.com', '2025-08-14 06:46:09');
 
 -- --------------------------------------------------------
@@ -746,7 +750,7 @@ CREATE TABLE IF NOT EXISTS `vehicle_information` (
   `fuel_type` varchar(45) DEFAULT NULL,
   `transmission` varchar(45) DEFAULT NULL,
   `engime_no` varchar(90) DEFAULT NULL,
-  `chasisi_no` varchar(250) DEFAULT NULL,
+  `chasisi_no` int DEFAULT NULL,
   `vehicle_no` varchar(45) DEFAULT NULL,
   `color` varchar(45) DEFAULT NULL,
   `odometer_reading` int DEFAULT NULL,
@@ -763,7 +767,7 @@ CREATE TABLE IF NOT EXISTS `vehicle_information` (
 --
 
 INSERT INTO `vehicle_information` (`id`, `verification_id`, `make`, `model`, `cc`, `fuel_type`, `transmission`, `engime_no`, `chasisi_no`, `vehicle_no`, `color`, `odometer_reading`, `is_the_vehicle_total_loss`, `condition_of_vehicle`, `place_of_survey`, `point_of_impact`) VALUES
-(1, 1, 'Toyota', 'Corolla', 1500, 'Petrol', 'Automatic', 'ENG123456789', 'CHS987654321', 'ABC-123', 'Red', 72000, 0, 'good', 'Garage ABC, Quatre Bornes', 'Front bumper');
+(1, 1, 'Toyota', 'Corolla', 1500, 'Petrol', 'Automatic', 'ENG123456789', 0, 'ABC-123', 'Red', 72000, 0, 'good', 'Garage ABC, Quatre Bornes', 'Front bumper');
 
 --
 -- Constraints for dumped tables

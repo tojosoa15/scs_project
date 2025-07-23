@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\QueryParameter;
 use App\Controller\GetUserProfileController;
+use App\Controller\UpdateUserSecurityController;
 use App\Controller\UpdateUserWebsiteController;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -31,16 +32,18 @@ use Doctrine\ORM\Mapping as ORM;
             controller: GetUserProfileController::class . '::getUserByRole',
             parameters: [ 'role_id' => new QueryParameter()]
         ),
+        // Modification website
         new Patch(
-            uriTemplate: '/api/update/user_website',
+            uriTemplate: '/api/profile/website',
             controller: UpdateUserWebsiteController::class,
             parameters: [ 
                 'email'   => new QueryParameter(),  
                 'newWebsite'     => new QueryParameter()
             ]
         ),
+        // Modification administrative
         new Patch(
-            uriTemplate: '/api/update/admin_setting',
+            uriTemplate: '/api/profile/administrative',
             controller: GetUserProfileController::class . '::updateAdminSetting',
             parameters: [ 
                 'email'                 => new QueryParameter(),  
@@ -50,6 +53,16 @@ use Doctrine\ORM\Mapping as ORM;
                 'methodNames'           => new QueryParameter(),
             ]
         ),
+        // Modification security
+        new Patch(
+            uriTemplate: '/api/profile/security',
+            controller: UpdateUserSecurityController::class,
+            parameters: [ 
+                'email'             => new QueryParameter(),  
+                'newPassword'       => new QueryParameter(),
+                'newBackupEmail'    => new QueryParameter(),
+            ]
+            ),
         // forgot-password
         new Post(
             uriTemplate: '/api/auth/forgot-password',
@@ -69,15 +82,6 @@ use Doctrine\ORM\Mapping as ORM;
         // Reset-password
         new Patch(
             uriTemplate: '/api/auth/reset-password',
-            controller: GetUserProfileController::class . '::updateUserPassword',
-            parameters: [ 
-                'email'   => new QueryParameter(),  
-                'newPassword'    => new QueryParameter(),
-            ]
-        ),
-        // Change-password
-        new Post(
-            uriTemplate: '/api/change-passaword',
             controller: GetUserProfileController::class . '::updateUserPassword',
             parameters: [ 
                 'email'   => new QueryParameter(),  

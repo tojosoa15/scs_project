@@ -22,7 +22,11 @@ class UpdateUserWebsiteController extends AbstractController
 
         if (empty($params['email']) && empty($params['newWebsite'])) {
             return new JsonResponse(
-                ['error' => 'email and newWebsite  parameters are required'],
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_BAD_REQUEST,
+                    'message'   => 'email and newWebsite  parameters are required'
+                ],
                 JsonResponse::HTTP_BAD_REQUEST
             );
         }
@@ -35,13 +39,19 @@ class UpdateUserWebsiteController extends AbstractController
             
             return new JsonResponse([
                 'status'    => 'success',
-                'data'      => $results
+                'code'      => JsonResponse::HTTP_OK,
+                'message'   => 'Successful website update'
+                // 'data'      => $results
             ], JsonResponse::HTTP_OK);
 
 
         } catch (\Exception $e) {
             return new JsonResponse(
-                ['error' => $e->getMessage(), 'message' => 'Updated failed.'],
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                    'message'   => $e->getMessage()
+                ],
                 JsonResponse::HTTP_INTERNAL_SERVER_ERROR
             );
         }

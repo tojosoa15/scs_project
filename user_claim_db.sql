@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jul 20, 2025 at 08:53 PM
+-- Generation Time: Jul 23, 2025 at 07:50 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.2.26
 
@@ -281,6 +281,13 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetListByUser` (IN `p_email` VARCHA
     DEALLOCATE PREPARE stmt;
 END$$
 
+DROP PROCEDURE IF EXISTS `GetMethodCommunication`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetMethodCommunication` ()  DETERMINISTIC BEGIN
+    SELECT
+       CM.*
+    FROM user_claim_db.communication_methods CM;
+END$$
+
 DROP PROCEDURE IF EXISTS `GetUserByRole`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `GetUserByRole` (IN `p_role_id` INT)   BEGIN
     -- Vérifie que l'ID du rôle est valide
@@ -316,7 +323,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetUserProfile` (IN `p_email_addres
         AI.website,
         AI.backup_email,
         AI.password,
-        
+       
         FI.vat_number,
         FI.tax_identification_number,
         FI.bank_name,
@@ -326,7 +333,9 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetUserProfile` (IN `p_email_addres
         ASG.primary_contact_name,
         ASG.primary_contact_post,
         ASG.notification,
-        ASG.updated_at AS administrative_updated_at
+        ASG.updated_at AS administrative_updated_at,
+
+        GROUP_CONCAT(CM.method_name ORDER BY CM.method_name SEPARATOR ', ') AS communication_methods
 
     FROM user_claim_db.users U
     LEFT JOIN user_claim_db.account_informations AI
@@ -335,6 +344,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetUserProfile` (IN `p_email_addres
         ON U.id = FI.users_id
     LEFT JOIN user_claim_db.administrative_settings ASG
         ON U.id = ASG.users_id
+    LEFT JOIN user_claim_db.admin_settings_communications ASCM
+        ON ASG.id = ASCM.admin_setting_id
+    LEFT JOIN user_claim_db.communication_methods CM
+        ON ASCM.method_id = CM.id
     WHERE AI.email_address = p_email_address;
 END$$
 
@@ -373,9 +386,14 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `InsertAssignment` (IN `p_users_id` 
 END$$
 
 DROP PROCEDURE IF EXISTS `UpdateAdminSettings`$$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `UpdateAdminSettings` (IN `p_email_address` VARCHAR(255), IN `p_primary_contact_name` VARCHAR(100), IN `p_primary_contact_post` VARCHAR(100), IN `p_notification` BOOLEAN)   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `UpdateAdminSettings` (IN `p_email_address` VARCHAR(255), IN `p_primary_contact_name` VARCHAR(100), IN `p_primary_contact_post` VARCHAR(100), IN `p_notification` BOOLEAN, IN `p_method_names` TEXT)   BEGIN
     DECLARE v_users_id INT;
-
+    DECLARE v_admin_setting_id INT;
+    DECLARE v_method_name VARCHAR(255);
+    DECLARE v_pos INT DEFAULT 0;
+    DECLARE v_next_pos INT DEFAULT 0;
+    DECLARE v_len INT;
+   
     -- Récupérer le users_id
     SELECT users_id INTO v_users_id
     FROM user_claim_db.account_informations
@@ -386,21 +404,50 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `UpdateAdminSettings` (IN `p_email_a
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Email introuvable.';
     END IF;
 
-    -- Mise à jour
+    -- Récupérer l'admin_setting_id
+    SELECT id INTO v_admin_setting_id
+    FROM user_claim_db.administrative_settings
+    WHERE users_id = v_users_id
+    LIMIT 1;
+
+    IF v_admin_setting_id IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Paramètres administratifs introuvables.';
+    END IF;
+
+    -- Mise à jour administrative_settings
     UPDATE user_claim_db.administrative_settings
     SET primary_contact_name = p_primary_contact_name,
         primary_contact_post = p_primary_contact_post,
         notification = p_notification,
         updated_at = NOW()
     WHERE users_id = v_users_id;
-    
-     -- Vérification
-    IF ROW_COUNT() = 0 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Aucune mise à jour effectuée. Email introuvable ou site déjà à jour.';
-    ELSE
-        SELECT 'Mise à jour réussie' AS message;
-    END IF;
+
+    -- Suppression des anciennes méthodes
+    DELETE FROM user_claim_db.admin_settings_communications
+    WHERE admin_setting_id = v_admin_setting_id;
+
+    -- Boucle d'insertion des nouvelles méthodes
+    SET v_len = CHAR_LENGTH(p_method_names);
+    WHILE v_pos < v_len DO
+        SET v_next_pos = LOCATE(',', p_method_names, v_pos + 1);
+        IF v_next_pos = 0 THEN
+            SET v_next_pos = v_len + 1;
+        END IF;
+
+        SET v_method_name = TRIM(SUBSTRING(p_method_names, v_pos + 1, v_next_pos - v_pos - 1));
+
+        IF v_method_name != '' THEN
+            INSERT INTO user_claim_db.admin_settings_communications (admin_setting_id, method_id)
+            SELECT v_admin_setting_id, id
+            FROM user_claim_db.communication_methods
+            WHERE method_name = v_method_name;
+        END IF;
+
+        SET v_pos = v_next_pos;
+    END WHILE;
+
+    SELECT 'Mise à jour réussie' AS message;
+
 END$$
 
 DROP PROCEDURE IF EXISTS `UpdateAssignment`$$
@@ -467,7 +514,7 @@ DELIMITER ;
 DROP TABLE IF EXISTS `account_informations`;
 CREATE TABLE IF NOT EXISTS `account_informations` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `users_id` int NOT NULL,
+  `users_id` int DEFAULT NULL,
   `business_name` varchar(150) NOT NULL,
   `business_registration_number` varchar(150) NOT NULL,
   `business_address` varchar(250) NOT NULL,
@@ -475,7 +522,7 @@ CREATE TABLE IF NOT EXISTS `account_informations` (
   `postal_code` varchar(45) NOT NULL,
   `phone_number` varchar(100) NOT NULL,
   `email_address` varchar(255) NOT NULL,
-  `password` varchar(250) DEFAULT NULL,
+  `password` varchar(250) NOT NULL,
   `website` varchar(150) DEFAULT NULL,
   `backup_email` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
@@ -505,14 +552,13 @@ INSERT INTO `account_informations` (`id`, `users_id`, `business_name`, `business
 DROP TABLE IF EXISTS `administrative_settings`;
 CREATE TABLE IF NOT EXISTS `administrative_settings` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `users_id` int NOT NULL,
+  `users_id` int DEFAULT NULL,
   `primary_contact_name` varchar(255) NOT NULL,
   `primary_contact_post` varchar(150) NOT NULL,
   `notification` text NOT NULL,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `users_id_UNIQUE` (`users_id`),
-  KEY `fk_administrative_settings_users1_idx` (`users_id`)
+  UNIQUE KEY `users_id_UNIQUE` (`users_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3;
 
 --
@@ -520,7 +566,7 @@ CREATE TABLE IF NOT EXISTS `administrative_settings` (
 --
 
 INSERT INTO `administrative_settings` (`id`, `users_id`, `primary_contact_name`, `primary_contact_post`, `notification`, `updated_at`) VALUES
-(1, 1, 'Test contact 77', 'Test contact 55', '0', '2025-06-27 09:50:26');
+(1, 1, 'test 1', 'test 2', '0', '2025-07-23 07:34:01');
 
 -- --------------------------------------------------------
 
@@ -532,10 +578,18 @@ DROP TABLE IF EXISTS `admin_settings_communications`;
 CREATE TABLE IF NOT EXISTS `admin_settings_communications` (
   `admin_setting_id` int NOT NULL,
   `method_id` int NOT NULL,
-  `is_active` tinyint DEFAULT '1',
   PRIMARY KEY (`admin_setting_id`,`method_id`),
-  KEY `fk_admin_settings_communication_communication_methods1_idx` (`method_id`)
+  KEY `IDX_42D45B4519883967` (`method_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Dumping data for table `admin_settings_communications`
+--
+
+INSERT INTO `admin_settings_communications` (`admin_setting_id`, `method_id`) VALUES
+(1, 1),
+(1, 2),
+(1, 3);
 
 -- --------------------------------------------------------
 
@@ -562,6 +616,28 @@ INSERT INTO `assignment` (`claims_number`, `users_id`, `assignment_date`, `assig
 ('M0119921', 1, '2025-07-04 11:03:40', NULL, 2),
 ('M0119923', 1, '2025-07-03 20:00:00', 'test', 1),
 ('M0119921', 6, '2025-07-03 20:00:00', 'Test affectation garage 1', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `blacklisted_token`
+--
+
+DROP TABLE IF EXISTS `blacklisted_token`;
+CREATE TABLE IF NOT EXISTS `blacklisted_token` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `token` text COLLATE utf8mb4_unicode_ci,
+  `expires_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `blacklisted_token`
+--
+
+INSERT INTO `blacklisted_token` (`id`, `token`, `expires_at`) VALUES
+(1, 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3NTMxNzk5ODcsImV4cCI6MTc1MzE4NzE4Nywicm9sZXMiOlsic3BhcmVfcGFydCJdLCJ1c2VybmFtZSI6InJlbmVAZ21haWwuY29tIn0.thmAnfPaLoEJkZO5sm8F43NH-3e_ykjSc4S34atMh0OoeFMGZK8uNzV_koSAeNZy6FofBxTxgmRmGuKDLJOZ_oGt317irD7o0orNRDbVH3SjRkwqczaZxPrRiGfEcVp3RfVKM7aFKCO8lwJmePY-M4dRKvL5Z118sHQ5l0DTbTMX0BeRFzojO2IXJKEvvt3ynPeOpxpIW51vD8xxbP4UDUgNv84TvGxniQhgn9VpG_K8Hy_W2-o0JzaZ21iiJu4Qt7Ti3tSuexJRNAzd-AJliTKtItUFAJ8e4MMJIwi_HlcuEhiN7J76ytmSpTNnREcWupRpoGl7bzWQttin1zsZ0T389KNIscKWJfAER9n3qIeKi6p6DbQ3bRvL3Of8lg2C0qZshFYTiondrJwntCdMiBgbE8cd3lwmkCHxCPdiZUtJdb2ZI6VJLZzXdkdeh8HsqDqQFalaPnRovENLiM7xyVPXZ3hVEYnZ5NQrKhRL35NkdOcK9nQELhgYfMKwEnXXG2bRbDa2qB7kbJSIYcrg0OF_T_3wFvJWtix4N770vHHoH1LfOVVoxdCiSJZj0v315Rz_blWdHlhSSnDVTxWhhzsHZlSiVAvbGyOLBAqEZkqzHskOQyjVz8l4i6DgNoIRoQ0Z89povMkJvQdoY1IopmG4wjzwHzyc5G0-7hbdVlE', '2025-07-22 12:26:27'),
+(2, 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3NTMxODgwODAsImV4cCI6MTc1MzE5NTI4MCwicm9sZXMiOlsic3BhcmVfcGFydCJdLCJ1c2VybmFtZSI6InJlbmVAZ21haWwuY29tIn0.pDIonER3ELvjQ5MOcACefAjl0yV6rzmM1ypzxp971RTbjRl6rTCAXh_mjbhgWWX2u7cXjjGJEamKu2cXfKmnif1BizChjS7QzwM2NzDkIQusMwSq-sGsDGN9FB0e6FHOS35D-R-IymMAnwmwcF94i7dXw7kBj9Nhqvy0SCZBSpgIUWM1i3ArkI_c-frYLEsxQ3C-h_vxMox5rjBk5QDD8hsDqU51P1SwHWKIUz8G5FJL01iXhHQHjt8vKHNqupVArLL0QiIEGn2ZGSFSF82yRwJKNN96rLfsrX_efuL4WWwrk_Tq4Q2GnIJH4bdCRTFS8k_Q8eJt5seKTV-RxgkriedWdxgpVvqWmCwhhjvG8gcfTTfMbTdd_NaGLVfMBawj4HQFQiJP3YCduR68Nc5WyaKsCRFxmYFS0zss-8RDWUMH8aTTXzhZXEhe2RMYf0-ADRTWXYIHDsWtqqBZEV-tlc2JZyOXYnz7VqW_ROaNUN1JjxftX7SLH7xy0l_h-z3XIX9gTRJWG-BjmfhAXqrWyUJ5Qpp_K0w3CtKmtS86GNpUPefIEnCfxgRzBLWgnofq8yEB0ciNfGg7sU1kjJM_MHzj7yHPoBNe2pwmdx-_KTm_Nk-ijgoNWIwNDRlUgvTppErzaB9VFJs3VfkqYoKw4afNrmzgkBhR7Jm5iw2i0BE', '2025-07-22 14:41:20');
 
 -- --------------------------------------------------------
 
@@ -612,7 +688,30 @@ CREATE TABLE IF NOT EXISTS `communication_methods` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `method_code_UNIQUE` (`method_code`),
   UNIQUE KEY `method_name_UNIQUE` (`method_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Dumping data for table `communication_methods`
+--
+
+INSERT INTO `communication_methods` (`id`, `method_code`, `method_name`, `description`, `updated_at`) VALUES
+(1, 'email', 'Email', 'Communication email', '2025-07-22 06:25:59'),
+(2, 'sms', 'SMS', 'Communication sms', '2025-07-22 06:25:59'),
+(3, 'portal', 'Portal', 'Communication portal', '2025-07-22 06:26:49');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doctrine_migration_versions`
+--
+
+DROP TABLE IF EXISTS `doctrine_migration_versions`;
+CREATE TABLE IF NOT EXISTS `doctrine_migration_versions` (
+  `version` varchar(191) COLLATE utf8mb3_unicode_ci NOT NULL,
+  `executed_at` datetime DEFAULT NULL,
+  `execution_time` int DEFAULT NULL,
+  PRIMARY KEY (`version`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -765,7 +864,7 @@ ALTER TABLE `administrative_settings`
 -- Constraints for table `admin_settings_communications`
 --
 ALTER TABLE `admin_settings_communications`
-  ADD CONSTRAINT `fk_admin_settings_communication_administrative_settings1` FOREIGN KEY (`admin_setting_id`) REFERENCES `administrative_settings` (`users_id`),
+  ADD CONSTRAINT `FK_42D45B45260B1BF7` FOREIGN KEY (`admin_setting_id`) REFERENCES `administrative_settings` (`id`),
   ADD CONSTRAINT `fk_admin_settings_communication_communication_methods1` FOREIGN KEY (`method_id`) REFERENCES `communication_methods` (`id`);
 
 --

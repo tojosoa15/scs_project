@@ -241,7 +241,7 @@ class GetUserProfileController extends AbstractController
                 [
                     'status'    => 'error',
                     'code'      => JsonResponse::HTTP_BAD_REQUEST,
-                    'message'   => 'Your password should: Have at least 1 uppercase letter, Have at least 1 number,  .'
+                    'message'   => 'Your password should: Have at least 1 uppercase letter, Have at least 1 number, Have at least 1 special character, Have minimum character.'
                 ],
                 JsonResponse::HTTP_BAD_REQUEST
             );
