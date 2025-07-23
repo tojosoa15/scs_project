@@ -102,6 +102,13 @@ class AccountInformations implements UserInterface, PasswordAuthenticatedUserInt
     private $users;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="backup_email", type="string", length=255, nullable=false)
+     */
+    private $backupEmail;
+
+    /**
      * Mot de passe en clair temporaire
      * Non stocké en base
     */
@@ -266,6 +273,18 @@ class AccountInformations implements UserInterface, PasswordAuthenticatedUserInt
     public function setPlainPassword(?string $plainPassword): self
     {
         $this->plainPassword = $plainPassword;
+
+        return $this;
+    }
+
+    public function getBackupEmail(): ?string
+    {
+        return $this->backupEmail;
+    }
+
+    public function setBackupEmail(string $backupEmail): static
+    {
+        $this->backupEmail = $backupEmail;
 
         return $this;
     }
