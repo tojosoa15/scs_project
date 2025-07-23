@@ -59,9 +59,9 @@ class LabourDetail
     /**
      * @var string
      *
-     * @ORM\Column(name="vat", type="string", length=0, nullable=false)
+     * @ORM\Column(name="vat_labour", type="string", length=0, nullable=false)
      */
-    private $vat;
+    private $vatLabour;
 
     /**
      * @var float|null
@@ -145,14 +145,14 @@ class LabourDetail
         return $this;
     }
 
-    public function getVat(): ?string
+    public function getVatLabour(): ?string
     {
-        return $this->vat;
+        return $this->vatLabour;
     }
 
-    public function setVat(string $vat): static
+    public function setVatLabour(string $vatLabour): static
     {
-        $this->vat = $vat;
+        $this->vatLabour = $vatLabour;
 
         return $this;
     }

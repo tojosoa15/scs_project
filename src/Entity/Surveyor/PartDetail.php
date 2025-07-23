@@ -66,9 +66,9 @@ class PartDetail
     /**
      * @var string
      *
-     * @ORM\Column(name="vat", type="string", length=0, nullable=false)
+     * @ORM\Column(name="vat_part", type="string", length=0, nullable=false)
      */
-    private $vat;
+    private $vatPart;
 
     /**
      * @var float|null
@@ -164,14 +164,14 @@ class PartDetail
         return $this;
     }
 
-    public function getVat(): ?string
+    public function getVatPart(): ?string
     {
-        return $this->vat;
+        return $this->vatPart;
     }
 
-    public function setVat(string $vat): static
+    public function setVatPart(string $vatPart): static
     {
-        $this->vat = $vat;
+        $this->vatPart = $vatPart;
 
         return $this;
     }

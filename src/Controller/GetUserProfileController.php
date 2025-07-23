@@ -50,7 +50,7 @@ class GetUserProfileController extends AbstractController
         }
 
         try {
-             $data = $this->claimUserDbService->callForgotPassword([
+            $data = $this->claimUserDbService->callForgotPassword([
                 'p_email_address' => $params['email']
             ]);
 
