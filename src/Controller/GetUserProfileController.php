@@ -635,7 +635,7 @@ class GetUserProfileController extends AbstractController
             return new JsonResponse([
                 'status'    => 'success',
                 'code'      =>  JsonResponse::HTTP_OK,
-                'message'   => 'Insertion successful, a link to the first login is sent.'
+                'message'   => 'A link to the first login is sent.'
             ], JsonResponse::HTTP_OK);
 
         } catch (\Exception $e) {
