@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jul 23, 2025 at 07:50 AM
+-- Generation Time: Jul 24, 2025 at 12:06 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.2.26
 
@@ -204,7 +204,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetListByUser` (IN `p_email` VARCHA
     SET p_search_name = IFNULL(p_search_name, '');
     SET p_sort_by = IFNULL(p_sort_by, 'date');
     SET p_page = GREATEST(IFNULL(p_page, 1), 1);
-    SET p_page_size = GREATEST(IFNULL(p_page_size, 10), 10);
+    SET p_page_size = IFNULL(p_page_size, 10);
     SET p_search_num = IFNULL(p_search_num, '');
     SET p_search_reg_num = IFNULL(p_search_reg_num, '');
     SET p_search_phone = IFNULL(p_search_phone, '');
@@ -310,6 +310,69 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetUserByRole` (IN `p_role_id` INT)
         r.id = p_role_id;
 END$$
 
+DROP PROCEDURE IF EXISTS `GetUserClaimStats`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetUserClaimStats` (IN `p_email` VARCHAR(255))   BEGIN
+    DECLARE v_total_claims INT DEFAULT 0;
+    DECLARE v_new_claims INT DEFAULT 0;
+    DECLARE v_queries_claims INT DEFAULT 0;
+    DECLARE v_ageing_claims INT DEFAULT 0;
+
+    -- Vérifier l’email
+    IF p_email IS NULL OR p_email = '' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'L''email est un paramètre obligatoire.';
+    END IF;
+
+    -- Vérifier si l'utilisateur existe
+    IF NOT EXISTS (
+        SELECT 1 FROM account_informations WHERE email_address = p_email
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Aucun utilisateur trouvé avec cet email.';
+    END IF;
+
+    -- received
+    SELECT COUNT(*) INTO v_total_claims
+    FROM claims CL
+    INNER JOIN assignment A ON A.claims_number = CL.number
+    INNER JOIN users U ON A.users_id = U.id
+    INNER JOIN account_informations AI ON AI.users_id = U.id
+    WHERE AI.email_address = p_email;
+
+    -- Claims avec status = 'New'
+    SELECT COUNT(*) INTO v_new_claims
+    FROM claims CL
+    INNER JOIN assignment A ON A.claims_number = CL.number
+    INNER JOIN users U ON A.users_id = U.id
+    INNER JOIN account_informations AI ON AI.users_id = U.id
+    INNER JOIN status ST ON ST.id = A.status_id
+    WHERE AI.email_address = p_email AND ST.status_name = 'New';
+
+    -- Claims avec status = 'Queries'
+    SELECT COUNT(*) INTO v_queries_claims
+    FROM claims CL
+    INNER JOIN assignment A ON A.claims_number = CL.number
+    INNER JOIN users U ON A.users_id = U.id
+    INNER JOIN account_informations AI ON AI.users_id = U.id
+    INNER JOIN status ST ON ST.id = A.status_id
+    WHERE AI.email_address = p_email AND ST.status_name = 'Queries';
+
+    -- About to breach
+    SELECT COUNT(*) INTO v_ageing_claims
+    FROM claims CL
+    INNER JOIN assignment A ON A.claims_number = CL.number
+    INNER JOIN users U ON A.users_id = U.id
+    INNER JOIN account_informations AI ON AI.users_id = U.id
+    WHERE AI.email_address = p_email AND CL.ageing >= 48;
+
+    -- Retourner les résultats sous forme d'une seule ligne
+    SELECT
+        v_total_claims AS received,
+        v_new_claims AS new,
+        v_ageing_claims AS about_to_breach,
+        v_queries_claims AS queries;
+END$$
+
 DROP PROCEDURE IF EXISTS `GetUserProfile`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `GetUserProfile` (IN `p_email_address` VARCHAR(255))   BEGIN
     SELECT
@@ -383,6 +446,112 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `InsertAssignment` (IN `p_users_id` 
     UPDATE user_claim_db.claims
     SET    affected = 1
     WHERE  number   = p_claims_number;   -- ou id = p_claims_id selon votre clé
+END$$
+
+DROP PROCEDURE IF EXISTS `InsertFullUserFromJSON`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `InsertFullUserFromJSON` (IN `p_json_data` JSON)   BEGIN
+    DECLARE v_users_id INT;
+
+    -- 1. Insert into users
+    INSERT INTO users(created_at, updated_at)
+    VALUES (NOW(), NOW());
+
+    SET v_users_id = LAST_INSERT_ID();
+
+    -- 2. Insert into account_information
+    INSERT INTO account_informations (
+        users_id, business_name, business_registration_number,
+        business_address, city, postal_code, phone_number,
+        email_address, password, website, backup_email
+    ) VALUES (
+        v_users_id,
+        JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.accountInformation.businessName')),
+        JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.accountInformation.businessRegistrationNumber')),
+        JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.accountInformation.businessAddress')),
+        JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.accountInformation.city')),
+        JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.accountInformation.postalCode')),
+        JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.accountInformation.phoneNumber')),
+        JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.accountInformation.emailAddress')),
+        JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.accountInformation.password')),
+        JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.accountInformation.website')),
+        JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.accountInformation.backupEmail'))
+    );
+
+     -- 3. Insert into financial_informations
+    INSERT INTO financial_informations (
+        users_id, vat_number, tax_identification_number,
+        bank_name, bank_account_number, swift_code
+    ) VALUES (
+        v_users_id,
+        JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.financialInformation.vatNumber')),
+        JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.financialInformation.taxIdentificationNumber')),
+        JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.financialInformation.bankName')),
+        JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.financialInformation.bankAccountNumber')),
+        JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.financialInformation.swiftCode'))
+    );
+
+
+    -- 4. Insert into administrative_settings
+    INSERT INTO administrative_settings (
+        users_id, primary_contact_name, primary_contact_post, notification
+    ) VALUES (
+        v_users_id,
+        JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.administrativeSettings.primaryContactName')),
+        JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.administrativeSettings.primaryContactPost')),
+        JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.administrativeSettings.notification'))
+    );
+
+    -- 5. Insert into user_roles
+    INSERT INTO user_roles (
+        users_id, roles_id, assigned_at, is_active
+    ) VALUES (
+        v_users_id,
+        JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.rolesId')),
+        NOW(),
+        1
+    );
+    
+    SELECT v_users_id AS user_id;
+END$$
+
+DROP PROCEDURE IF EXISTS `InsertUsers`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `InsertUsers` (IN `p_business_name` VARCHAR(255), IN `p_business_registration_number` VARCHAR(100), IN `p_business_address` TEXT, IN `p_city` VARCHAR(100), IN `p_postal_code` VARCHAR(20), IN `p_phone_number` VARCHAR(30), IN `p_email_address` VARCHAR(255), IN `p_password` VARCHAR(255), IN `p_website` VARCHAR(255), IN `p_backup_email` VARCHAR(255))   BEGIN
+    DECLARE v_verification_id INT;
+
+    -- Insertion dans users
+    INSERT INTO users(created_at, updated_at)
+    VALUES (NOW(), NOW());
+
+    -- Récupérer l'id inséré
+    SET v_verification_id = LAST_INSERT_ID();
+
+    -- Insertion dans account_information
+    INSERT INTO account_informations (
+        users_id,
+        business_name,
+        business_registration_number,
+        business_address,
+        city,
+        postal_code,
+        phone_number,
+        email_address,
+        password,
+        website,
+        backup_email
+    )
+    VALUES (
+        v_verification_id,
+        p_business_name,
+        p_business_registration_number,
+        p_business_address,
+        p_city,
+        p_postal_code,
+        p_phone_number,
+        p_email_address,
+        p_password,
+        p_website,
+        p_backup_email
+    );
 END$$
 
 DROP PROCEDURE IF EXISTS `UpdateAdminSettings`$$
@@ -472,6 +641,37 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `UpdateAssignment` (IN `p_users_id` 
 
 END$$
 
+DROP PROCEDURE IF EXISTS `UpdateSecuritySetting`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `UpdateSecuritySetting` (IN `p_email_address` VARCHAR(100), IN `p_new_password` VARCHAR(255), IN `p_new_backup_email` VARCHAR(255))  DETERMINISTIC BEGIN
+    DECLARE v_rows_updated INT DEFAULT 0;
+
+    -- Mise à jour du mot de passe si fourni
+    IF p_new_password IS NOT NULL AND p_new_password != '' THEN
+        UPDATE user_claim_db.account_informations
+        SET password = p_new_password
+        WHERE email_address = p_email_address;
+        
+        SET v_rows_updated = v_rows_updated + ROW_COUNT();
+    END IF;
+
+    -- Mise à jour du backup email si fourni
+    IF p_new_backup_email IS NOT NULL AND p_new_backup_email != '' THEN
+        UPDATE user_claim_db.account_informations
+        SET backup_email = p_new_backup_email
+        WHERE email_address = p_email_address;
+
+        SET v_rows_updated = v_rows_updated + ROW_COUNT();
+    END IF;
+
+    -- Vérification si au moins une mise à jour a eu lieu
+    IF v_rows_updated = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Aucune mise à jour effectuée. Paramètres vides ou email introuvable.';
+    ELSE
+        SELECT CONCAT('Mise à jour effectuée sur ', v_rows_updated, ' champ(s).') AS message;
+    END IF;
+END$$
+
 DROP PROCEDURE IF EXISTS `UpdateUserPassword`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `UpdateUserPassword` (IN `p_email_address` VARCHAR(255), IN `p_new_password` VARCHAR(250))   BEGIN
     UPDATE user_claim_db.account_informations
@@ -528,20 +728,30 @@ CREATE TABLE IF NOT EXISTS `account_informations` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `email_address_UNIQUE` (`email_address`),
   UNIQUE KEY `users_id_UNIQUE` (`users_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Dumping data for table `account_informations`
 --
 
 INSERT INTO `account_informations` (`id`, `users_id`, `business_name`, `business_registration_number`, `business_address`, `city`, `postal_code`, `phone_number`, `email_address`, `password`, `website`, `backup_email`) VALUES
-(1, 1, 'Brondon', '48 AG 23', 'Squard Orchard', 'Quatre Bornes', '7000', '56589857', 'tojo@gmail.com', '$2y$12$BmZJWVGAOaYWv3l8y.PycO5O6YoW9QVie5WBILre.qmhb8/e3teRS', 'www.tojo.com', ''),
+(1, 1, 'Brondon', '48 AG 23', 'Squard Orchard', 'Quatre Bornes', '7000', '56589857', 'tojo@gmail.com', '$2y$12$Q8DmtgztAwBc28aP.3s42uzs1Fr0KKUvtXkeJQpv486MyoQgMDQ9i', 'www.tojosoa.com', 'tojoRene@gmail.com'),
 (2, 2, 'Christofer', '1 JN 24', 'La Louis', 'Quatre Bornes', '7120', '57896532', 'valentinmagde@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.rene.com', ''),
 (3, 3, 'Kierra', '94 NOV 06', 'Moka', 'Saint Pierre', '7520', '54789512', 'rene@gmail.com', '$2y$12$xhQSKfQWXosSbZCgfA3uAO6zD4CopXh9HrglAgUJFyRJuKCESOaN2', 'www.raharison.com', ''),
 (4, 4, 'Surveyor 2', 'Surveyor 2', 'addr Surveyor 2', 'Quatre bornes', '7200', '55678923', 'surveyor2@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.surveyor.com', ''),
 (5, 5, 'Surveyor 3', 'Surveyor 2', 'Addr Surveyor 2', 'Quatre Bornes', '7500', '55897899', 'surveyor3@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.surveyor3.com', ''),
 (6, 6, 'Garage 1', 'Garage 1', 'Addr Garage 1', 'Quatre bornes', '7200', '45677444', 'garage2@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.garage2.com', ''),
-(7, 7, 'Spare Part 2', 'Spare Part 2', 'Addr Spare Part 2', 'Quatre bornes', '7200', '34667777', 'sparepart@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.sparepart2.com', '');
+(7, 7, 'Spare Part 2', 'Spare Part 2', 'Addr Spare Part 2', 'Quatre bornes', '7200', '34667777', 'sparepart@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.sparepart2.com', ''),
+(8, 11, 'Super admin', '123456789', '123 Rue Principale', 'Paris', '75001', '+33123456789', 'admin@gmail.com', 'Tojo@1235', 'https://monentreprise.com', 'tt@gmail.com'),
+(10, 13, 'Super admin', '123456789', '123 Rue Principale', 'Paris', '75001', '+33123456789', 'admin4444@gmail.com', 'Tojo@1235', 'https://monentreprise.com', 'tt@gmail.com'),
+(12, 16, 'Super admin', '123456789', '123 Rue Principale', 'Paris', '75001', '+33123456789', 'admin53@gmail.com', 'Tojo@1235', 'https://monentreprise.com', 'tt@gmail.com'),
+(14, 18, 'Super admin', '123456789', '123 Rue Principale', 'Paris', '75001', '+33123456789', 'admin5344@gmail.com', 'Tojo@1235', 'https://monentreprise.com', 'tt@gmail.com'),
+(15, 19, 'Super admin', '123456789', '123 Rue Principale', 'Paris', '75001', '+33123456789', 'admin22@gmail.com', 'Tojo@1235', 'https://monentreprise.com', 'tt@gmail.com'),
+(17, 21, 'Super admin', '123456789', '123 Rue Principale', 'Paris', '75001', '+33123456789', 'admin2002@gmail.com', 'Tojo@1235', 'https://monentreprise.com', 'tt@gmail.com'),
+(19, 23, 'Super admin', '123456789', '123 Rue Principale', 'Paris', '75001', '+33123456789', 'admin200222@gmail.com', 'Tojo@1235', 'https://monentreprise.com', 'tt@gmail.com'),
+(21, 25, 'Super admin', '123456789', '123 Rue Principale', 'Paris', '75001', '+33123456789', 'admin333@gmail.com', 'Tojo@1235', 'https://monentreprise.com', 'tt@gmail.com'),
+(23, 27, 'Super admin', '123456789', '123 Rue Principale', 'Paris', '75001', '+33123456789', 'raharisontojo@gmail.com', 'Tojo@1235', 'https://monentreprise.com', 'tt@gmail.com'),
+(25, 29, 'Super admin', '123456789', '123 Rue Principale', 'Paris', '75001', '+33123456789', 'raharisontojo4@gmail.com', 'Tojo@1235', 'https://monentreprise.com', 'tt@gmail.com');
 
 -- --------------------------------------------------------
 
@@ -559,14 +769,22 @@ CREATE TABLE IF NOT EXISTS `administrative_settings` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `users_id_UNIQUE` (`users_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Dumping data for table `administrative_settings`
 --
 
 INSERT INTO `administrative_settings` (`id`, `users_id`, `primary_contact_name`, `primary_contact_post`, `notification`, `updated_at`) VALUES
-(1, 1, 'test 1', 'test 2', '0', '2025-07-23 07:34:01');
+(1, 1, 'test 1', 'test 2', '0', '2025-07-23 07:54:02'),
+(2, 16, '15', '222', 'Test notification', '2025-07-24 07:06:08'),
+(3, 18, '15', '222', 'Test notification', '2025-07-24 07:09:24'),
+(4, 19, '15', '222', 'Test notification', '2025-07-24 07:14:17'),
+(5, 21, '15', '222', 'Test notification', '2025-07-24 07:16:34'),
+(6, 23, '15', '222', 'Test notification', '2025-07-24 07:21:30'),
+(7, 25, '15', '222', 'Test notification', '2025-07-24 08:12:03'),
+(8, 27, '15', '222', 'Test notification', '2025-07-24 10:09:56'),
+(9, 29, '15', '222', 'Test notification', '2025-07-24 10:15:55');
 
 -- --------------------------------------------------------
 
@@ -730,7 +948,21 @@ CREATE TABLE IF NOT EXISTS `financial_informations` (
   `swift_code` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `users_id_UNIQUE` (`users_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Dumping data for table `financial_informations`
+--
+
+INSERT INTO `financial_informations` (`id`, `users_id`, `vat_number`, `tax_identification_number`, `bank_name`, `bank_account_number`, `swift_code`) VALUES
+(1, 16, '15', '222', 'mcb', 1111111111111, 'V446'),
+(2, 18, '15', '222', 'mcb', 1111111111111, 'V446'),
+(3, 19, '15', '222', 'mcb', 1111111111111, 'V446'),
+(4, 21, '15', '222', 'mcb', 1111111111111, 'V446'),
+(5, 23, '15', '222', 'mcb', 1111111111111, 'V446'),
+(6, 25, '15', '222', 'mcb', 1111111111111, 'V446'),
+(7, 27, '15', '222', 'mcb', 1111111111111, 'V446'),
+(8, 29, '15', '222', 'mcb', 1111111111111, 'V446');
 
 -- --------------------------------------------------------
 
@@ -799,7 +1031,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Dumping data for table `users`
@@ -812,7 +1044,29 @@ INSERT INTO `users` (`id`, `created_at`, `updated_at`) VALUES
 (4, '2025-06-26 22:49:06', '2025-06-26 22:49:06'),
 (5, '2025-06-26 22:49:14', '2025-06-26 22:49:14'),
 (6, '2025-06-26 22:53:25', '2025-06-26 22:53:25'),
-(7, '2025-06-26 22:53:30', '2025-06-26 22:53:30');
+(7, '2025-06-26 22:53:30', '2025-06-26 22:53:30'),
+(8, '2025-07-23 09:54:18', '2025-07-23 09:54:18'),
+(9, '2025-07-23 12:35:42', '2025-07-23 12:35:42'),
+(10, '2025-07-23 12:45:03', '2025-07-23 12:45:03'),
+(11, '2025-07-23 12:47:26', '2025-07-23 12:47:26'),
+(12, '2025-07-24 07:00:16', '2025-07-24 07:00:16'),
+(13, '2025-07-24 07:01:08', '2025-07-24 07:01:08'),
+(14, '2025-07-24 07:01:27', '2025-07-24 07:01:27'),
+(15, '2025-07-24 07:05:50', '2025-07-24 07:05:50'),
+(16, '2025-07-24 07:06:08', '2025-07-24 07:06:08'),
+(17, '2025-07-24 07:09:10', '2025-07-24 07:09:10'),
+(18, '2025-07-24 07:09:24', '2025-07-24 07:09:24'),
+(19, '2025-07-24 07:14:17', '2025-07-24 07:14:17'),
+(20, '2025-07-24 07:15:16', '2025-07-24 07:15:16'),
+(21, '2025-07-24 07:16:34', '2025-07-24 07:16:34'),
+(22, '2025-07-24 07:21:18', '2025-07-24 07:21:18'),
+(23, '2025-07-24 07:21:30', '2025-07-24 07:21:30'),
+(24, '2025-07-24 08:11:47', '2025-07-24 08:11:47'),
+(25, '2025-07-24 08:12:03', '2025-07-24 08:12:03'),
+(26, '2025-07-24 10:09:31', '2025-07-24 10:09:31'),
+(27, '2025-07-24 10:09:56', '2025-07-24 10:09:56'),
+(28, '2025-07-24 10:15:38', '2025-07-24 10:15:38'),
+(29, '2025-07-24 10:15:55', '2025-07-24 10:15:55');
 
 -- --------------------------------------------------------
 
@@ -842,7 +1096,14 @@ INSERT INTO `user_roles` (`users_id`, `roles_id`, `assigned_at`, `is_active`) VA
 (4, 1, '2025-06-26 22:53:08', 1),
 (5, 1, '2025-06-26 22:53:08', 1),
 (6, 2, '2025-06-26 22:56:16', 1),
-(7, 3, '2025-06-26 22:56:16', 1);
+(7, 3, '2025-06-26 22:56:16', 1),
+(18, 1, '2025-07-24 07:09:24', 1),
+(19, 1, '2025-07-24 07:14:17', 1),
+(21, 1, '2025-07-24 07:16:34', 1),
+(23, 1, '2025-07-24 07:21:30', 1),
+(25, 1, '2025-07-24 08:12:03', 1),
+(27, 1, '2025-07-24 10:09:56', 1),
+(29, 1, '2025-07-24 10:15:55', 1);
 
 --
 -- Constraints for dumped tables

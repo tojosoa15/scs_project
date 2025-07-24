@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jul 23, 2025 at 07:49 AM
+-- Generation Time: Jul 24, 2025 at 12:05 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.2.26
 
@@ -642,6 +642,7 @@ INSERT INTO `refresh_tokens` (`refresh_token`, `username`, `valid`) VALUES
 ('04193fe1-3e8d-4507-a5ac-090842eac144', 'valentinmagde@gmail.com', '2025-08-10 10:00:59'),
 ('07ee93b4-971d-44bf-921c-e9e1068522e7', 'rene@gmail.com', '2025-08-10 09:40:51'),
 ('0a12917f-f971-4499-a24e-226c21b8b15e', 'valentinmagde@gmail.com', '2025-08-10 09:45:40'),
+('0a9c5e66-b072-4ad3-8131-c3553899d8fb', 'tojo@gmail.com', '2025-08-24 06:59:48'),
 ('12e5901136bf8e0f3fb57cfc5a9384c4e544be94de6729acc78b37e55cd6e3641e9a7f2444fecf6ff524d884b5e091e4b5b7e732d9c8cea76fd41522b8519d59', 'rene@gmail.com', '2025-08-09 09:41:16'),
 ('1388399b-3b24-4ab1-9489-ea7b79d946c9', 'rene@gmail.com', '2025-08-11 11:17:28'),
 ('1a47fb10-a60e-4ff7-9834-02f58cedab65', 'rene@gmail.com', '2025-08-10 11:14:41'),
@@ -656,10 +657,13 @@ INSERT INTO `refresh_tokens` (`refresh_token`, `username`, `valid`) VALUES
 ('80ea5930-35e0-4c06-9c4d-e63bdc117fe1', 'rene@gmail.com', '2025-08-10 10:36:37'),
 ('84095067-18ae-4817-8608-95dbf29993b1', 'rene@gmail.com', '2025-08-22 06:15:04'),
 ('867287b0-899f-4fdd-9337-1df29b8e6a01', 'rene@gmail.com', '2025-08-10 11:07:53'),
+('87d2a352-6675-42f7-8b0b-7198585eb402', 'tojo@gmail.com', '2025-08-24 10:09:15'),
 ('8a6d45d718f9506bde2a7cddad03f2251075e872b18210bc2ada44f2cde50e94d7b3472127e46611555faadc39a0f8b4f8245f00e0ffc95f58e776a9b45b5051', 'rene@gmail.com', '2025-08-10 10:49:47'),
 ('8b62ac6b-29a9-4697-82e2-2361a1d254ef', 'rene@gmail.com', '2025-08-10 10:34:52'),
 ('94ddf92f-9e36-4ff3-90f4-5fc1f259632b', 'rene@gmail.com', '2025-08-16 10:03:10'),
 ('9f63d5d1-ad09-45b5-aae8-035804a56ff4', 'rene@gmail.com', '2025-08-23 06:44:51'),
+('a5071147-d7c4-474d-af51-1237bcd020ce', 'rene@gmail.com', '2025-08-23 09:35:36'),
+('b31848c1-86b5-4a29-809f-4e7c3aada01c', 'rene@gmail.com', '2025-08-23 10:00:17'),
 ('ba8618e5-8895-4ae8-9138-8213a3ffe674', 'valentinmagde@gmail.com', '2025-08-10 10:19:58'),
 ('be98df6a-8251-47f1-828d-2f0909f39e45', 'rene@gmail.com', '2025-08-16 07:56:37'),
 ('bff7ec0b-8eb4-4e4e-b080-1ede23058245', 'rene@gmail.com', '2025-08-22 10:02:39'),
@@ -668,9 +672,12 @@ INSERT INTO `refresh_tokens` (`refresh_token`, `username`, `valid`) VALUES
 ('cf821452-4f7c-47cd-b46f-2aea6b1b9fd3', 'valentinmagde@gmail.com', '2025-08-11 10:59:54'),
 ('d54dabbf6b471ac5ff37a5b0141c4310327bd28ab2bb16789c7cb577d02c165161e17c76d328bd98c2d9646fa6db273c1b8d8d553c5347176f7020e9b3ddcaab', 'rene@gmail.com', '2025-08-14 22:02:43'),
 ('d695766b-ff4d-48d6-a3f1-60b4a21ccdf1', 'rene@gmail.com', '2025-08-10 11:05:15'),
+('d6a1193f-5551-4198-8e06-471f06225ac6', 'tojo@gmail.com', '2025-08-23 12:28:28'),
 ('e0080c9f-8357-47ef-bd12-d4146e183f51', 'rene@gmail.com', '2025-08-16 12:23:21'),
+('e6f8804a-6ab5-48f2-9b2f-457accf412c5', 'tojo@gmail.com', '2025-08-24 12:00:32'),
 ('e7458cbe4adf6f4028c892f934465bf4e9138984f65f6df8eb53bef686fd483370e42fdee00e70bd1af5003f6c028869f66e1ab092fecf2f845aa0e713dc1479', 'rene@gmail.com', '2025-08-09 09:36:03'),
 ('e808c1191a1aeae9a89e24f23764844cb829f410c5bcb4ede2a10ace5766565afd5072d6148836da06433870c0dacc71cb485c1c5dac119906d8b376df19ed4a', 'rene@gmail.com', '2025-08-09 11:37:17'),
+('ec7ea226-742b-4d60-b4bf-137b82694d7e', 'tojo@gmail.com', '2025-08-23 10:00:38'),
 ('f1a30243-1ad1-461d-a545-0bd6be41ab8b', 'rene@gmail.com', '2025-08-10 11:47:03'),
 ('f382bd94-c6a8-4363-8f3b-776862de59c1', 'rene@gmail.com', '2025-08-20 19:32:27'),
 ('f700a981-4b89-47b9-bd40-8da07766a7b8', 'rene@gmail.com', '2025-08-10 10:52:59'),
