@@ -272,5 +272,19 @@ class ClaimUserDbService
         return $stmt->executeQuery()->fetchAllAssociative();
         
     }
+
+    /**
+     * Insertion utilisateur
+     */
+    public function callInsertFullUserFromJSON(array $params) : array 
+    {
+        $sql = "CALL InsertFullUserFromJSON(?)";
+
+        $stmt = $this->connection->prepare($sql);
+
+        $stmt->bindValue(1, $params['p_json_data']);
+        
+        return $stmt->executeQuery()->fetchAllAssociative();
+    }
             
 }

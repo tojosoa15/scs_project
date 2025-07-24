@@ -21,12 +21,26 @@ use Doctrine\ORM\Mapping as ORM;
  */
 #[ApiResource(
     operations: [
+        // Insertion utilisateur
+        new Post(
+            uriTemplate: '/api/insert',
+            controller: GetUserProfileController::class . '::inserUser'
+        ), 
+        // Verify-link-first-login
+        new Post(
+            uriTemplate: '/api/auth/verify-link-first-login',
+            controller: GetUserProfileController::class . '::verifyLinkFirstLogin',
+            parameters: [ 
+                'token'   => new QueryParameter()
+            ]
+        ),
         // Profile utilisateur
         new Get(
             uriTemplate: '/api/profile',
             controller: GetUserProfileController::class . '::__invoke',
             parameters: [ 'email' => new QueryParameter()]
         ), 
+        // Utilisateur filtré par rôle 
         new Get(
             uriTemplate: '/api/user_by_role',
             controller: GetUserProfileController::class . '::getUserByRole',

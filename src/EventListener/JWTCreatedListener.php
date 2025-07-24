@@ -18,7 +18,7 @@ class JWTCreatedListener implements EventSubscriberInterface
     {
         $user = $event->getUser();
 
-        if (!$user instanceof \App\Entity\AccountInformation) {
+        if (!$user instanceof \App\Entity\ClaimUser\AccountInformations) {
             return;
         }
 
@@ -26,7 +26,7 @@ class JWTCreatedListener implements EventSubscriberInterface
 
         // Ajouter des champs personnalisés
         $payload['id'] = $user->getId();
-        $payload['username'] = $user->getEmail();
+        // $payload['username'] = $user->getEmail();
         $payload['business_name'] = $user->getBusinessName();
         $payload['roles'] = $user->getRoles();
 

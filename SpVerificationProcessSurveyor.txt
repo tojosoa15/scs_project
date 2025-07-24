@@ -23,7 +23,7 @@ BEGIN
             verification_id, make, model, cc, fuel_type, transmission, engime_no, chasisi_no, vehicle_no, color, odometer_reading, is_the_vehicle_total_loss, condition_of_vehicle, place_of_survey, point_of_impact
         ) VALUES (
             v_verification_id,
-            JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.make')),
+            JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.test')),
             JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.model')),
             JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.cc')),
             JSON_UNQUOTE(JSON_EXTRACT(p_json_data, '$.fuel_type')),

@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\ClaimUser\AccountInformations;
 use App\Service\ClaimUserDbService;
 use App\Service\EmailService;
+use App\Service\EmailValidatorService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -24,7 +25,8 @@ class GetUserProfileController extends AbstractController
         private EmailService $emailService,
         private UserPasswordHasherInterface $passwordHashe,
         private JWTTokenManagerInterface $jwtManager,
-        private JWTEncoderInterface $jwtDecoder
+        private JWTEncoderInterface $jwtDecoder,
+        private EmailValidatorService $emailValidator
     ) {}
 
     /**
@@ -314,66 +316,27 @@ class GetUserProfileController extends AbstractController
                         'message'   => 'Email not found.'
                     ], JsonResponse::HTTP_NOT_FOUND);
             }
+            
+            // Génére le token  avec expiration 72 heure
+            $expiration = (new \DateTime('+5 minutes'))->getTimestamp();
 
-            // Envoyer email de réinitialisation de mot de passe
-                // Générer un token (simple exemple)
-                // $token = bin2hex(random_bytes(32));
-                // Création d'un utilisateur temporaire compatible JWT
-            $user = new class(
-                $data[0]['email_address'],
-                $data[0]['business_name'],
-            ) implements UserInterface {
-                private string $email;
-                private string $businessName;
-
-                public function __construct(
-                    string $email
-                    , string $businessName
-                ) {
-                    $this->email = $email;
-                    $this->businessName = $businessName;
-                }
-
-                public function getUserIdentifier(): string {
-                    return $this->email;
-                }
-
-                public function getRoles(): array {
-                    return ['test'];
-                }
-
-                public function getBusinessName(): ?string
-                {
-                    return $this->businessName;
-                }
-
-                public function getPassword(): ?string {
-                    return null;
-                }
-
-                public function getSalt(): ?string {
-                    return null;
-                }
-
-                public function getUsername(): string {
-                    return $this->email;
-                }
-
-                public function eraseCredentials(): void {}
-            };
-                
-            // // Génére le token JWT avec expiration 15 min
             $payload = [
-                // 'email' => $email,
-                'exp' => (new \DateTime('+15 minutes'))->getTimestamp()
+                'email' => $email,
+                'exp' => $expiration,
             ];
-    
-            $token = $this->jwtManager->createFromPayload($user, $payload);
+
+            $secret = '7a9ffaf424858910c32400b722263573';
+
+            $data = base64_encode(json_encode($payload));
+            $signature = hash_hmac('sha256', $data, $secret);
+
+            $token = $data . '.' . $signature;
 
             $url = $request->headers->get('Origin');
 
             $resetLink = sprintf('%s/auth/reset-password?email=%s&token=%s', $url, $email, $token);
 
+            // Envoyer email de réinitialisation de mot de passe
             $this->emailService->sendResetPasswordEmail($email, $resetLink);
             
 
@@ -437,28 +400,244 @@ class GetUserProfileController extends AbstractController
      * @return JsonResponse
      */
     public function verifyResetPassword(Request $request) : JsonResponse {
+        
         $query = (array)json_decode($request->getContent(), true);
 
         $token =  $query['token'];
-        
+
         if (!$token) {
-            return new JsonResponse(['error' => 'Token manquant.'], 400);
+            return new JsonResponse(
+            [
+                'status'    => 'error',
+                'code'      =>  JsonResponse::HTTP_BAD_REQUEST,
+                'error' => 'Missing token.'
+            ],  JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        if (!str_contains($token, '.')) {
+            return new JsonResponse([
+                'status'    => 'error',
+                'code'      =>  JsonResponse::HTTP_BAD_REQUEST,
+                'message' => 'Invalid token format.'
+
+            ],  JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Séparer le token en deux parties
+        [$encodedData, $signature] = explode('.', $token);
+
+        // Décoder le payload
+        $payload = json_decode(base64_decode($encodedData), true);
+
+        if (!$payload) {
+            return new JsonResponse([
+                'status'    => 'error',
+                'code'      =>  JsonResponse::HTTP_BAD_REQUEST,
+                'message' => 'Payload invalide.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        if (!isset($payload['exp']) || $payload['exp'] < time()) {
+            return new JsonResponse([
+                'status'    => 'error',
+                'code'      =>  403,
+                'error' => 'Expired token.'
+            ], 403);
         }
 
         try {
-            $data = $this->jwtDecoder->decode($token);
-
-            // return new JsonResponse(['status' => 'ok', 'email' => $data]);
-
             // Vérification expiration manuelle (facultatif, déjà gérée en interne)
-            if (isset($data['exp']) && time() > $data['exp']) {
-                return new JsonResponse(['error' => 'Token expiré.'], 403);
+            if (isset($payload['exp']) && time() > $payload['exp']) {
+                return new JsonResponse([
+                     'status'   => 'error',
+                    'code'      =>  403,
+                    'message'   => 'Expired token.'
+                ], 403);
             }
 
             return new JsonResponse([
-                'status' => 'ok', 
-                'code' => 200,
-                'token' => $token
+                'status'    => 'success', 
+                'code'      => 200,
+                'message'   => '',
+                'token'     => $token
+            ]);
+
+        } catch (JWTDecodeFailureException $e) {
+            return new JsonResponse(
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                    'message'   => $e->getMessage()
+                ],
+                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * Insertion utilisateur et envoyer lien first login
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function inserUser(Request $request) : JsonResponse {
+        $params         = (array)json_decode($request->getContent(), true);
+        $email          = $params['accountInformation']['emailAddress'];
+        $plainPassword  = $params['accountInformation']['password'];
+
+        if (empty($email) || !$this->emailValidator->isValid($email)) {
+            return new JsonResponse(
+                [
+                    'status'    => 'erreur',
+                    'code'      => JsonResponse::HTTP_BAD_REQUEST,
+                    'message'   => 'emailAddress parameters are required or invalide'
+                ],
+                JsonResponse::HTTP_BAD_REQUEST
+            );
+        }
+           
+        // Validation simple (à remplacer par validator si besoin)
+        if (strlen($plainPassword) < 8 || !preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/', $plainPassword)) {
+            return new JsonResponse(
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_BAD_REQUEST,
+                    'message'   => 'Your password should: Have at least 1 uppercase letter, Have at least 1 number, Have at least 1 special character, Have minimum character.'
+                ],
+                JsonResponse::HTTP_BAD_REQUEST
+            );
+        }
+
+        // Crée un user temporaire (obligatoire pour le hashPassword)
+        $user = new AccountInformations();
+        $user->setPlainPassword($plainPassword);
+
+        // Hashe le mot de passe
+        $hashedPassword = $this->passwordHashe->hashPassword($user, $plainPassword) ;
+        
+        try {
+            $results = $this->claimUserDbService->callInsertFullUserFromJSON([
+                'p_json_data'   => json_encode($params)
+            ]);
+            
+            if ($results && isset($results[0]['user_id'])) {
+                $userId = $results[0]['user_id'];
+            } else {
+                return new JsonResponse([
+                    'status'    => 'success',
+                    'code'      =>  JsonResponse::HTTP_BAD_REQUEST,
+                    'message'   => 'Errer Insertion.'
+                ], JsonResponse::HTTP_BAD_REQUEST);
+            }
+
+            // Génére le token  avec expiration 72 heure
+            // $expiration = (new \DateTime('+72 hours'))->getTimestamp();
+            $expiration = (new \DateTime('+72 hours'))->getTimestamp();
+
+            $payload = [
+                'user_id'   => $userId,
+                'email'     => $email,
+                'exp'       => $expiration,
+            ];
+
+            $secret = '7a9ffaf424858910c32400b722263573';
+
+            $data = base64_encode(json_encode($payload));
+            $signature = hash_hmac('sha256', $data, $secret);
+
+            $token = $data . '.' . $signature;
+
+            $url = "http://localhost:4200";
+
+            $resetLink = sprintf('%s/auth/first-login?email=%s&token=%s', $url, urlencode($email), $token);
+
+            // Envoie mail first login 
+            $this->emailService->sendFirstLogin($email, $resetLink, $plainPassword);
+
+            return new JsonResponse([
+                'status'    => 'success',
+                'code'      =>  JsonResponse::HTTP_OK,
+                'message'   => 'Insertion successful, a link to the first login is sent.'
+            ], JsonResponse::HTTP_OK);
+
+        } catch (\Exception $e) {
+           return new JsonResponse(
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                    'message'   => $e->getMessage()
+                ],
+                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * Verifier expiratoin token avant first login
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function verifyLinkFirstLogin(Request $request) : JsonResponse {
+
+        $query = (array)json_decode($request->getContent(), true);
+
+        $token =  $query['token'];
+
+        if (!$token) {
+            return new JsonResponse(
+            [
+                'status'    => 'error',
+                'code'      =>  JsonResponse::HTTP_BAD_REQUEST,
+                'error' => 'Missing token.'
+            ],  JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        if (!str_contains($token, '.')) {
+            return new JsonResponse([
+                'status'    => 'error',
+                'code'      =>  JsonResponse::HTTP_BAD_REQUEST,
+                'message' => 'Invalid token format.'
+
+            ],  JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Séparer le token en deux parties
+        [$encodedData, $signature] = explode('.', $token);
+
+        // Décoder le payload
+        $payload = json_decode(base64_decode($encodedData), true);
+
+        if (!$payload) {
+            return new JsonResponse([
+                'status'    => 'error',
+                'code'      =>  JsonResponse::HTTP_BAD_REQUEST,
+                'message' => 'Payload invalide.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        if (!isset($payload['exp']) || $payload['exp'] < time()) {
+            return new JsonResponse([
+                'status'    => 'error',
+                'code'      =>  403,
+                'error' => 'Expired token.'
+            ], 403);
+        }
+
+        try {
+            // Vérification expiration manuelle (facultatif, déjà gérée en interne)
+            if (isset($payload['exp']) && time() > $payload['exp']) {
+                return new JsonResponse([
+                     'status'   => 'error',
+                    'code'      =>  403,
+                    'message'   => 'Expired token.'
+                ], 403);
+            }
+
+            return new JsonResponse([
+                'status'    => 'success', 
+                'code'      => 200,
+                'message'   => '',
+                'token'     => $token
             ]);
 
         } catch (JWTDecodeFailureException $e) {

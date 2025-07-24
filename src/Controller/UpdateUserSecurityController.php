@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\ClaimUser\AccountInformations;
 use App\Service\ClaimUserDbService;
+use App\Service\EmailValidatorService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -16,22 +17,23 @@ class UpdateUserSecurityController extends AbstractController
 {
     public function __construct(
         private ClaimUserDbService $claimUserDbService,
-        private UserPasswordHasherInterface $passwordHashe,
+        private UserPasswordHasherInterface $passwordHashe
     ) {}
 
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(Request $request, EmailValidatorService $emailValidator): JsonResponse
     {
         $resFormat = [];
 
         // $params = $request->query->all();
         $params = (array)json_decode($request->getContent(), true);
+        $email  = $params['email'];
 
-        if (empty($params['email'])) {
+        if (empty($email) || !$emailValidator->isValid($email)) {
             return new JsonResponse(
                 [
-                    'status'    => 'error',
+                    'status'    => 'erreur',
                     'code'      => JsonResponse::HTTP_BAD_REQUEST,
-                    'message'   => 'Email  parameters are required'
+                    'message'   => 'Email parameters are required or invalide'
                 ],
                 JsonResponse::HTTP_BAD_REQUEST
             );
@@ -64,7 +66,7 @@ class UpdateUserSecurityController extends AbstractController
             }
 
             $this->claimUserDbService->callUpdateUserSecurity([
-                'p_email_address'       => $params['email'],
+                'p_email_address'       => $email,
                 'p_new_password'        => $hashedPassword,
                 'p_new_backup_email'    => $params['newBackupEmail'] ?? null,
             ]);

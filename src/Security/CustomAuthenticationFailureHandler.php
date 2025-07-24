@@ -14,7 +14,7 @@ class CustomAuthenticationFailureHandler implements AuthenticationFailureHandler
         return new JsonResponse([
             'status'    => 'error',
             'code'      => 400,
-            'message'   => 'Identifiants invalides.',
+            'message'   => 'Invalid identifiers.',
         ], 400);
     }
 }

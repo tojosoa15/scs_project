@@ -58,5 +58,6 @@ services:
         autoconfigure: true
         public: true
     
-    # App\Repository\ClaimUser\BlacklistedTokensRepository:
-    #     tags: ['doctrine.repository_service']
+    App\EventListener\JwtExceptionListener:
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, priority: 100 }
