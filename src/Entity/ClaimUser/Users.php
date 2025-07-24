@@ -26,6 +26,13 @@ use Doctrine\ORM\Mapping as ORM;
             uriTemplate: '/api/insert',
             controller: GetUserProfileController::class . '::inserUser'
         ), 
+        new Post(
+            uriTemplate: '/api/auth/send-invite',
+            controller: GetUserProfileController::class . '::sendInvite',
+            parameters: [ 
+                'email'   => new QueryParameter()
+            ]
+        ), 
         // Verify-link-first-login
         new Post(
             uriTemplate: '/api/auth/verify-link-first-login',

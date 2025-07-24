@@ -286,5 +286,20 @@ class ClaimUserDbService
         
         return $stmt->executeQuery()->fetchAllAssociative();
     }
-            
+        
+     /**
+     * Liste des claims d'un utilisateur (dashboard)
+     * 
+     * @param array $params
+     * @return array
+     */
+    public function callGetUserClaimStats(array $params): array
+    {
+        $sql = "CALL GetUserClaimStats(?)";
+        
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['p_email']);
+        
+        return $stmt->executeQuery()->fetchAllAssociative();
+    }
 }

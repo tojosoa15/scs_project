@@ -4,6 +4,7 @@ namespace App\Entity\ClaimUser;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\QueryParameter;
 use App\Controller\GetClaimsByUserController;
 use Doctrine\ORM\Mapping as ORM;
@@ -19,7 +20,7 @@ use Doctrine\ORM\Mapping as ORM;
         // Liste claim d'un utilisateur
         new GetCollection(
             uriTemplate: '/api/list/claims_user',
-            controller: GetClaimsByUserController::class,
+            controller: GetClaimsByUserController::class . '::__invoke',
             parameters: [ 
                 'email'             => new QueryParameter(),
                 'status'            => new QueryParameter(),
@@ -30,6 +31,13 @@ use Doctrine\ORM\Mapping as ORM;
                 'search_num'        => new QueryParameter(),
                 'search_reg_num'    => new QueryParameter(),
                 'search_phone'      => new QueryParameter(),
+            ],
+        ), 
+        new Get(
+            uriTemplate: '/api/card-stats',
+            controller: GetClaimsByUserController::class. '::getCardStats',
+            parameters: [ 
+                'email'=> new QueryParameter()
             ],
         )
     ]

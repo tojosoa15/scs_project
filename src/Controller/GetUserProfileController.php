@@ -475,7 +475,7 @@ class GetUserProfileController extends AbstractController
     }
 
     /**
-     * Insertion utilisateur et envoyer lien first login
+     * Envoyer lien first login
      *
      * @param Request $request
      * @return JsonResponse
@@ -536,6 +536,84 @@ class GetUserProfileController extends AbstractController
 
             $payload = [
                 'user_id'   => $userId,
+                'email'     => $email,
+                'exp'       => $expiration,
+            ];
+
+            $secret = '7a9ffaf424858910c32400b722263573';
+
+            $data = base64_encode(json_encode($payload));
+            $signature = hash_hmac('sha256', $data, $secret);
+
+            $token = $data . '.' . $signature;
+
+            $url = "http://localhost:4200";
+
+            $resetLink = sprintf('%s/auth/first-login?email=%s&token=%s', $url, urlencode($email), $token);
+
+            // Envoie mail first login 
+            $this->emailService->sendFirstLogin($email, $resetLink, $plainPassword);
+
+            return new JsonResponse([
+                'status'    => 'success',
+                'code'      =>  JsonResponse::HTTP_OK,
+                'message'   => 'Insertion successful, a link to the first login is sent.'
+            ], JsonResponse::HTTP_OK);
+
+        } catch (\Exception $e) {
+           return new JsonResponse(
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                    'message'   => $e->getMessage()
+                ],
+                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * Envoyer un lien pour un first login
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function sendInvite(Request $request) : JsonResponse {
+        $params = (array)json_decode($request->getContent(), true);
+        $email  = $params['email'];
+
+        if (empty($email) || !$this->emailValidator->isValid($email)) {
+            return new JsonResponse(
+                [
+                    'status'    => 'erreur',
+                    'code'      => JsonResponse::HTTP_BAD_REQUEST,
+                    'message'   => 'Email parameters are required or invalide'
+                ],
+                JsonResponse::HTTP_BAD_REQUEST
+            );
+        }
+        
+        // Générer un mdp aléatoire
+        // $plainPassword = bin2hex(random_bytes(5));
+        $plainPassword = $this->generateSecurePassword();
+
+        
+        // Hasher le mot de passe
+        $hashedPassword = $this->passwordHashe->hashPassword(
+            new AccountInformations(),
+            $plainPassword
+        );
+
+        // JE VAIS MODIFIER LE MDP DANS LA BASE POUR SIMULER LE FIRST LOGIN
+        $this->claimUserDbService->callUpdateUserPassword([
+            'p_email_address' => $email,
+            'p_new_password'  => $hashedPassword
+        ]);
+
+        try {
+            $expiration = (new \DateTime('+72 hours'))->getTimestamp();
+
+            $payload = [
                 'email'     => $email,
                 'exp'       => $expiration,
             ];
@@ -651,4 +729,30 @@ class GetUserProfileController extends AbstractController
             );
         }
     }
+
+
+    private function generateSecurePassword(int $length = 10): string
+    {
+        $uppercase    = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $lowercase    = 'abcdefghijklmnopqrstuvwxyz';
+        $numbers      = '0123456789';
+        $specialChars = '!@#$%^&*()-_=+[]{}|;:,.<>?';
+
+        // Assurez au moins 1 caractère de chaque catégorie
+        $password = '';
+        $password .= $uppercase[random_int(0, strlen($uppercase) - 1)];
+        $password .= $lowercase[random_int(0, strlen($lowercase) - 1)];
+        $password .= $numbers[random_int(0, strlen($numbers) - 1)];
+        $password .= $specialChars[random_int(0, strlen($specialChars) - 1)];
+
+        // Complétez le reste du mot de passe
+        $allChars = $uppercase . $lowercase . $numbers . $specialChars;
+        for ($i = strlen($password); $i < $length; $i++) {
+            $password .= $allChars[random_int(0, strlen($allChars) - 1)];
+        }
+
+        // Mélangez le mot de passe pour ne pas avoir un ordre fixe
+        return str_shuffle($password);
+    }
+
 }

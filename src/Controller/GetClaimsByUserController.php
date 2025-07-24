@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\ClaimUser\Claims;
 use App\Repository\ClaimRepository;
 use App\Service\ClaimUserDbService;
+use App\Service\EmailValidatorService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -17,9 +18,16 @@ class GetClaimsByUserController extends AbstractController
     public function __construct(
         private ClaimUserDbService $claimUserDbService,
         private EntityManagerInterface $em,
-        private ClaimRepository $claimRepository
+        private ClaimRepository $claimRepository,
+        private EmailValidatorService $emailValidator
     ) {}
 
+    /**
+     * Liste claim d'un utilisateur
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function __invoke(Request $request): JsonResponse
     {
         $params = $request->query->all();
@@ -80,6 +88,53 @@ class GetClaimsByUserController extends AbstractController
                     JsonResponse::HTTP_INTERNAL_SERVER_ERROR
                 );
             }
+        }
+
+    }
+
+    /**
+     * Cards statistique
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getCardStats(Request $request): JsonResponse
+    {
+        $params = $request->query->all();
+        $email  = $params['email'];
+
+        if (empty($email) || !$this->emailValidator->isValid($email)) {
+            return new JsonResponse(
+                [
+                    'status'    => 'erreur',
+                    'code'      => JsonResponse::HTTP_BAD_REQUEST,
+                    'message'   => 'Email parameters are required or invalide'
+                ],
+                JsonResponse::HTTP_BAD_REQUEST
+            );
+        }
+
+        try {
+            $cardsStats = $this->claimUserDbService->callGetUserClaimStats([
+                'p_email'      => $email
+            ]);
+            
+            return new JsonResponse([
+                'status'    => 'success',
+                'code'      => JsonResponse::HTTP_OK,
+                'message'   => 'Cards stats.',
+                'data'      => $cardsStats
+            ], JsonResponse::HTTP_OK);
+
+        } catch (\Exception $e) {
+            return new JsonResponse(
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                    'message'   => $e->getMessage()
+                ],
+                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
 
     }
