@@ -219,8 +219,6 @@ class GetClaimDetailsController extends AbstractController
             $recentStep = 'Estimate of repair';
         }
 
-        
-
         try {
             $this->claimDetailsService->callSpVerificationProcessSurveyor([
                 'p_claim_number'    => $params['claimNumber'],

@@ -320,6 +320,6 @@ class ClaimUserDbService
         $stmt = $this->connection->prepare($sql);
         $stmt->bindValue(1, $params['p_email']);
         
-        return $stmt->executeQuery()->fetchAllAssociative();
+        return $stmt->executeQuery()->fetchAssociative();
     }
 }

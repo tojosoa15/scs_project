@@ -22,8 +22,8 @@ use Doctrine\ORM\Mapping as ORM;
             uriTemplate: '/api/claim/details-with-survey',
             controller: GetClaimDetailsController::class . '::__invoke',
             parameters: [ 
-                'claimNo'  => new QueryParameter(),
-                'email'         => new QueryParameter()
+                'claimNo'   => new QueryParameter(),
+                'email'     => new QueryParameter()
             ]
         ),
         // Surveyor report
@@ -32,9 +32,9 @@ use Doctrine\ORM\Mapping as ORM;
             controller: GetClaimDetailsController::class . '::surveyorReport',
             parameters: [ 
                 'claimNo'     => new QueryParameter(),
-                'surveyorId'   => new QueryParameter(),
-                'status'        => new QueryParameter(),
-                'currentStep'  => new QueryParameter()
+                'surveyorId'  => new QueryParameter(),
+                'status'      => new QueryParameter(),
+                'currentStep' => new QueryParameter()
             ]
         ),
         // Résumé verification
