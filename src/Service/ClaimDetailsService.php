@@ -21,7 +21,7 @@ class ClaimDetailsService
         $stmt->bindValue(1, $params['p_claim_number']);
         $stmt->bindValue(2, $params['p_email']);
         
-        return $stmt->executeQuery()->fetchAllAssociative();
+        return $stmt->executeQuery()->fetchAssociative();
     }
 
     public function callSpVerificationProcessSurveyor(array $params): array

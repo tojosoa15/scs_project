@@ -29,13 +29,13 @@ class GetClaimDetailsController extends AbstractController
                 JsonResponse::HTTP_BAD_REQUEST
             );
         }
-
+        
         try {
             $results = $this->claimDetailsService->callGetClaimDetails([
                 'p_claim_number'    => $params['claimNo'],
                 'p_email'           => $params['email']
             ]);
-
+            
             foreach ($results as $res) {
                 $resFormat = [
                     'claim_number'  => $res['claim_number'],
@@ -120,14 +120,14 @@ class GetClaimDetailsController extends AbstractController
         $data       = (array)json_decode($request->getContent(), true);
 
         $params = [
-            'claimsNo'      => $data['claimsNo'],
+            'claimNo'      => $data['claimNo'],
             'surveyorId'    => $data['surveyorId'],
             'status'        => $data['status'] ?? false,
             'currentStep'   => $data['currentStep'],
             'json_data'     => json_encode($data)
         ];
         
-        $requiredFields = ['claimsNo', 'surveyorId', 'currentStep'];
+        $requiredFields = ['claimNo', 'surveyorId', 'currentStep'];
         
         foreach ($requiredFields as $field) {
 
@@ -221,7 +221,7 @@ class GetClaimDetailsController extends AbstractController
 
         try {
             $this->claimDetailsService->callSpVerificationProcessSurveyor([
-                'p_claim_number'    => $params['claimNumber'],
+                'p_claim_number'    => $params['claimNo'],
                 'p_surveyor_id'     => $params['surveyorId'],
                 'p_status'          => $params['status'],
                 'p_current_step'    => $params['currentStep'],
@@ -275,6 +275,7 @@ class GetClaimDetailsController extends AbstractController
                 'p_claim_number'    => $params['claimNo'],
                 'p_email'           => $params['email']
             ]);
+            dd($results);
 
             foreach ($results as $res) {
                 $resFormat = [

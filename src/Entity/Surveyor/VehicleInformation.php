@@ -65,9 +65,9 @@ class VehicleInformation
     private $engimeNo;
 
     /**
-     * @var int|null
+     * @var string|null
      *
-     * @ORM\Column(name="chasisi_no", type="integer", nullable=true)
+     * @ORM\Column(name="chasisi_no", type="string", length=100, nullable=true)
      */
     private $chasisiNo;
 
@@ -207,12 +207,12 @@ class VehicleInformation
         return $this;
     }
 
-    public function getChasisiNo(): ?int
+    public function getChasisiNo(): ?string
     {
         return $this->chasisiNo;
     }
 
-    public function setChasisiNo(?int $chasisiNo): static
+    public function setChasisiNo(?string $chasisiNo): static
     {
         $this->chasisiNo = $chasisiNo;
 
