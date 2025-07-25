@@ -20,7 +20,7 @@ use Doctrine\ORM\Mapping as ORM;
     operations: [
         // Liste methode de communication
         new GetCollection(
-            uriTemplate: '/api/methode_communications',
+            uriTemplate: '/api/methode-communications',
             controller: GetCommunicationMethodsController::class
         )
     ]

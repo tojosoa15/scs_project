@@ -38,13 +38,13 @@ class GetClaimsByUserController extends AbstractController
                 $results = $this->claimUserDbService->callGetListByUser([
                     'p_email'           => $params['email'],
                     'p_status'          => $params['status'] ?? null,
-                    'p_search_name'     => $query['search_name'] ?? null,
-                    'p_sort_by'         => $query['sort_by'] ?? 'date',
+                    'p_search_name'     => $query['searchName'] ?? null,
+                    'p_sort_by'         => $query['sortBy'] ?? 'date',
                     'p_page'            => (int)($query['page'] ?? 1),
-                    'p_page_size'       => (int)($query['page_size'] ?? 10),
-                    'p_search_num'      => $query['search_num'] ?? null,
-                    'p_search_reg_num'  => $query['search_reg_num'] ?? null,
-                    'p_search_phone'    => $query['search_phone'] ?? null
+                    'p_page_size'       => (int)($query['pageSize'] ?? 10),
+                    'p_search_num'      => $query['searchNum'] ?? null,
+                    'p_search_reg_num'  => $query['searchRegNum'] ?? null,
+                    'p_search_phone'    => $query['searchPhone'] ?? null
                 ]);
                 // return new JsonResponse($results);
                 return new JsonResponse([

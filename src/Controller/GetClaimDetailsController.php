@@ -19,7 +19,7 @@ class GetClaimDetailsController extends AbstractController
 
         $params = $request->query->all();
 
-        if (empty($params['claim_number']) && empty($params['email'])) {
+        if (empty($params['claimNo']) && empty($params['email'])) {
             return new JsonResponse(
                 [
                     'status'    => 'error',
@@ -32,11 +32,9 @@ class GetClaimDetailsController extends AbstractController
 
         try {
             $results = $this->claimDetailsService->callGetClaimDetails([
-                'p_claim_number'    => $params['claim_number'],
+                'p_claim_number'    => $params['claimNo'],
                 'p_email'           => $params['email']
             ]);
-
-            // return new JsonResponse($results);
 
             foreach ($results as $res) {
                 $resFormat = [
@@ -57,7 +55,6 @@ class GetClaimDetailsController extends AbstractController
                         'condition_of_vehicle'      => $res['condition_of_vehicle'],    
                         'place_of_survey'           => $res['place_of_survey'],
                         'point_of_impact'           => $res['point_of_impact']
-                        // 'details_url' => '/claim/details_with_survey?id=' . $res['id']
                     ],
                     'survey_information' => [
                         'garage'                => $res['garage'],
@@ -123,14 +120,14 @@ class GetClaimDetailsController extends AbstractController
         $data       = (array)json_decode($request->getContent(), true);
 
         $params = [
-            'claim_number'  => $data['claims_no'],
-            'surveyor_id'   => $data['surveyor_id'],
+            'claimsNo'      => $data['claimsNo'],
+            'surveyorId'    => $data['surveyorId'],
             'status'        => $data['status'] ?? false,
-            'current_step'  => $data['current_step'],
+            'currentStep'   => $data['currentStep'],
             'json_data'     => json_encode($data)
         ];
         
-        $requiredFields = ['claims_no', 'surveyor_id', 'current_step'];
+        $requiredFields = ['claimsNo', 'surveyorId', 'currentStep'];
         
         foreach ($requiredFields as $field) {
 
@@ -147,12 +144,12 @@ class GetClaimDetailsController extends AbstractController
         }
 
         // Validation champs obligatoires etape 1
-        if ($data['current_step'] === 'step_1') {
+        if ($data['currentStep'] === 'step_1') {
             $requiredVehicleInformation = [
-                'make', 'model', 'cc', 'fuel_type', 'transmission', 'engime_no',
-                'chasisi_no', 'vehicle_no', 'color', 'odometer_reading',
-                'is_the_vehicle_total_loss', 'condition_of_vehicle',
-                'place_of_survey', 'point_of_impact'
+                'make', 'model', 'cc', 'fuelType', 'transmission', 'engimeNo',
+                'chasisiNo', 'vehicleNo', 'color', 'odometerReading',
+                'isTheVehicleTotalLoss', 'conditionOfVehicle',
+                'placeOfSurvey', 'pointOfImpact'
             ];
 
             foreach ($requiredVehicleInformation as $field) {
@@ -172,10 +169,10 @@ class GetClaimDetailsController extends AbstractController
         }
 
         // Validation champs obligatoires etape 2
-        if ($data['current_step'] === 'step_2') {
+        if ($data['currentStep'] === 'step_2') {
             $requiredSurveyInformation = [
-                'garage', 'garage_address', 'garage_contact_number', 'eor_value', 'invoice_number', 'survey_type',
-                'date_of_survey', 'time_of_survey', 'pre_accident_valeur', 'showroom_price','wrech_value', 'excess_applicable'
+                'garage', 'garageAddress', 'garageContactNumber', 'eorValue', 'invoiceNumber', 'surveyType',
+                'dateOfSurvey', 'timeOfSurvey', 'preAccidentValeur', 'showroomPrice','wrechValue', 'excessApplicable'
             ];
 
             foreach ($requiredSurveyInformation as $field) {
@@ -195,8 +192,8 @@ class GetClaimDetailsController extends AbstractController
         }
 
         // Validation champs obligatoires etape 3
-        if ($data['current_step'] === 'step_3') {
-            $requiredEstimateFields = ['current_editor', 'remarks', 'parts', 'labours'];
+        if ($data['currentStep'] === 'step_3') {
+            $requiredEstimateFields = ['currentEditor', 'remarks', 'parts', 'labours'];
 
             foreach ($requiredEstimateFields as $field) {
                 if (empty($data[$field])) {
@@ -226,10 +223,10 @@ class GetClaimDetailsController extends AbstractController
 
         try {
             $this->claimDetailsService->callSpVerificationProcessSurveyor([
-                'p_claim_number'    => $params['claim_number'],
-                'p_surveyor_id'     => $params['surveyor_id'],
+                'p_claim_number'    => $params['claimNumber'],
+                'p_surveyor_id'     => $params['surveyorId'],
                 'p_status'          => $params['status'],
-                'p_current_step'    => $params['current_step'],
+                'p_current_step'    => $params['currentStep'],
                 'p_json_data'       => $params['json_data']
             ]);
 
@@ -238,7 +235,6 @@ class GetClaimDetailsController extends AbstractController
                     'status'    => 'success',
                     'code'      => 200,
                     'message'   => "{$recentStep} successfully completed",
-                    // 'data'      => $result ?? null
                 ]
             ]);
 
@@ -265,7 +261,7 @@ class GetClaimDetailsController extends AbstractController
 
         $params = $request->query->all();
 
-        if (empty($params['claim_number']) && empty($params['email'])) {
+        if (empty($params['claimNo']) && empty($params['email'])) {
             return new JsonResponse(
                 [
                     'status'    => 'error',
@@ -278,7 +274,7 @@ class GetClaimDetailsController extends AbstractController
 
         try {
             $results = $this->claimDetailsService->callGetSummary([
-                'p_claim_number'    => $params['claim_number'],
+                'p_claim_number'    => $params['claimNo'],
                 'p_email'           => $params['email']
             ]);
 
@@ -295,23 +291,12 @@ class GetClaimDetailsController extends AbstractController
                         'point_of_impact'           => $res['point_of_impact'],
                         'place_of_survey'           => $res['place_of_survey'],
                         'is_the_vehicle_total_loss' => $res['is_the_vehicle_total_loss']
-                        // 'cc'                        => $res['cc'],
-                        // 'fuel_type'                 => $res['fuel_type'],
-                        // 'transmission'              => $res['transmission'],
-                        // 'engime_no'                 => $res['engime_no'],
-                        // 'vehicle_no'                => $res['vehicle_no'],
-                        // 'color'                     => $res['color'],
-                        // 'odometer_reading'          => $res['odometer_reading'],
-                        // 'details_url' => '/claim/details_with_survey?id=' . $res['id']
                     ],
                     'survey_information' => [
                         'invoice_number'        => $res['invoice_number'],
                         'survey_type'           => $res['survey_type'],
                         'eor_value'             => $res['eor_value'],
                         'date_of_survey'        => $res['date_of_survey']
-                        // 'garage'                => $res['garage'],
-                        // 'garage_address'        => $res['garage_address'],
-                        // 'garage_contact_number' => $res['garage_contact_number'],
                     ],
                     'rapaire_estimate' => [
                         'part_details'   =>  [
@@ -319,19 +304,12 @@ class GetClaimDetailsController extends AbstractController
                             'discount_part' => $res['discount_part'],
                             'vat_part'      => $res['vat_part'],
                             'part_total'    => $res['part_total']
-                            // 'part_name'     => $res['part_name'],
-                            // 'quantity'      => $res['quantity'],
-                            // 'supplier'      => $res['supplier'],
-                            // 'quality'       => $res['quality'],
                         ],
                         'labour_details' => [
                             'hourly_const_labour'   => $res['hourly_const_labour'],
                             'discount_labour'       => $res['discount_labour'],
                             'vat_labour'            => $res['vat_labour'],
                             'labour_total'          => $res['labour_total']
-                            // 'eor_or_surveyor'       => $res['eor_or_surveyor'],
-                            // 'activity'              => $res['activity'],
-                            // 'number_of_hours'       => $res['number_of_hours'],
                         ],
                         'grand_tatal'   => [
                             'cost_total'        => $res['cost_total'],//(float)$res['cost_part'] + (float)$res['hourly_const_labour'],

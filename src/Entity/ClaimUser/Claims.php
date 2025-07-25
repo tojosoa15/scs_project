@@ -19,18 +19,18 @@ use Doctrine\ORM\Mapping as ORM;
     operations: [
         // Liste claim d'un utilisateur
         new GetCollection(
-            uriTemplate: '/api/list/claims',
+            uriTemplate: '/api/claims',
             controller: GetClaimsByUserController::class . '::__invoke',
             parameters: [ 
-                'email'             => new QueryParameter(),
-                'status'            => new QueryParameter(),
-                'search_name'       => new QueryParameter(),
-                'sort_by'           => new QueryParameter(),
-                'page'              => new QueryParameter(),
-                'page_size'         => new QueryParameter(),
-                'search_num'        => new QueryParameter(),
-                'search_reg_num'    => new QueryParameter(),
-                'search_phone'      => new QueryParameter(),
+                'email'         => new QueryParameter(),
+                'status'        => new QueryParameter(),
+                'searchName'    => new QueryParameter(),
+                'sortBy'        => new QueryParameter(),
+                'searchNum'     => new QueryParameter(),
+                'searchRegNum'  => new QueryParameter(),
+                'searchPhone'   => new QueryParameter(),
+                'page'          => new QueryParameter(),
+                'pageSize'      => new QueryParameter(),
             ],
         ), 
         new Get(

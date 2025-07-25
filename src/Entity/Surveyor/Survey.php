@@ -19,31 +19,31 @@ use Doctrine\ORM\Mapping as ORM;
     operations: [
         // Détail d'un claim 
         new Get(
-            uriTemplate: '/api/claim/details_with_survey',
+            uriTemplate: '/api/claim/details-with-survey',
             controller: GetClaimDetailsController::class . '::__invoke',
             parameters: [ 
-                'claim_number'  => new QueryParameter(),
+                'claimNo'  => new QueryParameter(),
                 'email'         => new QueryParameter()
             ]
         ),
         // Surveyor report
         new Post(
-            uriTemplate: '/api/surveyor_report',
+            uriTemplate: '/api/surveyor-report',
             controller: GetClaimDetailsController::class . '::surveyorReport',
             parameters: [ 
-                'claims_no'     => new QueryParameter(),
-                'surveyor_id'   => new QueryParameter(),
+                'claimNo'     => new QueryParameter(),
+                'surveyorId'   => new QueryParameter(),
                 'status'        => new QueryParameter(),
-                'current_step'  => new QueryParameter()
+                'currentStep'  => new QueryParameter()
             ]
         ),
         // Résumé verification
         new Get(
-            uriTemplate: '/api/report_summary',
+            uriTemplate: '/api/report-summary',
             controller: GetClaimDetailsController::class . '::reportSummary',
             parameters: [ 
-                'claim_number'  => new QueryParameter(),
-                'email'         => new QueryParameter()
+                'claimNo'   => new QueryParameter(),
+                'email'     => new QueryParameter()
             ]
         )
     ]
