@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jul 24, 2025 at 12:06 PM
+-- Generation Time: Jul 25, 2025 at 07:57 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.2.26
 
@@ -279,6 +279,129 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetListByUser` (IN `p_email` VARCHA
     PREPARE stmt FROM @sql;
     EXECUTE stmt;
     DEALLOCATE PREPARE stmt;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetListByUserPag`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetListByUserPag` (IN `p_email` VARCHAR(255), IN `p_status` VARCHAR(255), IN `p_search_name` VARCHAR(255), IN `p_sort_by` VARCHAR(50), IN `p_page` INT, IN `p_page_size` INT, IN `p_search_num` VARCHAR(255), IN `p_search_reg_num` VARCHAR(255), IN `p_search_phone` VARCHAR(255))   BEGIN
+    DECLARE v_where TEXT;
+    DECLARE v_order_by TEXT;
+    DECLARE v_offset INT;
+    DECLARE v_sql TEXT;
+    DECLARE v_sql_count TEXT;
+    DECLARE v_total INT DEFAULT 0;
+
+    -- Set default values
+    SET p_email = IFNULL(p_email, '');
+    SET p_status = IFNULL(p_status, '');
+    SET p_search_name = IFNULL(p_search_name, '');
+    SET p_sort_by = IFNULL(p_sort_by, 'date_DESC'); -- Valeur par défaut
+    SET p_page = GREATEST(IFNULL(p_page, 1), 1);
+    SET p_page_size = IFNULL(p_page_size, 10);
+    SET p_search_num = IFNULL(p_search_num, '');
+    SET p_search_reg_num = IFNULL(p_search_reg_num, '');
+    SET p_search_phone = IFNULL(p_search_phone, '');
+
+    -- Validation de l'email
+    IF p_email = '' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'L''email est obligatoire.';
+    END IF;
+
+    -- Vérifier si l'utilisateur existe
+    IF NOT EXISTS (
+        SELECT 1 FROM account_informations WHERE email_address = p_email
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Utilisateur introuvable.';
+    END IF;
+
+    -- Construction du WHERE dynamique
+    SET v_where = ' WHERE 1=1';
+
+    IF p_status <> '' THEN
+        SET v_where = CONCAT(v_where, ' AND ST.status_name = ', QUOTE(p_status));
+    END IF;
+    IF p_search_name <> '' THEN
+        SET v_where = CONCAT(v_where, ' AND CL.name LIKE ''%', p_search_name, '%''');
+    END IF;
+    IF p_search_num <> '' THEN
+        SET v_where = CONCAT(v_where, ' AND CL.number LIKE ''%', p_search_num, '%''');
+    END IF;
+    IF p_search_reg_num <> '' THEN
+        SET v_where = CONCAT(v_where, ' AND CL.registration_number LIKE ''%', p_search_reg_num, '%''');
+    END IF;
+    IF p_search_phone <> '' THEN
+        SET v_where = CONCAT(v_where, ' AND CL.phone LIKE ''%', p_search_phone, '%''');
+    END IF;
+
+    SET v_where = CONCAT(v_where, ' AND ACI.email_address = ', QUOTE(p_email));
+
+    -- Définir l'ordre de tri basé sur p_sort_by
+    IF p_sort_by = 'date_ASC' THEN
+        SET v_order_by = ' ORDER BY CL.received_date ASC';
+    ELSEIF p_sort_by = 'date_DESC' THEN
+        SET v_order_by = ' ORDER BY CL.received_date DESC';
+    ELSEIF p_sort_by = 'ageing_ASC' THEN
+        SET v_order_by = ' ORDER BY CL.ageing ASC';
+    ELSEIF p_sort_by = 'ageing_DESC' THEN
+        SET v_order_by = ' ORDER BY CL.ageing DESC';
+    ELSE
+        SET v_order_by = ' ORDER BY CL.received_date DESC'; -- tri par défaut
+    END IF;
+
+    -- Calcul du décalage
+    SET v_offset = (p_page - 1) * p_page_size;
+
+    -- Construction et exécution du SQL de comptage
+    SET v_sql_count = CONCAT('
+        SELECT COUNT(*) INTO @v_total
+        FROM claims CL
+        INNER JOIN assignment A ON CL.number = A.claims_number
+        INNER JOIN users US ON US.id = A.users_id
+        INNER JOIN account_informations ACI ON ACI.users_id = US.id
+        INNER JOIN status ST ON A.status_id = ST.id
+        ', v_where);
+
+    SET @v_total = 0;
+    SET @stmt = v_sql_count;
+    PREPARE stmt_count FROM @stmt;
+    EXECUTE stmt_count;
+    DEALLOCATE PREPARE stmt_count;
+
+    SELECT @v_total INTO v_total;
+
+    -- Construction de la requête principale avec pagination
+    SET v_sql = CONCAT('
+        SELECT
+            CL.received_date,
+            CL.number,
+            CL.name,
+            CL.registration_number,
+            CL.ageing,
+            CL.phone,
+            ST.status_name
+        FROM claims CL
+        INNER JOIN assignment A ON CL.number = A.claims_number
+        INNER JOIN users US ON US.id = A.users_id
+        INNER JOIN account_informations ACI ON ACI.users_id = US.id
+        INNER JOIN status ST ON A.status_id = ST.id
+        ', v_where, v_order_by, '
+        LIMIT ', v_offset, ', ', p_page_size);
+
+    -- Exécution de la requête principale
+    SET @sql = v_sql;
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+
+    -- Résultat de pagination
+    SELECT
+        v_total AS total_claims,
+        CEIL(v_total / p_page_size) AS total_pages,
+        p_page AS current_page,
+        GREATEST(p_page - 1, 1) AS previous_page,
+        LEAST(p_page + 1, CEIL(v_total / p_page_size)) AS next_page,
+        p_page_size AS page_size;
 END$$
 
 DROP PROCEDURE IF EXISTS `GetMethodCommunication`$$
@@ -735,7 +858,7 @@ CREATE TABLE IF NOT EXISTS `account_informations` (
 --
 
 INSERT INTO `account_informations` (`id`, `users_id`, `business_name`, `business_registration_number`, `business_address`, `city`, `postal_code`, `phone_number`, `email_address`, `password`, `website`, `backup_email`) VALUES
-(1, 1, 'Brondon', '48 AG 23', 'Squard Orchard', 'Quatre Bornes', '7000', '56589857', 'tojo@gmail.com', '$2y$12$Q8DmtgztAwBc28aP.3s42uzs1Fr0KKUvtXkeJQpv486MyoQgMDQ9i', 'www.tojosoa.com', 'tojoRene@gmail.com'),
+(1, 1, 'Brondon', '48 AG 23', 'Squard Orchard', 'Quatre Bornes', '7000', '56589857', 'tojo@gmail.com', '$2y$12$hfHzc6co/yGxOHAZ/S7Tqe1ST1FPJo7EY4M72kVEls5IKisjc8kDy', 'www.tojosoa.com', 'tojoRene@gmail.com'),
 (2, 2, 'Christofer', '1 JN 24', 'La Louis', 'Quatre Bornes', '7120', '57896532', 'valentinmagde@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.rene.com', ''),
 (3, 3, 'Kierra', '94 NOV 06', 'Moka', 'Saint Pierre', '7520', '54789512', 'rene@gmail.com', '$2y$12$xhQSKfQWXosSbZCgfA3uAO6zD4CopXh9HrglAgUJFyRJuKCESOaN2', 'www.raharison.com', ''),
 (4, 4, 'Surveyor 2', 'Surveyor 2', 'addr Surveyor 2', 'Quatre bornes', '7200', '55678923', 'surveyor2@gmail.com', '$2y$12$nHmXmOQnSx4Nt0H7DX3Ye.OIa7BEjRz1Ez.gK3uxG8C1JwBBLmbCa', 'www.surveyor.com', ''),
