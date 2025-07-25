@@ -21,21 +21,41 @@ class ClaimUserDbService
      */
     public function callGetListByUser(array $params): array
     {
-        $sql = "CALL GetListByUser(?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        
-        $stmt = $this->connection->prepare($sql);
+        /** @var \PDO $pdo */
+        $pdo = $this->connection->getNativeConnection();
+
+        $stmt = $pdo->prepare("CALL GetListByUserPag(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
         $stmt->bindValue(1, $params['p_email']);
-        $stmt->bindValue(2, $params['p_status'] ?? null);
-        $stmt->bindValue(3, $params['p_search_name']);
-        $stmt->bindValue(4, $params['p_sort_by']);
-        $stmt->bindValue(5, $params['p_page'], \PDO::PARAM_INT);
-        $stmt->bindValue(6, $params['p_page_size'], \PDO::PARAM_INT);
-        $stmt->bindValue(7, $params['p_search_num']);
-        $stmt->bindValue(8, $params['p_search_reg_num']);
-        $stmt->bindValue(9, $params['p_search_phone']);
-        
-        return $stmt->executeQuery()->fetchAllAssociative();
+        $stmt->bindValue(2, $params['p_status'] ?? '');
+        $stmt->bindValue(3, $params['p_search_name'] ?? '');
+        $stmt->bindValue(4, $params['p_sort_by'] ?? 'date');
+        $stmt->bindValue(5, (int)($params['p_page'] ?? 1), \PDO::PARAM_INT);
+        $stmt->bindValue(6, (int)($params['p_page_size'] ?? 10), \PDO::PARAM_INT);
+        $stmt->bindValue(7, $params['p_search_num'] ?? '');
+        $stmt->bindValue(8, $params['p_search_reg_num'] ?? '');
+        $stmt->bindValue(9, $params['p_search_phone'] ?? '');
+
+        $stmt->execute();
+
+        $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        if ($stmt->nextRowset()) {
+            $meta = $stmt->fetch(\PDO::FETCH_ASSOC);
+        } else {
+            $meta = [];
+        }
+
+        return array_merge(
+            ['data' => $data],
+            $meta ?: []
+        );
+
     }
+
+
+
+
 
     /**
      * Information utilisateur pour visualiser et gerer profile

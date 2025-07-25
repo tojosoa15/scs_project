@@ -46,7 +46,7 @@ class GetClaimsByUserController extends AbstractController
                     'p_search_reg_num'  => $query['search_reg_num'] ?? null,
                     'p_search_phone'    => $query['search_phone'] ?? null
                 ]);
-    
+                // return new JsonResponse($results);
                 return new JsonResponse([
                     'status'    => 'success',
                     'code'      => JsonResponse::HTTP_OK,
