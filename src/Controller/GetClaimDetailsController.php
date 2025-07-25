@@ -31,6 +31,7 @@ class GetClaimDetailsController extends AbstractController
         }
         
         try {
+            
             $results = $this->claimDetailsService->callGetClaimDetails([
                 'p_claim_number'    => $params['claimNo'],
                 'p_email'           => $params['email']
@@ -275,7 +276,6 @@ class GetClaimDetailsController extends AbstractController
                 'p_claim_number'    => $params['claimNo'],
                 'p_email'           => $params['email']
             ]);
-            dd($results);
 
             foreach ($results as $res) {
                 $resFormat = [
