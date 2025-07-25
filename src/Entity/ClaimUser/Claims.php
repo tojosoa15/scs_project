@@ -34,7 +34,7 @@ use Doctrine\ORM\Mapping as ORM;
             ],
         ), 
         new Get(
-            uriTemplate: '/api/card-stats',
+            uriTemplate: '/api/claim/card-stats',
             controller: GetClaimsByUserController::class. '::getCardStats',
             parameters: [ 
                 'email'=> new QueryParameter()
