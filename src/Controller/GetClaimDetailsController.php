@@ -36,66 +36,66 @@ class GetClaimDetailsController extends AbstractController
                 'p_claim_number'    => $params['claimNo'],
                 'p_email'           => $params['email']
             ]);
-            
-            foreach ($results as $res) {
-                $resFormat = [
-                    'claim_number'  => $res['claim_number'],
-                    'status_name'   => $res['status_name'],
-                    'vehicle_informatin' => [
-                        'make'                      => $res['make'],
-                        'model'                     => $res['model'],
-                        'cc'                        => $res['cc'],
-                        'fuel_type'                 => $res['fuel_type'],
-                        'transmission'              => $res['transmission'],
-                        'engime_no'                 => $res['engime_no'],
-                        'chasisi_no'                => $res['chasisi_no'],
-                        'vehicle_no'                => $res['vehicle_no'],
-                        'color'                     => $res['color'],
-                        'odometer_reading'          => $res['odometer_reading'],
-                        'is_the_vehicle_total_loss' => $res['is_the_vehicle_total_loss'],
-                        'condition_of_vehicle'      => $res['condition_of_vehicle'],    
-                        'place_of_survey'           => $res['place_of_survey'],
-                        'point_of_impact'           => $res['point_of_impact']
-                    ],
-                    'survey_information' => [
-                        'garage'                => $res['garage'],
-                        'garage_address'        => $res['garage_address'],
-                        'garage_contact_number' => $res['garage_contact_number'],
-                        'eor_value'             => $res['eor_value'],
-                        'invoice_number'        => $res['invoice_number'],
-                        'survey_type'           => $res['survey_type'],
-                        'date_of_survey'        => $res['date_of_survey']
-                    ],
-                    'estimate_of_repairs' => [
-                        'part_detail'   =>  [
-                            'part_name'     => $res['part_name'],
-                            'quantity'      => $res['quantity'],
-                            'supplier'      => $res['supplier'],
-                            'quality'       => $res['quality'],
-                            'cost_part'     => $res['cost_part'],
-                            'discount_part' => $res['discount_part'],
-                            'vat_part'      => $res['vat_part'],
-                            'part_total'    => $res['part_total']
-                        ],
-                        'labour_detail' => [
-                            'eor_or_surveyor'       => $res['eor_or_surveyor'],
-                            'activity'              => $res['activity'],
-                            'number_of_hours'       => $res['number_of_hours'],
-                            'hourly_const_labour'   => $res['hourly_const_labour'],
-                            'discount_labour'       => $res['discount_labour'],
-                            'vat_labour'            => $res['vat_labour'],
-                            'labour_total'          => $res['labour_total']
-                        ],
-                        'remarks'   => $res['remarks']
-                    ]
-                ];
-            }
+
+            // foreach ($results as $res) {
+            //     $resFormat = [
+            //         'claim_number'  => $res['claim_number'],
+            //         'status_name'   => $res['status_name'],
+            //         'vehicle_informatin' => [
+            //             'make'                      => $res['make'],
+            //             'model'                     => $res['model'],
+            //             'cc'                        => $res['cc'],
+            //             'fuel_type'                 => $res['fuel_type'],
+            //             'transmission'              => $res['transmission'],
+            //             'engime_no'                 => $res['engime_no'],
+            //             'chasisi_no'                => $res['chasisi_no'],
+            //             'vehicle_no'                => $res['vehicle_no'],
+            //             'color'                     => $res['color'],
+            //             'odometer_reading'          => $res['odometer_reading'],
+            //             'is_the_vehicle_total_loss' => $res['is_the_vehicle_total_loss'],
+            //             'condition_of_vehicle'      => $res['condition_of_vehicle'],    
+            //             'place_of_survey'           => $res['place_of_survey'],
+            //             'point_of_impact'           => $res['point_of_impact']
+            //         ],
+            //         'survey_information' => [
+            //             'garage'                => $res['garage'],
+            //             'garage_address'        => $res['garage_address'],
+            //             'garage_contact_number' => $res['garage_contact_number'],
+            //             'eor_value'             => $res['eor_value'],
+            //             'invoice_number'        => $res['invoice_number'],
+            //             'survey_type'           => $res['survey_type'],
+            //             'date_of_survey'        => $res['date_of_survey']
+            //         ],
+            //         'estimate_of_repairs' => [
+            //             'part_detail'   =>  [
+            //                 'part_name'     => $res['part_name'],
+            //                 'quantity'      => $res['quantity'],
+            //                 'supplier'      => $res['supplier'],
+            //                 'quality'       => $res['quality'],
+            //                 'cost_part'     => $res['cost_part'],
+            //                 'discount_part' => $res['discount_part'],
+            //                 'vat_part'      => $res['vat_part'],
+            //                 'part_total'    => $res['part_total']
+            //             ],
+            //             'labour_detail' => [
+            //                 'eor_or_surveyor'       => $res['eor_or_surveyor'],
+            //                 'activity'              => $res['activity'],
+            //                 'number_of_hours'       => $res['number_of_hours'],
+            //                 'hourly_const_labour'   => $res['hourly_const_labour'],
+            //                 'discount_labour'       => $res['discount_labour'],
+            //                 'vat_labour'            => $res['vat_labour'],
+            //                 'labour_total'          => $res['labour_total']
+            //             ],
+            //             'remarks'   => $res['remarks']
+            //         ]
+            //     ];
+            // }
 
             return new JsonResponse([
                 'status'    => 'success',
                 'code'      => JsonResponse::HTTP_OK,
                 'message'   => 'Successful Claim details',
-                'data'      => $resFormat
+                'data'      => $results
             ], JsonResponse::HTTP_OK);
 
         } catch (\Exception $e) {
