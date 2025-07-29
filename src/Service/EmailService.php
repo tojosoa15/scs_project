@@ -18,9 +18,9 @@ class EmailService
         $email = (new Email())
             ->from('no-reply@yourapp.com')
             ->to($toEmail)
-            ->subject('Réinitialisation de votre mot de passe')
-            ->text("Cliquez sur ce lien pour réinitialiser votre mot de passe : $resetLink")
-            ->html("<p>Cliquez sur ce lien pour réinitialiser votre mot de passe :</p><p><a href=\"$resetLink\">$resetLink</a></p>");
+            ->subject('Reset your password.')
+            ->text("Click on this link to reset your password : $resetLink")
+            ->html("<p>Click on this link to reset your password :</p><p><a href=\"$resetLink\">$resetLink</a></p>");
 
         $this->mailer->send($email);
     }
@@ -30,24 +30,36 @@ class EmailService
         $email = (new Email())
             ->from('no-reply@yourapp.com')
             ->to($toEmail)
-            ->subject('Vos accès à la plateforme')
+            ->subject('Your access to the platform')
             ->text("
-                Voici vos identifiants de connexion :
+                Here are your login details :
                 Email : $toEmail
-                Mot de passe : $plainPassword
+                Password : $plainPassword
 
-                Cliquez sur ce lien pour définir un nouveau mot de passe :
+                Click on this link to set a new password:
                 $resetLink
             ")
             ->html("
-                <p>Voici vos identifiants de connexion :</p>
+                <p>Here are your login details :</p>
                 <ul>
                     <li><strong>Email :</strong> $toEmail</li>
-                    <li><strong>Mot de passe :</strong> $plainPassword</li>
+                    <li><strong>Password :</strong> $plainPassword</li>
                 </ul>
-                <p>Cliquez sur ce lien pour définir un nouveau mot de passe :</p>
+                <p>Click on this link to set a new password:</p>
                 <p><a href=\"$resetLink\">$resetLink</a></p>
             ");
+
+        $this->mailer->send($email);
+    }
+
+    public function sendSummaryWithAttachment(string $toEmail, string $pdfPath): void
+    {
+        $email = (new Email())
+            ->from('noreply@tonapp.com')
+            ->to($toEmail)
+            ->subject('Claim Summary Report')
+            ->text('Please find enclosed a summary of your claim.')
+            ->attachFromPath($pdfPath, 'claim_summary.pdf', 'application/pdf');
 
         $this->mailer->send($email);
     }

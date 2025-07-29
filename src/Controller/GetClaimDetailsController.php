@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Service\ClaimDetailsService;
+use App\Service\EmailService;
+use App\Service\SummaryExportService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -11,7 +13,11 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 #[AsController]
 class GetClaimDetailsController extends AbstractController
 {
-    public function __construct(private ClaimDetailsService $claimDetailsService) {}
+    public function __construct(
+        private ClaimDetailsService $claimDetailsService,
+        private SummaryExportService $summaryExportService,
+        private EmailService $emailService,
+    ) {}
 
     public function __invoke(Request $request): JsonResponse
     {
@@ -339,4 +345,116 @@ class GetClaimDetailsController extends AbstractController
         }
     }
 
+    /**
+     * Export en pdf du résumé de la vérification
+     * 
+     * @param $request 
+     */
+    public function reportSummaryExportPdf(Request $request) {
+        $params = $request->query->all();
+
+        if (empty($params['claimNo']) && empty($params['email'])) {
+            return new JsonResponse(
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_BAD_REQUEST,
+                    'message'   => 'Claim Number and email parameters is required'
+                ],
+                JsonResponse::HTTP_BAD_REQUEST
+            );
+        }
+
+        try {
+            // Choix type d'export
+            // if (empty($params['typeExport'])) {
+            //     return new JsonResponse(
+            //         [
+            //             'status'    => 'error',
+            //             'code'      => JsonResponse::HTTP_BAD_REQUEST,
+            //             'message'   => 'Type Export parameters is required'
+            //         ],
+            //         JsonResponse::HTTP_BAD_REQUEST
+            //     );
+            // }
+
+            $results = $this->claimDetailsService->callGetSummary([
+                'p_claim_number'    => $params['claimNo'],
+                'p_email'           => $params['email']
+            ]);
+
+            // dd($results);
+
+            // if ($params['typeExport'] == 'pdf') {
+                return $this->summaryExportService->generatePdf($results);
+            // }
+
+            // if ($params['typeExport'] == 'xlsx') {
+            //     return $this->summaryExportService->generateExcel($results);
+            // }
+
+            throw new \Exception('Type d\'export pas renseigné');
+
+        } catch (\Exception $e) {
+            return new JsonResponse(
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                    'message'   => 'Claim retrieval failed.'
+                ],
+                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * Envoyer par mail le ficiher résumé de la vérification en pdf
+     * 
+     * @param $request 
+     */
+    public function reportSummarySendMail(Request $request) {
+        $params =  (array)json_decode($request->getContent(), true);
+        $email  = $params['email'];
+        
+        if (empty($params['claimNo']) && empty($email)) {
+            return new JsonResponse(
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_BAD_REQUEST,
+                    'message'   => 'Claim Number and email parameters is required'
+                ],
+                JsonResponse::HTTP_BAD_REQUEST
+            );
+        }
+        
+        try {
+            $results = $this->claimDetailsService->callGetSummary([
+                'p_claim_number'    => $params['claimNo'],
+                'p_email'           => $email
+            ]);
+                
+            // Générer le PDF et le sauvegarder temporairement
+            $pdfFilePath = $this->summaryExportService->generatePdfToFile($results);
+
+            // Envoi de l’email avec pièce jointe
+            $this->emailService->sendSummaryWithAttachment(
+                $email,
+                $pdfFilePath
+            );
+            
+
+            return new JsonResponse([
+                'status'    => 'success',
+                'code'      => JsonResponse::HTTP_OK,
+                'message'   => 'Email sent with PDF attachment.'
+            ], JsonResponse::HTTP_OK);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'code' => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Claim retrieval or email sending failed.',
+                'error' => $e->getMessage()
+            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }

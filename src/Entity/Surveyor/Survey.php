@@ -45,7 +45,25 @@ use Doctrine\ORM\Mapping as ORM;
                 'claimNo'   => new QueryParameter(),
                 'email'     => new QueryParameter()
             ]
-        )
+        ),
+         // export verification
+        new Get(
+            uriTemplate: '/api/report-summary/export-pdf',
+            controller: GetClaimDetailsController::class . '::reportSummaryExportPdf',
+            parameters: [ 
+                'claimNo'   => new QueryParameter(),
+                'email'     => new QueryParameter()
+                // 'typeExport'    => new QueryParameter()
+            ]
+        ), 
+        new Post(
+            uriTemplate: '/api/report-summary/send-mail',
+            controller: GetClaimDetailsController::class . '::reportSummarySendMail',
+            parameters: [ 
+                'claimNo'   => new QueryParameter(),
+                'email'     => new QueryParameter()
+            ]
+        )    
     ]
 )]
 class Survey

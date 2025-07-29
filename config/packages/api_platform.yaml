@@ -13,3 +13,8 @@ api_platform:
         json: ['application/json']  # Activation explicite du JSON
     patch_formats:
         json: ['application/json']  # Important pour les opérations PATCH
+    swagger:
+        api_keys:
+            JWT:
+                name: Authorization
+                type: header
