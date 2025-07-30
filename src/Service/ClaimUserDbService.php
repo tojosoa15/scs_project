@@ -53,10 +53,6 @@ class ClaimUserDbService
 
     }
 
-
-
-
-
     /**
      * Information utilisateur pour visualiser et gerer profile
      * 
@@ -321,5 +317,30 @@ class ClaimUserDbService
         $stmt->bindValue(1, $params['p_email']);
         
         return $stmt->executeQuery()->fetchAssociative();
+    }
+
+    /**
+     * Liste des payements d'un utilisateur (dashboard)
+     * 
+     * @param array $params
+     * @return array
+     */
+    public function callGetPaiementListByUser(array $params): array
+    {
+
+        $sql = "CALL GetPaiementListByUser(?, ?, ?, ?, ?, ?, ?)";
+
+        $stmt = $this->connection->prepare($sql);
+
+        $stmt->bindValue(1, $params['p_email']);
+        $stmt->bindValue(2, $params['p_status'] ?? '');
+        $stmt->bindValue(3, $params['p_invoice_no'] ?? '');
+        $stmt->bindValue(4, $params['p_claim_number'] ?? '');
+        $stmt->bindValue(5, $params['p_sort_by'] ?? 'date');
+        $stmt->bindValue(6, (int)($params['p_page'] ?? 1), \PDO::PARAM_INT);
+        $stmt->bindValue(7, (int)($params['p_page_size'] ?? 10), \PDO::PARAM_INT);
+
+        return $stmt->executeQuery()->fetchAllAssociative();
+
     }
 }
