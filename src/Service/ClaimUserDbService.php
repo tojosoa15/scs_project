@@ -328,17 +328,19 @@ class ClaimUserDbService
     public function callGetPaiementListByUser(array $params): array
     {
 
-        $sql = "CALL GetPaiementListByUser(?, ?, ?, ?, ?, ?, ?)";
+        $sql = "CALL GetPaiementListByUser(?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $this->connection->prepare($sql);
 
         $stmt->bindValue(1, $params['p_email']);
-        $stmt->bindValue(2, $params['p_status'] ?? '');
-        $stmt->bindValue(3, $params['p_invoice_no'] ?? '');
-        $stmt->bindValue(4, $params['p_claim_number'] ?? '');
-        $stmt->bindValue(5, $params['p_sort_by'] ?? 'date');
-        $stmt->bindValue(6, (int)($params['p_page'] ?? 1), \PDO::PARAM_INT);
-        $stmt->bindValue(7, (int)($params['p_page_size'] ?? 10), \PDO::PARAM_INT);
+        $stmt->bindValue(2, $params['p_status'] ?? null);
+        $stmt->bindValue(3, $params['p_invoice_no'] ?? null);
+        $stmt->bindValue(4, $params['p_claim_number'] ?? null);
+        $stmt->bindValue(5, $params['p_sort_by'] ?? null);
+        $stmt->bindValue(6, (int)($params['p_page'] ?? 1));
+        $stmt->bindValue(7, (int)($params['p_page_size'] ?? 10));
+        $stmt->bindValue(8, $params['p_start_date'] ?? null);
+        $stmt->bindValue(9, $params['p_end_date'] ?? null);
 
         return $stmt->executeQuery()->fetchAllAssociative();
 

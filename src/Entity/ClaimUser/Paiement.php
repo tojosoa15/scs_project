@@ -42,7 +42,24 @@ use Doctrine\ORM\Mapping as ORM;
             parameters: [ 
                 'email' => new QueryParameter()
             ],
-        )
+        ),
+        // Liste paiement d'un utilisateur
+        new GetCollection(
+            uriTemplate: '/api/payment/export',
+            controller: PaymentController::class . '::paymentExport',
+            parameters: [ 
+                'email'    => new QueryParameter(),
+                // 'status'        => new QueryParameter(),
+                // 'invoiceNo'     => new QueryParameter(),
+                // 'claimNo'       => new QueryParameter(),
+                // 'sortBy'        => new QueryParameter(),
+                // 'page'          => new QueryParameter(),
+                // 'pageSize'      => new QueryParameter(),
+                'startDate' => new QueryParameter(),
+                'endDate'   => new QueryParameter(),
+                'format'    => new QueryParameter()
+            ],
+        ),
     ]
 )]
 class Paiement

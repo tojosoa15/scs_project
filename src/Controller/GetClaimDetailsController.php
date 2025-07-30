@@ -352,6 +352,7 @@ class GetClaimDetailsController extends AbstractController
      */
     public function reportSummaryExportPdf(Request $request) {
         $params = $request->query->all();
+        
 
         if (empty($params['claimNo']) && empty($params['email'])) {
             return new JsonResponse(
@@ -376,13 +377,10 @@ class GetClaimDetailsController extends AbstractController
             //         JsonResponse::HTTP_BAD_REQUEST
             //     );
             // }
-
             $results = $this->claimDetailsService->callGetSummary([
                 'p_claim_number'    => $params['claimNo'],
                 'p_email'           => $params['email']
             ]);
-
-            // dd($results);
 
             // if ($params['typeExport'] == 'pdf') {
                 return $this->summaryExportService->generatePdf($results);
