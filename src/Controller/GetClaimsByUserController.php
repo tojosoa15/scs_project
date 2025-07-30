@@ -122,7 +122,7 @@ class GetClaimsByUserController extends AbstractController
             return new JsonResponse([
                 'status'    => 'success',
                 'code'      => JsonResponse::HTTP_OK,
-                'message'   => 'Cards stats.',
+                'message'   => 'Cards stats claims.',
                 'data'      => $cardsStats
             ], JsonResponse::HTTP_OK);
 

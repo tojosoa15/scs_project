@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\ClaimUser\Paiement;
 use App\Service\ClaimUserDbService;
+use App\Service\EmailValidatorService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -16,6 +17,7 @@ class PaymentController extends AbstractController
     public function __construct(
         private ClaimUserDbService $claimUserDbService,
         private EntityManagerInterface $em,
+        private EmailValidatorService $emailValidator
     ) {}
 
     public function __invoke(Request $request): JsonResponse
@@ -46,5 +48,52 @@ class PaymentController extends AbstractController
                     JsonResponse::HTTP_INTERNAL_SERVER_ERROR
             );
         }
+    }
+
+    /**
+     * Cards statistique
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getCardStatsPaiment(Request $request): JsonResponse
+    {
+        $params = $request->query->all();
+        $email  = $params['email'] ?? null;
+
+        if (empty($email) || !$this->emailValidator->isValid($email)) {
+            return new JsonResponse(
+                [
+                    'status'    => 'erreur',
+                    'code'      => JsonResponse::HTTP_BAD_REQUEST,
+                    'message'   => 'Email parameters are required or invalide'
+                ],
+                JsonResponse::HTTP_BAD_REQUEST
+            );
+        }
+
+        try {
+            $cardsStats = $this->claimUserDbService->callGetUserPaiementStats([
+                'p_email'   => $email
+            ]);
+            
+            return new JsonResponse([
+                'status'    => 'success',
+                'code'      => JsonResponse::HTTP_OK,
+                'message'   => 'Cards stats payment.',
+                'data'      => $cardsStats
+            ], JsonResponse::HTTP_OK);
+
+        } catch (\Exception $e) {
+            return new JsonResponse(
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                    'message'   => $e->getMessage()
+                ],
+                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+
     }
 }

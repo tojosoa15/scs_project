@@ -303,8 +303,8 @@ class ClaimUserDbService
         return $stmt->executeQuery()->fetchAllAssociative();
     }
         
-     /**
-     * Liste des claims d'un utilisateur (dashboard)
+    /**
+     * Statistique cards claims
      * 
      * @param array $params
      * @return array
@@ -342,5 +342,22 @@ class ClaimUserDbService
 
         return $stmt->executeQuery()->fetchAllAssociative();
 
+    }
+
+
+     /**
+     * Statistique cards paiements
+     * 
+     * @param array $params
+     * @return array
+     */
+    public function callGetUserPaiementStats(array $params): array
+    {
+        $sql = "CALL GetUserPaiementStats(?)";
+        
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['p_email']);
+        
+        return $stmt->executeQuery()->fetchAssociative();
     }
 }

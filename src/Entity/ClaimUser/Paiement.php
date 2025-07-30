@@ -3,6 +3,7 @@
 namespace App\Entity\ClaimUser;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\QueryParameter;
 use App\Controller\PaymentController;
@@ -20,10 +21,10 @@ use Doctrine\ORM\Mapping as ORM;
  */
 #[ApiResource(
     operations: [
-        // Liste claim d'un utilisateur
+        // Liste paiement d'un utilisateur
         new GetCollection(
             uriTemplate: '/api/payments',
-            controller: PaymentController::class,
+            controller: PaymentController::class . '::__invoke',
             parameters: [ 
                 'email'         => new QueryParameter(),
                 'status'        => new QueryParameter(),
@@ -32,6 +33,14 @@ use Doctrine\ORM\Mapping as ORM;
                 'sortBy'        => new QueryParameter(),
                 'page'          => new QueryParameter(),
                 'pageSize'      => new QueryParameter()
+            ],
+        ),
+        // Card pour les paiements
+        new Get(
+            uriTemplate: '/api/payment/card-stats',
+            controller: PaymentController::class . '::getCardStatsPaiment',
+            parameters: [ 
+                'email' => new QueryParameter()
             ],
         )
     ]
