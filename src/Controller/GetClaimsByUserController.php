@@ -38,13 +38,13 @@ class GetClaimsByUserController extends AbstractController
                 $results = $this->claimUserDbService->callGetListByUser([
                     'p_email'           => $params['email'],
                     'p_status'          => $params['status'] ?? null,
-                    'p_search_name'     => $query['searchName'] ?? null,
-                    'p_sort_by'         => $query['sortBy'] ?? 'date',
-                    'p_page'            => (int)($query['page'] ?? 1),
-                    'p_page_size'       => (int)($query['pageSize'] ?? 10),
-                    'p_search_num'      => $query['searchNum'] ?? null,
-                    'p_search_reg_num'  => $query['searchRegNum'] ?? null,
-                    'p_search_phone'    => $query['searchPhone'] ?? null
+                    'p_search_name'     => $params['searchName'] ?? null,
+                    'p_sort_by'         => $params['sortBy'] ?? 'date',
+                    'p_page'            => (int)($params['page'] ?? 1),
+                    'p_page_size'       => (int)($params['pageSize'] ?? 10),
+                    'p_search_num'      => $params['searchNum'] ?? null,
+                    'p_search_reg_num'  => $params['searchRegNum'] ?? null,
+                    'p_search_phone'    => $params['searchPhone'] ?? null
                 ]);
                 // return new JsonResponse($results);
                 return new JsonResponse([
@@ -67,8 +67,8 @@ class GetClaimsByUserController extends AbstractController
         } else {
             try {
                 $claims = $this->claimUserDbService->callGetAllClaims([
-                    'page'      => (int)($query['page'] ?? 1),
-                    'page_size' => (int)($query['page_size'] ?? 10),
+                    'page'      => (int)($params['page'] ?? 1),
+                    'page_size' => (int)($params['page_size'] ?? 10),
                 ]);
                 
                 return new JsonResponse([
