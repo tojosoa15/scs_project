@@ -37,7 +37,7 @@ class PaymentController extends AbstractController
                 'p_status'          => $params['status'] ?? null,
                 'p_invoice_no'      => $params['searchName'] ?? null,
                 'p_claim_number'    => $params['searchPhone'] ?? null,
-                'p_sort_by'         => $params['sortBy'] ?? 'date',
+                'p_sort_by'         => $params['sortBy'] ?? 'received_date-asc',
                 'p_page'            => (int)($params['page'] ?? 1),
                 'p_page_size'       => (int)($params['pageSize'] ?? 10)
             ]);

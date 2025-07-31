@@ -39,7 +39,7 @@ class GetClaimsByUserController extends AbstractController
                     'p_email'           => $params['email'],
                     'p_status'          => $params['status'] ?? null,
                     'p_search_name'     => $params['searchName'] ?? null,
-                    'p_sort_by'         => $params['sortBy'] ?? 'date',
+                    'p_sort_by'         => $params['sortBy'] ?? 'received_date-asc',
                     'p_page'            => (int)($params['page'] ?? 1),
                     'p_page_size'       => (int)($params['pageSize'] ?? 10),
                     'p_search_num'      => $params['searchNum'] ?? null,
