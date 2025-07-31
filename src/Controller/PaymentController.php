@@ -35,11 +35,11 @@ class PaymentController extends AbstractController
             $payments = $this->claimUserDbService->callGetPaiementListByUser([
                 'p_email'           => $params['email'],
                 'p_status'          => $params['status'] ?? null,
-                'p_invoice_no'      => $query['searchName'] ?? null,
-                'p_claim_number'    => $query['searchPhone'] ?? null,
-                'p_sort_by'         => $query['sortBy'] ?? 'date',
-                'p_page'            => (int)($query['page'] ?? 1),
-                'p_page_size'       => (int)($query['pageSize'] ?? 10)
+                'p_invoice_no'      => $params['searchName'] ?? null,
+                'p_claim_number'    => $params['searchPhone'] ?? null,
+                'p_sort_by'         => $params['sortBy'] ?? 'date',
+                'p_page'            => (int)($params['page'] ?? 1),
+                'p_page_size'       => (int)($params['pageSize'] ?? 10)
             ]);
             
             return new JsonResponse([

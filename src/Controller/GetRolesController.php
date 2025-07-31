@@ -26,8 +26,8 @@ class GetRolesController extends AbstractController
 
         try {
             $claims = $this->claimUserDbService->callAllRoles([
-                'page' => (int)($query['page'] ?? 1),
-                'page_size' => (int)($query['page_size'] ?? 10),
+                'page' => (int)($params['page'] ?? 1),
+                'page_size' => (int)($params['page_size'] ?? 10),
             ]);
             
             return new JsonResponse([
