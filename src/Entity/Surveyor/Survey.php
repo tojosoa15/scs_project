@@ -34,7 +34,8 @@ use Doctrine\ORM\Mapping as ORM;
                 'claimNo'     => new QueryParameter(),
                 'surveyorId'  => new QueryParameter(),
                 'status'      => new QueryParameter(),
-                'currentStep' => new QueryParameter()
+                'currentStep' => new QueryParameter(),
+                'imageFile'   => new QueryParameter(),
             ]
         ),
         // Résumé verification

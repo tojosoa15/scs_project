@@ -3,6 +3,9 @@
 namespace App\Entity\Surveyor;
 
 use Doctrine\DBAL\Types\Types;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -115,6 +118,8 @@ class SurveyInformation
      * })
      */
     private $verification;
+
+    private ?UploadedFile $imageFile = null;
 
     public function getId(): ?int
     {
@@ -274,6 +279,21 @@ class SurveyInformation
     {
         $this->verification = $verification;
 
+        return $this;
+    }
+
+    /**
+     * @Assert\File(maxSize="5M")
+     * @Groups({"survey:write"})
+     */
+    public function getImageFile(): ?UploadedFile
+    {
+        return $this->imageFile;
+    }
+
+    public function setImageFile(?UploadedFile $file): static
+    {
+        $this->imageFile = $file;
         return $this;
     }
 

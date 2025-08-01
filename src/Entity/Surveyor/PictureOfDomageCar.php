@@ -2,6 +2,10 @@
 
 namespace App\Entity\Surveyor;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\QueryParameter;
+use App\Controller\DeletedActionController;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -10,6 +14,18 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="picture_of_domage_car", indexes={@ORM\Index(name="fk_picture_of_domage_car_survey_information1_idx", columns={"survey_information_id"})})
  * @ORM\Entity
  */
+#[ApiResource(
+    operations: [
+        // Suppression une image de dommage
+        new Patch(
+            uriTemplate: '/api/delete-image-of-domage',
+            controller: DeletedActionController::class . '::deteleImageOfDomage',
+            parameters: [ 
+                'imageOfDomageId' => new QueryParameter(),
+            ]
+        ),
+    ]
+)]
 class PictureOfDomageCar
 {
     /**
@@ -37,6 +53,13 @@ class PictureOfDomageCar
      * })
      */
     private $surveyInformation;
+
+    /**
+     * @var \DateTime|null
+     *
+     * @ORM\Column(name="deleted_at", type="datetime", nullable=true, options={"default"="NULL"})
+     */
+    private $deletedAt = null;
 
     public function getId(): ?int
     {
@@ -67,5 +90,16 @@ class PictureOfDomageCar
         return $this;
     }
 
+    public function getDeletedAt(): ?\DateTime
+    {
+        return $this->deletedAt;
+    }
+
+    public function setDeletedAt(?\DateTime $deletedAt): static
+    {
+        $this->deletedAt = $deletedAt;
+
+        return $this;
+    }
 
 }

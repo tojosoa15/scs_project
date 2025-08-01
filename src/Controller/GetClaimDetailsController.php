@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Surveyor\PictureOfDomageCar;
 use App\Service\ClaimDetailsService;
 use App\Service\EmailService;
 use App\Service\SummaryExportService;
@@ -9,6 +10,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\String\Slugger\SluggerInterface;
+use Doctrine\ORM\EntityManagerInterface;
 
 #[AsController]
 class GetClaimDetailsController extends AbstractController
@@ -121,13 +125,16 @@ class GetClaimDetailsController extends AbstractController
      * 
      * @param $request
      */
-    public function surveyorReport(Request $request): JsonResponse 
+    public function surveyorReport(Request $request,  SluggerInterface $slugger, EntityManagerInterface $em): JsonResponse 
     {
+        $data = $request->request->all();
+        // $data       = (array)json_decode($request->getContent(), true);
+
         $recentStep = '';
-        $data       = (array)json_decode($request->getContent(), true);
+        // $data       = (array)json_decode($request->getContent(), true);
 
         $params = [
-            'claimNo'      => $data['claimNo'],
+            'claimNo'       => $data['claimNo'],
             'surveyorId'    => $data['surveyorId'],
             'status'        => $data['status'] ?? false,
             'currentStep'   => $data['currentStep'],
@@ -234,6 +241,58 @@ class GetClaimDetailsController extends AbstractController
                 'p_current_step'    => $params['currentStep'],
                 'p_json_data'       => $params['json_data']
             ]);
+
+            // Pour les insertions image télécharger
+            if ($data['currentStep'] === 'step_2') {
+                $imageFiles = $request->files->get('imageFile');
+
+                $qb = $em->createQuery(
+                    'SELECT s FROM App\Entity\Surveyor\SurveyInformation s 
+                    JOIN s.verification v 
+                    WHERE v.claimNumber = :claimNo'
+                );
+                $qb->setParameter('claimNo', $params['claimNo']);
+
+                $survey = $qb->getOneOrNullResult();
+
+                if (!$survey) {
+                    return new JsonResponse(['error' => 'Survey not found'], 404);
+                }
+
+                // Répertoire d'upload
+                $uploadDir = 'C:' . DIRECTORY_SEPARATOR . 'Users' . DIRECTORY_SEPARATOR . 'Lenovo' . DIRECTORY_SEPARATOR . 'Pictures' . DIRECTORY_SEPARATOR . 'testPictures';
+
+                // Normaliser $imageFiles en tableau (même s'il n'y a qu'un seul fichier)
+                if (!is_array($imageFiles)) {
+                    $imageFiles = [$imageFiles];
+                }
+
+                foreach ($imageFiles as $imageFile) {
+                    if ($imageFile && $imageFile->isValid()) {
+                        $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                        $safeFilename = $slugger->slug($originalFilename);
+                        $newFilename = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
+
+                        try {
+                            $imageFile->move($uploadDir, $newFilename);
+
+                            $picture = new PictureOfDomageCar();
+                            $picture->setPath($uploadDir . DIRECTORY_SEPARATOR . $newFilename);
+                            $picture->setSurveyInformation($survey);
+                            $picture->setDeletedAt(null);
+
+                            $em->persist($picture);
+                        } catch (FileException $e) {
+                            return new JsonResponse([
+                                'error' => 'Upload failed for ' . $originalFilename,
+                                'details' => $e->getMessage()
+                            ], 500);
+                        }
+                    }
+                }
+
+                $em->flush();
+            }
 
             return new JsonResponse([
                 'status' => [

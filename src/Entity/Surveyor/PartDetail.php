@@ -2,6 +2,10 @@
 
 namespace App\Entity\Surveyor;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\QueryParameter;
+use App\Controller\DeletedActionController;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -10,6 +14,18 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="part_detail", indexes={@ORM\Index(name="fk_part_detail_estimate_of_repair1_idx", columns={"estimate_of_repair_id"})})
  * @ORM\Entity
  */
+#[ApiResource(
+    operations: [
+        // Suppression 
+        new Patch(
+            uriTemplate: '/api/delete-part',
+            controller: DeletedActionController::class . '::detelePart',
+            parameters: [ 
+                'partId' => new QueryParameter(),
+            ]
+        ),
+    ]
+)]
 class PartDetail
 {
     /**
@@ -86,6 +102,13 @@ class PartDetail
      * })
      */
     private $estimateOfRepair;
+
+     /**
+     * @var \DateTime|null
+     *
+     * @ORM\Column(name="deleted_at", type="datetime", nullable=true, options={"default"="CURRENT_TIMESTAMP"})
+     */
+    private $deletedAt = null;
 
     public function getId(): ?int
     {
@@ -200,5 +223,16 @@ class PartDetail
         return $this;
     }
 
+    public function getDeletedAt(): ?\DateTime
+    {
+        return $this->deletedAt;
+    }
+
+    public function setDeletedAt(?\DateTime $deletedAt): static
+    {
+        $this->deletedAt = $deletedAt;
+
+        return $this;
+    }
 
 }
