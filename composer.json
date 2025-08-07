@@ -30,6 +30,7 @@
         "symfony/framework-bundle": "6.4.*",
         "symfony/mailer": "6.4.*",
         "symfony/maker-bundle": "^1.63",
+        "symfony/mercure": "^0.6.5",
         "symfony/property-access": "6.4.*",
         "symfony/property-info": "6.4.*",
         "symfony/runtime": "6.4.*",
@@ -39,7 +40,8 @@
         "symfony/uid": "6.4.*",
         "symfony/validator": "6.4.*",
         "symfony/yaml": "6.4.*",
-        "twig/twig": "^3.21"
+        "twig/twig": "^3.21",
+        "twilio/sdk": "^8.7"
     },
     "config": {
         "allow-plugins": {

@@ -19,7 +19,7 @@ use Doctrine\ORM\Mapping as ORM;
     operations: [
         // Détail d'un claim 
         new Get(
-            uriTemplate: '/api/claim/details-with-survey',
+            uriTemplate: '/api/claim',
             controller: GetClaimDetailsController::class . '::__invoke',
             parameters: [ 
                 'claimNo'   => new QueryParameter(),

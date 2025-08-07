@@ -72,6 +72,10 @@ class JWTTokenAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?JsonResponse
     {
-        return new JsonResponse(['error' => $exception->getMessageKey()], 401);
+        return new JsonResponse([
+            'status'    => 'error',
+            'code'      => 401,
+            'message'   => 'You must reconnect, you are already disconnected.',
+        ], 401);
     }
 }
