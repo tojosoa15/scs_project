@@ -89,15 +89,17 @@ class ClaimDetailsService
             $summaries['labour_details'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         }
     
-        // 5. Grand Totals
+        // 5. Documents
+        if ($stmt->nextRowset()) {
+            $summaries['documents'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        // 6. Grand Totals
         if ($stmt->nextRowset()) {
             $summaries['grand_totals'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         }
     
-        // 6. Documents
-        if ($stmt->nextRowset()) {
-            $summaries['Document'] = ['document_list' => $vehicle_survey['document_names']];
-        }
+        
         return $summaries;
     }
 
