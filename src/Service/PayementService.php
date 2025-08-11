@@ -27,7 +27,7 @@ class PayementService
     {
     }
 
-     /**
+    /**
      * Génération détail PDF
      * @param Paiement $payement
      * @return void
@@ -164,6 +164,32 @@ class PayementService
         $response->headers->set('Cache-Control', 'no-store, no-cache');
 
         return $response;
+    }
+
+    /**
+     * Génération détail facture d'un paiement en PDF
+     * 
+     * @return void
+     */
+    public function generatePdfDetailsInvoice($invoices)
+    {
+        $pdfOptions = new \Dompdf\Options();
+        $pdfOptions->set('defaultFont', 'Arial')->setIsRemoteEnabled(true);
+        $pdfOptions->set("isPhpEnabled", true);
+        $pdf = new Dompdf($pdfOptions);
+        
+        $template = $this->twig->render("payement/pdf-invoice.html.twig", [
+            'invoices' => $invoices
+        ]);
+
+        $pdf->loadHtml($template);
+        $pdf->setPaper('A4', 'portrait');
+        $pdf->render();
+
+        $date           = (new \DateTime())->format('d_m_Y_H_i_s');
+        $filename       = "payments_invoice_details_" . $date . ".pdf";
+        $pdf->stream($filename, ["Attachment" => true]);
+        exit();
     }
 
 }

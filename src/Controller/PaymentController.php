@@ -132,16 +132,10 @@ class PaymentController extends AbstractController
         try {
             $payments = $this->claimUserDbService->callGetPaiementListByUser([
                 'p_email'       => $params['email'],
-                // 'p_status'          => $params['status'] ?? null,
-                // 'p_invoice_no'      => $query['searchName'] ?? null,
-                // 'p_claim_number'    => $query['searchPhone'] ?? null,
-                // 'p_sort_by'         => $query['sortBy'] ?? 'date',
-                // 'p_page'            => (int)($query['page'] ?? 1),
-                // 'p_page_size'       => (int)($query['pageSize'] ?? 10),
                 'p_start_date'  => $params['startDate'] ?? null,
                 'p_end_date'    => $params['endDate'] ?? null
             ]);
-            // dd($payments);
+
             if ($params['format'] == 'pdf') {
                 return $this->payementService->generatePdf($payments);
             }
@@ -159,8 +153,11 @@ class PaymentController extends AbstractController
 
         } catch (\Exception $e) {
             return new JsonResponse(
-                [   'error' => $e->getMessage(), 'message' => 'Roles retrieval failed.'],
-                    JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+                [   
+                    'status' => 'error',
+                    'code' => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                    'message' => 'Export retrieval failed.'
+                ],JsonResponse::HTTP_INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -189,9 +186,7 @@ class PaymentController extends AbstractController
         }
 
         try {
-            
-            // dd($params);
-            $cardsStats = $this->claimUserDbService->callGetPaymentDetailsByInvoice([
+            $payementInvoice = $this->claimUserDbService->callGetPaymentDetailsByInvoice([
                 'p_email'       => $params['email'],
                 'p_invoice_no'  => $params['invoiceNo']
             ]);
@@ -200,8 +195,52 @@ class PaymentController extends AbstractController
                 'status'    => 'success',
                 'code'      => JsonResponse::HTTP_OK,
                 'message'   => 'Cards stats payment.',
-                'data'      => $cardsStats
+                'data'      => $payementInvoice
             ], JsonResponse::HTTP_OK);
+
+        } catch (\Exception $e) {
+            return new JsonResponse(
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                    'message'   => $e->getMessage()
+                ],
+                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+
+    }
+
+    /**
+     * Téléchargement de la facture d'un paiement
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function downloadInvoice(Request $request)
+    {
+        $params = $request->query->all();
+        
+        if (empty($params['email']) || empty($params['invoiceNo'])) {
+            return new JsonResponse(
+                [
+                    'status'    => 'erreur',
+                    'code'      => JsonResponse::HTTP_BAD_REQUEST,
+                    'message'   => 'Email or invoiceNo parameters are required or invalide'
+                ],
+                JsonResponse::HTTP_BAD_REQUEST
+            );
+        }
+
+        try {
+            $payementInvoice = $this->claimUserDbService->callGetPaymentDetailsByInvoice([
+                'p_email'       => $params['email'],
+                'p_invoice_no'  => $params['invoiceNo']
+            ]);
+            
+            return $this->payementService->generatePdfDetailsInvoice($payementInvoice);
+
+            throw new \Exception('Type d\'export pas renseigné');
 
         } catch (\Exception $e) {
             return new JsonResponse(

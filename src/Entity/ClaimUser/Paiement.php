@@ -48,13 +48,7 @@ use Doctrine\ORM\Mapping as ORM;
             uriTemplate: '/api/payment/export',
             controller: PaymentController::class . '::paymentExport',
             parameters: [ 
-                'email'    => new QueryParameter(),
-                // 'status'        => new QueryParameter(),
-                // 'invoiceNo'     => new QueryParameter(),
-                // 'claimNo'       => new QueryParameter(),
-                // 'sortBy'        => new QueryParameter(),
-                // 'page'          => new QueryParameter(),
-                // 'pageSize'      => new QueryParameter(),
+                'email'     => new QueryParameter(),
                 'startDate' => new QueryParameter(),
                 'endDate'   => new QueryParameter(),
                 'format'    => new QueryParameter()
@@ -67,6 +61,16 @@ use Doctrine\ORM\Mapping as ORM;
             parameters: [ 
                 'email'     => new QueryParameter(),
                 'invoiceNo' => new QueryParameter(),
+            ],
+        ),
+
+        // Liste paiement d'un utilisateur
+        new Get(
+            uriTemplate: '/api/payment/download-invoice',
+            controller: PaymentController::class . '::downloadInvoice',
+            parameters: [ 
+                'email'    => new QueryParameter(),
+                'invoiceNo' => new QueryParameter()
             ],
         ),
     ]
