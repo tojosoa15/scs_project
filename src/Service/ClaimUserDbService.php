@@ -347,7 +347,7 @@ class ClaimUserDbService
     }
 
 
-     /**
+    /**
      * Statistique cards paiements
      * 
      * @param array $params
@@ -359,6 +359,23 @@ class ClaimUserDbService
         
         $stmt = $this->connection->prepare($sql);
         $stmt->bindValue(1, $params['p_email']);
+        
+        return $stmt->executeQuery()->fetchAssociative();
+    }
+
+    /**
+     * Détail d'un paiement
+     * 
+     * @param array $params
+     * @return array
+     */
+    public function callGetPaymentDetailsByInvoice(array $params): array
+    {
+        $sql = "CALL GetPaymentDetailsByInvoice(?, ?)";
+        
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['p_invoice_no']);
+        $stmt->bindValue(2, $params['p_email']);
         
         return $stmt->executeQuery()->fetchAssociative();
     }

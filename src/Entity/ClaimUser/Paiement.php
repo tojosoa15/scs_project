@@ -60,6 +60,15 @@ use Doctrine\ORM\Mapping as ORM;
                 'format'    => new QueryParameter()
             ],
         ),
+        // Détail d'un paiement
+        new Get(
+            uriTemplate: '/api/payment',
+            controller: PaymentController::class . '::getDetailPaiement',
+            parameters: [ 
+                'email'     => new QueryParameter(),
+                'invoiceNo' => new QueryParameter(),
+            ],
+        ),
     ]
 )]
 class Paiement

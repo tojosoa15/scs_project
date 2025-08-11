@@ -164,4 +164,55 @@ class PaymentController extends AbstractController
             );
         }
     }
+
+    /**
+     * Détail d'un payement
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getDetailPaiement(Request $request): JsonResponse
+    {
+        $params = $request->query->all();
+        // $email  = $params['email'] ?? null;
+
+        
+        if (empty($params['email']) || empty($params['invoiceNo'])) {
+            return new JsonResponse(
+                [
+                    'status'    => 'erreur',
+                    'code'      => JsonResponse::HTTP_BAD_REQUEST,
+                    'message'   => 'Email or invoiceNo parameters are required or invalide'
+                ],
+                JsonResponse::HTTP_BAD_REQUEST
+            );
+        }
+
+        try {
+            
+            // dd($params);
+            $cardsStats = $this->claimUserDbService->callGetPaymentDetailsByInvoice([
+                'p_email'       => $params['email'],
+                'p_invoice_no'  => $params['invoiceNo']
+            ]);
+            
+            return new JsonResponse([
+                'status'    => 'success',
+                'code'      => JsonResponse::HTTP_OK,
+                'message'   => 'Cards stats payment.',
+                'data'      => $cardsStats
+            ], JsonResponse::HTTP_OK);
+
+        } catch (\Exception $e) {
+            return new JsonResponse(
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                    'message'   => $e->getMessage()
+                ],
+                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+
+    }
 }

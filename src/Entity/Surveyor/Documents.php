@@ -29,6 +29,13 @@ class Documents
     private $attachements;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="path", type="string", length=255, nullable=false)
+     */
+    private $path;
+
+    /**
      * @var \SurveyInformation
      *
      * @ORM\ManyToOne(targetEntity="SurveyInformation")
@@ -67,5 +74,16 @@ class Documents
         return $this;
     }
 
+    public function getPath(): ?string
+    {
+        return $this->path;
+    }
+
+    public function setPath(string $path): static
+    {
+        $this->path = $path;
+
+        return $this;
+    }
 
 }
