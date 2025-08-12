@@ -25,9 +25,15 @@ class GetClaimDetailsController extends AbstractController
 
     public function __invoke(Request $request): JsonResponse
     {
-        $resFormat = [];
-
         $params = $request->query->all();
+
+        // $url = $request->headers->get('Origin');
+        // return new JsonResponse([
+        //          'status'    => 'success',
+        //          'code'      => JsonResponse::HTTP_OK,
+        //          'message'   => 'Successful Claim details',
+        //          'data'      => $url
+        //      ], JsonResponse::HTTP_OK);
 
         if (empty($params['claimNo']) && empty($params['email'])) {
             return new JsonResponse(

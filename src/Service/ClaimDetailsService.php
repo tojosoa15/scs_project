@@ -15,14 +15,8 @@ class ClaimDetailsService
 
     public function callGetClaimDetails(array $params): array
     {
-        // $sql = "CALL GetClaimDetails(?, ?)";
-        
-        // $stmt = $this->connection->prepare($sql);
-        // $stmt->bindValue(1, $params['p_claim_number']);
-        // $stmt->bindValue(2, $params['p_email']);
-        
-        // return $stmt->executeQuery()->fetchAssociative();
-         $pdo = $this->connection->getNativeConnection(); // Retourne un \PDO natif
+
+        $pdo = $this->connection->getNativeConnection(); // Retourne un \PDO natif
     
         $stmt = $pdo->prepare("CALL GetClaimDetails(:claim_number, :email)");
         $stmt->bindValue(':claim_number', $params['p_claim_number']);
@@ -73,28 +67,35 @@ class ClaimDetailsService
                 'excess_applicable'     => $vehicle_survey['excess_applicable']
             ];
         }
-    
-        // 2. Vehicle Information
-        // if ($stmt->nextRowset()) {
-        //     $summaries['vehicle_information'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        // }
-    
-        // 3. Part Summary
+        // 2. Part Summary
         if ($stmt->nextRowset()) {
             $summaries['part_details'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         }
     
-        // 4. Labour Summary
+        // 3. Labour Summary
         if ($stmt->nextRowset()) {
             $summaries['labour_details'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         }
     
-        // 5. Documents
+        // // 4. Documents
+        // if ($stmt->nextRowset()) {
+        //     $summaries['documents'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        // }
+        // 4. Documents
         if ($stmt->nextRowset()) {
-            $summaries['documents'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $documents = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            // URL de base (par exemple depuis le serveur Symfony)
+            $baseUrl = $_ENV['APP_URL'] ?? 'http://localhost:8000'; // À mettre dans ton .env
+
+            foreach ($documents as &$doc) {
+                $doc['path'] = rtrim($baseUrl, '/') . '/' . ltrim($doc['path'], '/');
+            }
+
+            $summaries['documents'] = $documents;
         }
 
-        // 6. Grand Totals
+        // 5. Grand Totals
         if ($stmt->nextRowset()) {
             $summaries['grand_totals'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         }

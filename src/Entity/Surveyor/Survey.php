@@ -17,15 +17,6 @@ use Doctrine\ORM\Mapping as ORM;
  */
 #[ApiResource(
     operations: [
-        // Détail d'un claim 
-        new Get(
-            uriTemplate: '/api/claim',
-            controller: GetClaimDetailsController::class . '::__invoke',
-            parameters: [ 
-                'claimNo'   => new QueryParameter(),
-                'email'     => new QueryParameter()
-            ]
-        ),
         // Surveyor report
         new Post(
             uriTemplate: '/api/surveyor-report',

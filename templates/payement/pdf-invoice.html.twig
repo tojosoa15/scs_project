@@ -53,22 +53,30 @@
             margin: 8px 0 16px 0;
         }
 
-        /* Items table */
-        table.items {
-            width: 100%;
+        /* Summary table */
+        table.summary-table {
+            width: 40%; /* ou 100% si besoin pleine largeur */
             border-collapse: collapse;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            overflow: hidden;
+            font-size: 12px;
         }
-        table.items th, table.items td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
+
+        table.summary-table td {
+            border: 1px solid #f5f5f5;
+            padding: 8px 10px;
         }
-        table.items th {
-            background: #f8f8f8;
-            text-align: left;
+
+        table.summary-table tr:nth-child(odd) td {
+            background: #fafafa;
         }
-        .text-left { text-align: left; }
-        .grand-total { font-weight: bold; background: #f0f0f0; }
+
+        table.summary-table .text-right {
+            text-align: right;
+            font-weight: bold;
+        }
+
     </style>
 </head>
 <body>
@@ -107,31 +115,22 @@
 
     <hr class="separator" />
 
-    <!-- Items -->
-    <table class="items">
-        <thead>
-            <tr>
-                <th class="text-left">Repair items</th>
-                <th>Amount (MUR)</th>
-                <th>VAT %</th>
-                <th>Total (MUR)</th>
-            </tr>
-        </thead>
+    <!-- Summary table -->
+    <table class="summary-table">
         <tbody>
             <tr>
-                <td class="text-left">Claim Payment</td>
-                <td>{{ invoices.claim_amount|number_format(2, '.', ',') }}</td>
-                <td>{{ invoices.vat }}</td>
-                <td>{{ invoices.total_amount|number_format(2, '.', ',') }}</td>
+                <td>Amount</td>
+                <td class="text-right">Rs {{ invoices.claim_amount|number_format(2, '.', ',') }}</td>
             </tr>
-            <tr class="grand-total">
-                <td class="text-left">Grand total</td>
-                <td>{{ invoices.claim_amount|number_format(2, '.', ',') }}</td>
-                <td>{{ invoices.vat }}</td>
-                <td>{{ invoices.total_amount|number_format(2, '.', ',') }}</td>
+            <tr>
+                <td>VAT</td>
+                <td class="text-right">{{ invoices.vat|number_format(2, '.', ',') }}%</td>
+            </tr>
+            <tr>
+                <td>Total</td>
+                <td class="text-right">Rs {{ invoices.total_amount|number_format(2, '.', ',') }}</td>
             </tr>
         </tbody>
     </table>
-
 </body>
 </html>

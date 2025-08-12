@@ -6,6 +6,7 @@ use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\QueryParameter;
+use App\Controller\GetClaimDetailsController;
 use App\Controller\GetClaimsByUserController;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -33,6 +34,15 @@ use Doctrine\ORM\Mapping as ORM;
                 'pageSize'      => new QueryParameter(),
             ],
         ), 
+        // Détail d'un claim 
+        new Get(
+            uriTemplate: '/api/claim',
+            controller: GetClaimDetailsController::class . '::__invoke',
+            parameters: [ 
+                'claimNo'   => new QueryParameter(),
+                'email'     => new QueryParameter()
+            ]
+        ),
         new Get(
             uriTemplate: '/api/claim/card-stats',
             controller: GetClaimsByUserController::class. '::getCardStats',
