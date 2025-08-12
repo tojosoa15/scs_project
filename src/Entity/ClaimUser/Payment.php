@@ -10,9 +10,9 @@ use App\Controller\PaymentController;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Paiement
+ * Payment
  *
- * @ORM\Table(name="paiement", indexes={
+ * @ORM\Table(name="payment", indexes={
  *     @ORM\Index(name="fk_paiement_status", columns={"status_id"}),
  *     @ORM\Index(name="fk_paiement_users", columns={"users_id"}),
  *     @ORM\Index(name="fk_paiement_claims", columns={"claim_number"})
@@ -75,7 +75,7 @@ use Doctrine\ORM\Mapping as ORM;
         ),
     ]
 )]
-class Paiement
+class Payment
 {
     /**
      * @var int

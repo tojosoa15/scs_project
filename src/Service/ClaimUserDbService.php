@@ -346,7 +346,6 @@ class ClaimUserDbService
 
     }
 
-
     /**
      * Statistique cards paiements
      * 
@@ -355,7 +354,7 @@ class ClaimUserDbService
      */
     public function callGetUserPaiementStats(array $params): array
     {
-        $sql = "CALL GetUserPaiementStats(?)";
+        $sql = "CALL GetUserPaymentStats(?)";
         
         $stmt = $this->connection->prepare($sql);
         $stmt->bindValue(1, $params['p_email']);

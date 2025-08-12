@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Entity\Surveyor\PictureOfDomageCar;
+use App\Entity\Surveyor\PictureOfDamageCar;
 use App\Service\ClaimDetailsService;
 use App\Service\EmailService;
 use App\Service\SummaryExportService;
@@ -282,7 +282,7 @@ class GetClaimDetailsController extends AbstractController
                         try {
                             $imageFile->move($uploadDir, $newFilename);
 
-                            $picture = new PictureOfDomageCar();
+                            $picture = new PictureOfDamageCar();
                             $picture->setPath($uploadDir . DIRECTORY_SEPARATOR . $newFilename);
                             $picture->setSurveyInformation($survey);
                             $picture->setDeletedAt(null);

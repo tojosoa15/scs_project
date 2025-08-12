@@ -67,16 +67,16 @@ class DeletedActionController extends AbstractController
      * @param Request $request
      * @return JsonResponse
      */
-    public function deteleImageOfDomage(Request $request): JsonResponse
+    public function deteleImageOfDamage(Request $request): JsonResponse
     {   
         $params = (array)json_decode($request->getContent(), true);
 
-        if (empty($params['imageOfDomageId'])) {
+        if (empty($params['imageOfDamageId'])) {
             return new JsonResponse(
                 [
                     'status'    => 'erreur',
                     'code'      => JsonResponse::HTTP_BAD_REQUEST,
-                    'message'   => 'imageOfDomageId parameters are required or invalide'
+                    'message'   => 'imageOfDamageId parameters are required or invalide'
                 ],
                 JsonResponse::HTTP_BAD_REQUEST
             );
@@ -84,7 +84,7 @@ class DeletedActionController extends AbstractController
 
         try {
             $this->deletedService->callDeleteImageOfDomage([
-                'p_image_id' => $params['imageOfDomageId']
+                'p_image_id' => $params['imageOfDamageId']
             ]);
 
             return new JsonResponse([

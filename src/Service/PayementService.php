@@ -2,7 +2,7 @@
 
 namespace App\Service;
 
-use App\Entity\ClaimUser\Paiement;
+use App\Entity\ClaimUser\Payment;
 use Doctrine\ORM\EntityManagerInterface;
 use Dompdf\Dompdf;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -29,7 +29,7 @@ class PayementService
 
     /**
      * Génération détail PDF
-     * @param Paiement $payement
+     * @param Payment $payement
      * @return void
      */
     public function generatePdf($payments)
@@ -56,7 +56,7 @@ class PayementService
 
     /**
      * Génération détail Excel
-     * @param  Paiement $payementBookingForm $bookingForm
+     * @param  Payment $payementBookingForm $bookingForm
      * @return array
      */
     public function generateExcel($payements)
@@ -123,7 +123,7 @@ class PayementService
 
     /**
      * Génération détail csv
-     * @param  Paiement $payementBookingForm $bookingForm
+     * @param  Payment $payementBookingForm $bookingForm
      * @return array
      */
     public function generateCsv(array $payments): StreamedResponse

@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Entity\ClaimUser\Paiement;
+use App\Entity\ClaimUser\Payment;
 use App\Service\ClaimUserDbService;
 use App\Service\EmailValidatorService;
 use App\Service\PayementService;

@@ -42,7 +42,7 @@ class DeletedService
      */
     public function callDeleteImageOfDomage(array $params) : array
     {
-        $sql = "CALL DeletedImageOfDomage(?)";
+        $sql = "CALL DeletedImageOfDamage(?)";
 
         $stmt = $this->connection->prepare($sql);
         $stmt->bindValue(1, $params['p_image_id']);

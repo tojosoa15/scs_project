@@ -106,7 +106,7 @@ class ClaimDetailsService
 
     public function callSpVerificationProcessSurveyor(array $params): array
     {
-        $sql = "CALL SpVerificationProcessSurveyor(?, ?, ?, ?, ?)";
+        $sql = "CALL InsertSurveyForm(?, ?, ?, ?, ?)";
         
         $stmt = $this->connection->prepare($sql);
         $stmt->bindValue(1, $params['p_claim_number']);

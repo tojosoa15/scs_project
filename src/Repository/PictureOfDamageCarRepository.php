@@ -2,22 +2,22 @@
 
 namespace App\Repository;
 
-use App\Entity\PictureOfDomageCar;
+use App\Entity\Surveyor\PictureOfDamageCar;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<PictureOfDomageCar>
+ * @extends ServiceEntityRepository<PictureOfDamageCar>
  */
-class PictureOfDomageCarRepository extends ServiceEntityRepository
+class PictureOfDamageCarRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, PictureOfDomageCar::class);
+        parent::__construct($registry, PictureOfDamageCar::class);
     }
 
 //    /**
-//     * @return PictureOfDomageCar[] Returns an array of PictureOfDomageCar objects
+//     * @return PictureOfDamageCar[] Returns an array of PictureOfDamageCar objects
 //     */
 //    public function findByExampleField($value): array
 //    {
@@ -31,7 +31,7 @@ class PictureOfDomageCarRepository extends ServiceEntityRepository
 //        ;
 //    }
 
-//    public function findOneBySomeField($value): ?PictureOfDomageCar
+//    public function findOneBySomeField($value): ?PictureOfDamageCar
 //    {
 //        return $this->createQueryBuilder('p')
 //            ->andWhere('p.exampleField = :val')

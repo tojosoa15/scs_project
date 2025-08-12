@@ -9,24 +9,24 @@ use App\Controller\DeletedActionController;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * PictureOfDomageCar
+ * PictureOfDamageCar
  *
- * @ORM\Table(name="picture_of_domage_car", indexes={@ORM\Index(name="fk_picture_of_domage_car_survey_information1_idx", columns={"survey_information_id"})})
+ * @ORM\Table(name="picture_of_damage_car", indexes={@ORM\Index(name="fk_picture_of_domage_car_survey_information1_idx", columns={"survey_information_id"})})
  * @ORM\Entity
  */
 #[ApiResource(
     operations: [
         // Suppression une image de dommage
         new Patch(
-            uriTemplate: '/api/delete-image-of-domage',
-            controller: DeletedActionController::class . '::deteleImageOfDomage',
+            uriTemplate: '/api/delete-image-of-damage',
+            controller: DeletedActionController::class . '::deteleImageOfDamage',
             parameters: [ 
-                'imageOfDomageId' => new QueryParameter(),
+                'imageOfDamageId' => new QueryParameter(),
             ]
         ),
     ]
 )]
-class PictureOfDomageCar
+class PictureOfDamageCar
 {
     /**
      * @var int
