@@ -61,7 +61,7 @@ class GetUserProfileController extends AbstractController
                 return new JsonResponse(
                     [
                         'status'    => 'error',
-                        'cod'       => JsonResponse::HTTP_NOT_FOUND,
+                        'code'       => JsonResponse::HTTP_NOT_FOUND,
                         'message'   => 'Email not found.'
                     ], JsonResponse::HTTP_NOT_FOUND);
             }
@@ -312,7 +312,7 @@ class GetUserProfileController extends AbstractController
                 return new JsonResponse(
                     [
                         'status'    => 'error',
-                        'cod'       => JsonResponse::HTTP_NOT_FOUND,
+                        'code'       => JsonResponse::HTTP_NOT_FOUND,
                         'message'   => 'Email not found.'
                     ], JsonResponse::HTTP_NOT_FOUND);
             }
