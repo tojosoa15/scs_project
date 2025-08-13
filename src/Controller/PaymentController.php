@@ -135,7 +135,7 @@ class PaymentController extends AbstractController
                 'p_start_date'  => $params['startDate'] ?? null,
                 'p_end_date'    => $params['endDate'] ?? null
             ]);
-
+            
             if ($params['format'] == 'pdf') {
                 return $this->payementService->generatePdf($payments);
             }
@@ -153,11 +153,12 @@ class PaymentController extends AbstractController
 
         } catch (\Exception $e) {
             return new JsonResponse(
-                [   
-                    'status' => 'error',
-                    'code' => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
-                    'message' => 'Export retrieval failed.'
-                ],JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                    'message'   => $e->getMessage()
+                ],
+                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
             );
         }
     }

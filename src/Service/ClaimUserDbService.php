@@ -328,7 +328,7 @@ class ClaimUserDbService
     public function callGetPaiementListByUser(array $params): array
     {
 
-        $sql = "CALL GetPaiementListByUser(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "CALL GetPaymentListByUser(?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $this->connection->prepare($sql);
 
