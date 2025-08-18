@@ -2,9 +2,11 @@
 
 namespace App\Controller;
 
+use App\Entity\ClaimUser\Notification;
 use App\Entity\Surveyor\PictureOfDamageCar;
 use App\Service\ClaimDetailsService;
 use App\Service\EmailService;
+use App\Service\NotificationService;
 use App\Service\SummaryExportService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -13,27 +15,28 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query;
+use Doctrine\Persistence\ManagerRegistry;
 
 #[AsController]
 class GetClaimDetailsController extends AbstractController
 {
+    private EntityManagerInterface $claimUserEm;
+
     public function __construct(
         private ClaimDetailsService $claimDetailsService,
-        private SummaryExportService $summaryExportService,
         private EmailService $emailService,
-    ) {}
+        ManagerRegistry $doctrine,
+        private NotificationService $notificationService,
+        private SummaryExportService $summaryExportService
+    ) {
+        // On récupère l'EntityManager lié à claim_user_db
+        $this->claimUserEm = $doctrine->getManager('claim_user_db');
+    }
 
     public function __invoke(Request $request): JsonResponse
     {
         $params = $request->query->all();
-
-        // $url = $request->headers->get('Origin');
-        // return new JsonResponse([
-        //          'status'    => 'success',
-        //          'code'      => JsonResponse::HTTP_OK,
-        //          'message'   => 'Successful Claim details',
-        //          'data'      => $url
-        //      ], JsonResponse::HTTP_OK);
 
         if (empty($params['claimNo']) && empty($params['email'])) {
             return new JsonResponse(
@@ -431,29 +434,12 @@ class GetClaimDetailsController extends AbstractController
         }
 
         try {
-            // Choix type d'export
-            // if (empty($params['typeExport'])) {
-            //     return new JsonResponse(
-            //         [
-            //             'status'    => 'error',
-            //             'code'      => JsonResponse::HTTP_BAD_REQUEST,
-            //             'message'   => 'Type Export parameters is required'
-            //         ],
-            //         JsonResponse::HTTP_BAD_REQUEST
-            //     );
-            // }
             $results = $this->claimDetailsService->callGetSummary([
                 'p_claim_number'    => $params['claimNo'],
                 'p_email'           => $params['email']
             ]);
 
-            // if ($params['typeExport'] == 'pdf') {
-                return $this->summaryExportService->generatePdf($results);
-            // }
-
-            // if ($params['typeExport'] == 'xlsx') {
-            //     return $this->summaryExportService->generateExcel($results);
-            // }
+            return $this->summaryExportService->generatePdf($results);
 
             throw new \Exception('Type d\'export pas renseigné');
 
@@ -476,9 +462,10 @@ class GetClaimDetailsController extends AbstractController
      */
     public function reportSummarySendMail(Request $request) {
         $params =  (array)json_decode($request->getContent(), true);
-        $email  = $params['email'];
+        $email      = $params['email'];
+        $claimNo    = $params['claimNo'];
         
-        if (empty($params['claimNo']) && empty($email)) {
+        if (empty($claimNo) && empty($email)) {
             return new JsonResponse(
                 [
                     'status'    => 'error',
@@ -491,25 +478,32 @@ class GetClaimDetailsController extends AbstractController
         
         try {
             $results = $this->claimDetailsService->callGetSummary([
-                'p_claim_number'    => $params['claimNo'],
+                'p_claim_number'    => $claimNo,
                 'p_email'           => $email
             ]);
-                
+         
             // Générer le PDF et le sauvegarder temporairement
             $pdfFilePath = $this->summaryExportService->generatePdfToFile($results);
+   
+            $response = $this->sendMailAndNotification($email, $pdfFilePath, $claimNo);
 
-            // Envoi de l’email avec pièce jointe
-            $this->emailService->sendSummaryWithAttachment(
-                $email,
-                $pdfFilePath
-            );
-            
+            if (!$response) {
+                return new JsonResponse(
+                    [
+                        'status'    => 'error',
+                        'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                        'message'   => 'Failed to send email or create notification.'
+                    ],
+                    JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+                );
+            }
 
             return new JsonResponse([
-                'status'    => 'success',
-                'code'      => JsonResponse::HTTP_OK,
-                'message'   => 'Email sent with PDF attachment.'
+                'status'  => 'success',
+                'code'    => JsonResponse::HTTP_OK,
+                'message' => 'Email sent with PDF attachment and create a successful notification.'
             ], JsonResponse::HTTP_OK);
+
 
         } catch (\Exception $e) {
             return new JsonResponse([
@@ -520,4 +514,49 @@ class GetClaimDetailsController extends AbstractController
             ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    public function sendMailAndNotification(string $email, string $pdfFilePath, string $claimNo)
+    {
+        try {
+            // Envoi de l'email avec le PDF en pièce jointe
+            // $this->emailService->sendSummaryWithAttachment($email, $pdfFilePath);
+
+            $claimId = $this->claimUserEm->createQuery(
+                'SELECT c.id FROM App\Entity\ClaimUser\Claims c WHERE c.number = :claimNo'
+            )
+            ->setParameter('claimNo', $claimNo)
+            ->getSingleScalarResult();
+
+            $userId = $this->claimUserEm->createQuery(
+                'SELECT u.id 
+                FROM App\Entity\ClaimUser\AccountInformations ai 
+                JOIN ai.users u
+                WHERE ai.emailAddress = :email_address'
+            )
+            ->setParameter('email_address', $email)
+            ->getSingleScalarResult();
+
+            // Récupération des objets
+            $claim = $this->claimUserEm->getReference(\App\Entity\ClaimUser\Claims::class, $claimId);
+            $user  = $this->claimUserEm->getReference(\App\Entity\ClaimUser\Users::class, $userId);
+
+            // Création de la notification
+            $notification = new Notification();
+            $notification->setUsers($user); // objet Users
+            $notification->setClaims($claim); // objet Claims
+            $notification->setChannel('portal');
+            $notification->setType('claim_summary');
+            $notification->setContent("A summary report for claim number {$claimNo} has been sent to your email.");
+            $notification->setClaimNumber($claimNo);
+
+            // Envoi de la notification via le service
+            $this->notificationService->sendNotification($notification);
+            
+            return true;
+        } catch (\Exception $e) {
+            // Log the error if needed
+            return false;
+        }
+    }
+
 }

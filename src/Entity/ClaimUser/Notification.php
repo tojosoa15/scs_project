@@ -3,15 +3,15 @@
 namespace App\Entity\ClaimUser;
 
 use Doctrine\ORM\Mapping as ORM;
-use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\ApiResource as MetadataApiResource;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity
- * @ApiResource(
- *     mercure=true,
- * )
+ * 
  */
+#[ApiResource(mercure:true)]
 class Notification
 {
     /**
@@ -36,12 +36,8 @@ class Notification
     /**
      * @var \Claims
      *
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="NONE")
-     * @ORM\OneToOne(targetEntity="Claims")
-     * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="claim_id", referencedColumnName="id")
-     * })
+     * @ORM\ManyToOne(targetEntity="Claims")
+     * @ORM\JoinColumn(name="claim_id", referencedColumnName="id")
      */
     private $claims;
 
@@ -90,7 +86,7 @@ class Notification
     /**
      * @var \DateTime|null
      *
-     * @ORM\Column(name="created_at", type="datetime", nullable=true, options={"default"="CURRENT_TIMESTAMP"})
+     * @ORM\Column(name="sent_at", type="datetime", nullable=true)
      */
     private $sentAt = null;
 

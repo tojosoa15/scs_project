@@ -31,6 +31,7 @@
         "symfony/mailer": "6.4.*",
         "symfony/maker-bundle": "^1.63",
         "symfony/mercure": "^0.6.5",
+        "symfony/mercure-bundle": "*",
         "symfony/property-access": "6.4.*",
         "symfony/property-info": "6.4.*",
         "symfony/runtime": "6.4.*",

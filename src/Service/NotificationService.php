@@ -4,9 +4,10 @@ namespace App\Service;
 
 use App\Entity\ClaimUser\Notification;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
-use Twilio\Rest\Client;
+// use Twilio\Rest\Client;
 use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
 
@@ -14,26 +15,29 @@ class NotificationService
 {
     private EntityManagerInterface $entityManager;
     private MailerInterface $mailer;
-    private Client $twilio;
+    // private Client $twilio;
     private HubInterface $mercureHub;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         MailerInterface $mailer,
-        Client $twilio,
-        HubInterface $mercureHub
+        // Client $twilio,
+        HubInterface $mercureHub,
+        ManagerRegistry $doctrine,
     ) {
-        $this->entityManager = $entityManager;
-        $this->mailer = $mailer;
-        $this->twilio = $twilio;
-        $this->mercureHub = $mercureHub;
+        $this->entityManager    = $doctrine->getManager('claim_user_db');
+        $this->mailer           = $mailer;
+        // $this->twilio           = $twilio;
+        $this->mercureHub       = $mercureHub;
     }
 
     public function sendNotification(Notification $notification): void
     {
         $notification->setStatus('pending');
         $this->entityManager->persist($notification);
-        $this->entityManager->flush();
+        $notification->setCreatedAt(new \DateTime());
+        // dd($notification->getChannel());
+        // $this->entityManager->flush();
 
         try {
             switch ($notification->getChannel()) {
@@ -71,25 +75,31 @@ class NotificationService
 
     private function sendSms(Notification $notification): void
     {
-        $this->twilio->messages->create(
-            $notification->getUser()->getPhone(),
-            [
-                'from' => '+1234567890', // Remplace par ton numéro Twilio
-                'body' => $notification->getContent()
-            ]
-        );
+        // $this->twilio->messages->create(
+        //     $notification->getUser()->getPhone(),
+        //     [
+        //         'from' => '+1234567890', // Remplace par ton numéro Twilio
+        //         'body' => $notification->getContent()
+        //     ]
+        // );
     }
 
-    private function sendPortalNotification(Notification $notification): void
+    /**
+     * Publishes a notification update to the Mercure hub.
+     *
+     * @param Notification $notification
+     */
+    private function sendPortalNotification(Notification $notification)
     {
+        dd($notification->getType(), $notification->getContent(), $notification->getClaimNumber());
         $update = new Update(
-            'notifications/' . $notification->getUser()->getId(),
+            'notifications/%d' . $notification->getUsers()->getId(),
             json_encode([
-                'id' => $notification->getId(),
-                'type' => $notification->getType(),
-                'content' => $notification->getContent(),
-                'claimNumber' => $notification->getClaimNumber(),
-                'createdAt' => $notification->getCreatedAt()->format('c')
+                'id'            => $notification->getUsers()->getId(),
+                'type'          => $notification->getType(),
+                'content'       => $notification->getContent(),
+                'claimNumber'   => $notification->getClaimNumber(),
+                'createdAt'     => $notification->getCreatedAt()? $notification->getCreatedAt()->format('c') : null
             ])
         );
 
@@ -109,4 +119,4 @@ class NotificationService
 
         return $subjects[$type] ?? 'Notification';
     }
-}
+} 

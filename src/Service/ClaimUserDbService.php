@@ -378,4 +378,15 @@ class ClaimUserDbService
         
         return $stmt->executeQuery()->fetchAssociative();
     }
+
+    public function callGetClaimPartial(array $params): array
+    {
+        $sql = "CALL GetClaimPartialInfo(?)";
+        
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['p_claim_number']);
+        
+        return $stmt->executeQuery()->fetchAllAssociative();
+
+    }
 }
