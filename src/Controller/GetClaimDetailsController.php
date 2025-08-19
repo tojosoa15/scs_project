@@ -136,9 +136,8 @@ class GetClaimDetailsController extends AbstractController
      */
     public function surveyorReport(Request $request,  SluggerInterface $slugger, EntityManagerInterface $em): JsonResponse 
     {
-        $data = $request->request->all();
-        // $data       = (array)json_decode($request->getContent(), true);
-
+        $data = $this->getRequestData($request);
+        //dd($data);
         $recentStep = '';
         // $data       = (array)json_decode($request->getContent(), true);
 
@@ -243,7 +242,9 @@ class GetClaimDetailsController extends AbstractController
         }
 
         try {
-            $this->claimDetailsService->callSpVerificationProcessSurveyor([
+
+            
+            $results = $this->claimDetailsService->callSpVerificationProcessSurveyor([
                 'p_claim_number'    => $params['claimNo'],
                 'p_surveyor_id'     => $params['surveyorId'],
                 'p_status'          => $params['status'],
@@ -251,6 +252,50 @@ class GetClaimDetailsController extends AbstractController
                 'p_json_data'       => $params['json_data']
             ]);
 
+            if($params['currentStep'] === 'step_3' && is_array($results)) {
+                foreach ($results as $res) {
+                    $results = [
+                        'claim_number'  => $res['claim_number'],
+                        'status_name'   => $res['status_name'],
+                        'general_information' => [
+                            'name'                      => $res['name'],
+                            'make'                      => $res['make'],
+                            'model'                     => $res['model'],
+                            'condition_of_vehicle'      => $res['condition_of_vehicle'],    
+                            'chasisi_no'                => $res['chasisi_no'],
+                            'point_of_impact'           => $res['point_of_impact'],
+                            'place_of_survey'           => $res['place_of_survey'],
+                            'is_the_vehicle_total_loss' => $res['is_the_vehicle_total_loss']
+                        ],
+                        'survey_information' => [
+                            'invoice_number'        => $res['invoice_number'],
+                            'survey_type'           => $res['survey_type'],
+                            'eor_value'             => $res['eor_value'],
+                            'date_of_survey'        => $res['date_of_survey']
+                        ],
+                        'rapaire_estimate' => [
+                            'part_details'   =>  [
+                                'cost_part'     => $res['cost_part'],
+                                'discount_part' => $res['discount_part'],
+                                'vat_part'      => $res['vat_part'],
+                                'part_total'    => $res['part_total']
+                            ],
+                            'labour_details' => [
+                                'hourly_const_labour'   => $res['hourly_const_labour'],
+                                'discount_labour'       => $res['discount_labour'],
+                                'vat_labour'            => $res['vat_labour'],
+                                'labour_total'          => $res['labour_total']
+                            ],
+                            'grand_tatal'   => [
+                                'cost_total'        => $res['cost_total'],//(float)$res['cost_part'] + (float)$res['hourly_const_labour'],
+                                'discount_total'    => $res['discount_total'],//(float)$res['discount_part'] + (float)$res['discount_labour'],
+                                'vat_total'         => $res['vat_total'],//(float)$res['vat_part'] + (float)$res['vat_labour'],
+                                'total'             => $res['total']//(float)$res['part_total'] + (float)$res['labour_total']
+                            ],
+                        ]
+                    ];
+                }
+            }
             // Pour les insertions image télécharger
             if ($data['currentStep'] === 'step_2') {
                 $imageFiles = $request->files->get('imageFile');
@@ -269,7 +314,7 @@ class GetClaimDetailsController extends AbstractController
                 }
 
                 // Répertoire d'upload
-                $uploadDir = 'C:' . DIRECTORY_SEPARATOR . 'Users' . DIRECTORY_SEPARATOR . 'Lenovo' . DIRECTORY_SEPARATOR . 'Pictures' . DIRECTORY_SEPARATOR . 'testPictures';
+                $uploadDir = 'D:' . DIRECTORY_SEPARATOR . 'Santatra' . DIRECTORY_SEPARATOR . 'Pictures' . DIRECTORY_SEPARATOR . 'Pictures' . DIRECTORY_SEPARATOR . 'testPictures';
 
                 // Normaliser $imageFiles en tableau (même s'il n'y a qu'un seul fichier)
                 if (!is_array($imageFiles)) {
@@ -308,6 +353,7 @@ class GetClaimDetailsController extends AbstractController
                     'status'    => 'success',
                     'code'      => 200,
                     'message'   => "{$recentStep} successfully completed",
+                    'data'      => $results
                 ]
             ]);
 
@@ -355,7 +401,7 @@ class GetClaimDetailsController extends AbstractController
                 $resFormat = [
                     'claim_number'  => $res['claim_number'],
                     'status_name'   => $res['status_name'],
-                    'general_informatin' => [
+                    'general_information' => [
                         'name'                      => $res['name'],
                         'make'                      => $res['make'],
                         'model'                     => $res['model'],
@@ -559,4 +605,17 @@ class GetClaimDetailsController extends AbstractController
         }
     }
 
+    private function getRequestData(Request $request): array
+    {
+        $data = $request->request->all();
+
+        if (empty($data)) {
+            $json = json_decode($request->getContent(), true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($json)) {
+                $data = $json;
+            }
+        }
+
+        return $data;
+    }
 }

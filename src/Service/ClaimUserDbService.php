@@ -381,10 +381,11 @@ class ClaimUserDbService
 
     public function callGetClaimPartial(array $params): array
     {
-        $sql = "CALL GetClaimPartialInfo(?)";
+        $sql = "CALL GetClaimPartialInfo(?, ?)";
         
         $stmt = $this->connection->prepare($sql);
         $stmt->bindValue(1, $params['p_claim_number']);
+        $stmt->bindValue(2, $params['p_email']);
         
         return $stmt->executeQuery()->fetchAllAssociative();
 

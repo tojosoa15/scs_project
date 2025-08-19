@@ -18,10 +18,11 @@ use Doctrine\ORM\Mapping as ORM;
     operations: [
         // Détail d'un claim 
         new Get(
-            uriTemplate: '/api/claim/information',
+            uriTemplate: '/api/claim/report',
             controller: GetClaimPartialInfoByNumberController::class,
             parameters: [ 
-                'claimNo'   => new QueryParameter()
+                'claimNo'   => new QueryParameter(),
+                'email '    => new QueryParameter()
             ]
         )
     ]
