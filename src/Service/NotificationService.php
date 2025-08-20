@@ -91,9 +91,11 @@ class NotificationService
      */
     private function sendPortalNotification(Notification $notification)
     {
-        dd($notification->getType(), $notification->getContent(), $notification->getClaimNumber());
+        $topic = sprintf('notifications/%d', $notification->getUsers()->getId());
+        // dd($notification->getType(), $notification->getContent(), $notification->getClaimNumber());
+        // dd($topic);
         $update = new Update(
-            'notifications/%d' . $notification->getUsers()->getId(),
+            $topic,
             json_encode([
                 'id'            => $notification->getUsers()->getId(),
                 'type'          => $notification->getType(),

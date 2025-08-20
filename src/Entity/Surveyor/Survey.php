@@ -19,14 +19,14 @@ use Doctrine\ORM\Mapping as ORM;
     operations: [
         // Surveyor report
         new Post(
-            uriTemplate: '/api/surveyor-report',
+            uriTemplate: '/api/claim/report',
             controller: GetClaimDetailsController::class . '::surveyorReport',
             parameters: [ 
                 'claimNo'     => new QueryParameter(),
                 'surveyorId'  => new QueryParameter(),
                 'status'      => new QueryParameter(),
                 'currentStep' => new QueryParameter(),
-                'imageFile'   => new QueryParameter(),
+                // 'imageFile'   => new QueryParameter(),
             ]
         ),
         // Résumé verification
@@ -40,7 +40,7 @@ use Doctrine\ORM\Mapping as ORM;
         ),
          // export verification
         new Get(
-            uriTemplate: '/api/report-summary/export-pdf',
+            uriTemplate: '/api/claim/report/download',
             controller: GetClaimDetailsController::class . '::reportSummaryExportPdf',
             parameters: [ 
                 'claimNo'   => new QueryParameter(),
@@ -49,7 +49,7 @@ use Doctrine\ORM\Mapping as ORM;
             ]
         ), 
         new Post(
-            uriTemplate: '/api/report-summary/send-mail',
+            uriTemplate: '/api/claim/report/send-mail',
             controller: GetClaimDetailsController::class . '::reportSummarySendMail',
             parameters: [ 
                 'claimNo'   => new QueryParameter(),

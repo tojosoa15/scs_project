@@ -242,8 +242,6 @@ class GetClaimDetailsController extends AbstractController
         }
 
         try {
-
-            
             $results = $this->claimDetailsService->callSpVerificationProcessSurveyor([
                 'p_claim_number'    => $params['claimNo'],
                 'p_surveyor_id'     => $params['surveyorId'],
@@ -297,56 +295,56 @@ class GetClaimDetailsController extends AbstractController
                 }
             }
             // Pour les insertions image télécharger
-            if ($data['currentStep'] === 'step_2') {
-                $imageFiles = $request->files->get('imageFile');
+            // if ($data['currentStep'] === 'step_2') {
+            //     $imageFiles = $request->files->get('imageFile');
 
-                $qb = $em->createQuery(
-                    'SELECT s FROM App\Entity\Surveyor\SurveyInformation s 
-                    JOIN s.verification v 
-                    WHERE v.claimNumber = :claimNo'
-                );
-                $qb->setParameter('claimNo', $params['claimNo']);
+            //     $qb = $em->createQuery(
+            //         'SELECT s FROM App\Entity\Surveyor\SurveyInformation s 
+            //         JOIN s.verification v 
+            //         WHERE v.claimNumber = :claimNo'
+            //     );
+            //     $qb->setParameter('claimNo', $params['claimNo']);
 
-                $survey = $qb->getOneOrNullResult();
+            //     $survey = $qb->getOneOrNullResult();
 
-                if (!$survey) {
-                    return new JsonResponse(['error' => 'Survey not found'], 404);
-                }
+            //     if (!$survey) {
+            //         return new JsonResponse(['error' => 'Survey not found'], 404);
+            //     }
 
-                // Répertoire d'upload
-                $uploadDir = 'D:' . DIRECTORY_SEPARATOR . 'Santatra' . DIRECTORY_SEPARATOR . 'Pictures' . DIRECTORY_SEPARATOR . 'Pictures' . DIRECTORY_SEPARATOR . 'testPictures';
+            //     // Répertoire d'upload
+            //     $uploadDir = 'D:' . DIRECTORY_SEPARATOR . 'Santatra' . DIRECTORY_SEPARATOR . 'Pictures' . DIRECTORY_SEPARATOR . 'Pictures' . DIRECTORY_SEPARATOR . 'testPictures';
 
-                // Normaliser $imageFiles en tableau (même s'il n'y a qu'un seul fichier)
-                if (!is_array($imageFiles)) {
-                    $imageFiles = [$imageFiles];
-                }
+            //     // Normaliser $imageFiles en tableau (même s'il n'y a qu'un seul fichier)
+            //     if (!is_array($imageFiles)) {
+            //         $imageFiles = [$imageFiles];
+            //     }
 
-                foreach ($imageFiles as $imageFile) {
-                    if ($imageFile && $imageFile->isValid()) {
-                        $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
-                        $safeFilename = $slugger->slug($originalFilename);
-                        $newFilename = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
+            //     foreach ($imageFiles as $imageFile) {
+            //         if ($imageFile && $imageFile->isValid()) {
+            //             $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+            //             $safeFilename = $slugger->slug($originalFilename);
+            //             $newFilename = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
 
-                        try {
-                            $imageFile->move($uploadDir, $newFilename);
+            //             try {
+            //                 $imageFile->move($uploadDir, $newFilename);
 
-                            $picture = new PictureOfDamageCar();
-                            $picture->setPath($uploadDir . DIRECTORY_SEPARATOR . $newFilename);
-                            $picture->setSurveyInformation($survey);
-                            $picture->setDeletedAt(null);
+            //                 $picture = new PictureOfDamageCar();
+            //                 $picture->setPath($uploadDir . DIRECTORY_SEPARATOR . $newFilename);
+            //                 $picture->setSurveyInformation($survey);
+            //                 $picture->setDeletedAt(null);
 
-                            $em->persist($picture);
-                        } catch (FileException $e) {
-                            return new JsonResponse([
-                                'error' => 'Upload failed for ' . $originalFilename,
-                                'details' => $e->getMessage()
-                            ], 500);
-                        }
-                    }
-                }
+            //                 $em->persist($picture);
+            //             } catch (FileException $e) {
+            //                 return new JsonResponse([
+            //                     'error' => 'Upload failed for ' . $originalFilename,
+            //                     'details' => $e->getMessage()
+            //                 ], 500);
+            //             }
+            //         }
+            //     }
 
-                $em->flush();
-            }
+            //     $em->flush();
+            // }
 
             return new JsonResponse([
                 'status' => [

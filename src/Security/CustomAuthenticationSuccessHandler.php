@@ -2,6 +2,8 @@
 
 namespace App\Security;
 
+use App\Entity\ClaimUser\Users;
+use App\Service\MercureTokenGenerator;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTManager;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,14 +18,17 @@ class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler
 {
     private JWTTokenManagerInterface $jwtManager;
     private RefreshTokenManagerInterface $refreshTokenManager;
+    private MercureTokenGenerator $mercureTokenGenerator;
 
     public function __construct(
         JWTTokenManagerInterface $jwtManager,
-        RefreshTokenManagerInterface $refreshTokenManager
+        RefreshTokenManagerInterface $refreshTokenManager,
+        MercureTokenGenerator $mercureTokenGenerator
     )
     {
         $this->jwtManager           = $jwtManager;
         $this->refreshTokenManager  = $refreshTokenManager;
+        $this->mercureTokenGenerator  = $mercureTokenGenerator;
     } 
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token): Response
@@ -41,6 +46,12 @@ class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler
 
         $this->refreshTokenManager->save($refreshToken);
 
+        // Token JWT pour Mercure
+        $mercureToken = $this->mercureTokenGenerator->generateToken(
+                subscribe: ["*"],   // ou "https://example.com/user/{$user->getId()}"
+                publish: []         // vide si l’utilisateur ne peut pas publier
+        );
+
         return new JsonResponse([
             'status' => 'success',
             'code' => 200,  
@@ -48,6 +59,7 @@ class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler
             'data' => [
                 'accessToken' => $jwt,
                 'refreshToken' => $refreshToken->getRefreshToken(),
+                'mercureToken' => $mercureToken,
                 'user' => [
                     'id' => $user->getId(),
                     'email' => $user->getEmailAddress(),
@@ -56,5 +68,20 @@ class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler
                 ]
             ]
         ]);
+    }
+
+    private function createMercureToken($user): string
+    {
+        $secret = $_ENV['MERCURE_JWT_SECRET']; // défini dans .env
+
+        // Donne seulement accès aux topics liés à cet user
+        $payload = [
+            'mercure' => [
+                'subscribe' => ["notifications/{$user->getId()}"]
+            ],
+            'exp' => (new \DateTime('+1 hour'))->getTimestamp()
+        ];
+
+        return \Firebase\JWT\JWT::encode($payload, $secret, 'HS256');
     }
 }
