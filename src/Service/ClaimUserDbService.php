@@ -404,7 +404,7 @@ class ClaimUserDbService
                 'fuel_type'                 => $vehicle_survey['fuel_type'],
                 'transmission'              => $vehicle_survey['transmission'],
                 'engine_no'                 => $vehicle_survey['engine_no'],
-                'chasisi_no'                => $vehicle_survey['chasis_no'],
+                'chassis_no'                => $vehicle_survey['chasis_no'],
                 'vehicle_no'                => $vehicle_survey['vehicle_no'],
             ];
             $summaries['survey_information'] = [

@@ -69,19 +69,4 @@ class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler
             ]
         ]);
     }
-
-    private function createMercureToken($user): string
-    {
-        $secret = $_ENV['MERCURE_JWT_SECRET']; // défini dans .env
-
-        // Donne seulement accès aux topics liés à cet user
-        $payload = [
-            'mercure' => [
-                'subscribe' => ["notifications/{$user->getId()}"]
-            ],
-            'exp' => (new \DateTime('+1 hour'))->getTimestamp()
-        ];
-
-        return \Firebase\JWT\JWT::encode($payload, $secret, 'HS256');
-    }
 }

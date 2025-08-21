@@ -64,4 +64,5 @@ services:
             
     App\Service\MercureTokenGenerator:
         arguments:
+            $mercureUrl: '%env(MERCURE_URL)%'
             $mercureSecret: '%env(MERCURE_JWT_SECRET)%'

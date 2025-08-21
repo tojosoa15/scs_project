@@ -55,6 +55,15 @@ use Doctrine\ORM\Mapping as ORM;
                 'claimNo'   => new QueryParameter(),
                 'email'     => new QueryParameter()
             ]
+        ),    
+          new Post(
+            uriTemplate: '/api/claim/report/total',
+            controller: GetClaimDetailsController::class . '::getReportTotalPartOrLabour',
+            parameters: [ 
+                'claimNo'   => new QueryParameter(),
+                'email'     => new QueryParameter(),
+                'section'   => new QueryParameter()
+            ]
         )    
     ]
 )]

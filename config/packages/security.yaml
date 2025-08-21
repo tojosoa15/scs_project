@@ -51,6 +51,8 @@ security:
     # l'access_control détermine les permissions d'accès aus URLs
     access_control:
         # Accès libre à toutes les routes d'authentification (login, register, forgot-password, etc.)
+        - { path: '^/mercure/', roles: PUBLIC_ACCESS }
+        # Accès libre à toutes les routes d'authentification (login, register, forgot-password, etc.)
         - { path: ^/api/auth, roles: PUBLIC_ACCESS }
         # Accès libre au refresh token
         - { path: ^/api/token/refresh, roles: PUBLIC_ACCESS }

@@ -558,6 +558,13 @@ class GetClaimDetailsController extends AbstractController
         }
     }
 
+    /**
+     * Envoi de l'email et création de la notification
+     * 
+     * @param string $email
+     * @param string $pdfFilePath
+     * @param string $claimNo
+     */
     public function sendMailAndNotification(string $email, string $pdfFilePath, string $claimNo)
     {
         try {
@@ -599,6 +606,52 @@ class GetClaimDetailsController extends AbstractController
         } catch (\Exception $e) {
             // Log the error if needed
             return false;
+        }
+    }
+
+    /**
+     * Retourne le total de pièce et main d'oeuvre
+     * 
+     * @param $request
+     */
+    function getReportTotalPartOrLabour(Request $request): JsonResponse
+    {
+        $params = $request->query->all();
+
+        if (empty($params['claimNo']) && empty($params['email'])) {
+            return new JsonResponse(
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_BAD_REQUEST,
+                    'message'   => 'Claim Number and email parameters is required'
+                ],
+                JsonResponse::HTTP_BAD_REQUEST
+            );
+        }
+
+        try {
+            $results = $this->claimDetailsService->callGetTotalReport([
+                'p_claim_number'    => $params['claimNo'],
+                'p_email'           => $params['email'],
+                'p_section'         => $params['section'] ?? null
+            ]);
+
+            return new JsonResponse([
+                'status'    => 'success',
+                'code'      => JsonResponse::HTTP_OK,
+                'message'   => 'Successful report total part or labour',
+                'data'      => $results
+            ], JsonResponse::HTTP_OK);
+
+        } catch (\Exception $e) {
+            return new JsonResponse(
+                [
+                    'status'    => 'error',
+                    'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                    'message'   => 'Claim retrieval failed.'
+                ],
+                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
     }
 

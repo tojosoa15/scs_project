@@ -162,4 +162,16 @@ class ClaimDetailsService
     
         return $summaries;
     } 
+
+    public function callGetTotalReport(array $params) : array 
+    {
+        $sql = "CALL GetTotalReport(?, ?, ?)";
+        
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['p_claim_number']);
+        $stmt->bindValue(2, $params['p_email']);
+        
+        return $stmt->executeQuery()->fetchAllAssociative();
+    }
+    }
 }
