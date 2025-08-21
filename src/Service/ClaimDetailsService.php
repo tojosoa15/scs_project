@@ -170,6 +170,7 @@ class ClaimDetailsService
         $stmt = $this->connection->prepare($sql);
         $stmt->bindValue(1, $params['p_claim_number']);
         $stmt->bindValue(2, $params['p_email']);
+        $stmt->bindValue(3, $params['p_section']);
         
         return $stmt->executeQuery()->fetchAllAssociative();
     }
