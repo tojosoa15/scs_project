@@ -248,7 +248,7 @@ class GetClaimDetailsController extends AbstractController
                 'p_current_step'    => $params['currentStep'],
                 'p_json_data'       => $params['json_data']
             ]);
-// dd($results);
+            
             if($params['currentStep'] === 'step_3' && is_array($results)) {
                 foreach ($results as $res) {
                     $results = [
