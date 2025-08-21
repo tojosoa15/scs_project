@@ -77,10 +77,7 @@ class ClaimDetailsService
             $summaries['labour_details'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         }
     
-        // // 4. Documents
-        // if ($stmt->nextRowset()) {
-        //     $summaries['documents'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        // }
+        
         // 4. Documents
         if ($stmt->nextRowset()) {
             $documents = $stmt->fetchAll(\PDO::FETCH_ASSOC);

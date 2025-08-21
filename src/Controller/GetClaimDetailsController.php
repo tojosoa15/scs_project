@@ -137,7 +137,7 @@ class GetClaimDetailsController extends AbstractController
     public function surveyorReport(Request $request,  SluggerInterface $slugger, EntityManagerInterface $em): JsonResponse 
     {
         $data = $this->getRequestData($request);
-        //dd($data);
+        
         $recentStep = '';
         // $data       = (array)json_decode($request->getContent(), true);
 
@@ -148,7 +148,6 @@ class GetClaimDetailsController extends AbstractController
             'currentStep'   => $data['currentStep'],
             'json_data'     => json_encode($data)
         ];
-        
         $requiredFields = ['claimNo', 'surveyorId', 'currentStep'];
         
         foreach ($requiredFields as $field) {
@@ -168,9 +167,9 @@ class GetClaimDetailsController extends AbstractController
         // Validation champs obligatoires etape 1
         if ($data['currentStep'] === 'step_1') {
             $requiredVehicleInformation = [
-                'make', 'model', 'cc', 'fuelType', 'transmission', 'engimeNo',
-                'chasisiNo', 'vehicleNo', 'color', 'odometerReading',
-                'isTheVehicleTotalLoss', 'conditionOfVehicle',
+                'make', 'model', 'cc', 'fuelType', 'transmission', 'engineNo',
+                'chassisNo', 'vehicleNo', 'color', 'odometerReading',
+                'isTotalLoss', 'conditionOfVehicle',
                 'placeOfSurvey', 'pointOfImpact'
             ];
 
@@ -194,7 +193,7 @@ class GetClaimDetailsController extends AbstractController
         if ($data['currentStep'] === 'step_2') {
             $requiredSurveyInformation = [
                 'garage', 'garageAddress', 'garageContactNumber', 'eorValue', 'invoiceNumber', 'surveyType',
-                'dateOfSurvey', 'timeOfSurvey', 'preAccidentValeur', 'showroomPrice','wrechValue', 'excessApplicable'
+                'dateOfSurvey', 'timeOfSurvey', 'preAccidentValue', 'showroomPrice','wreckValue', 'excessApplicable'
             ];
 
             foreach ($requiredSurveyInformation as $field) {
@@ -215,7 +214,7 @@ class GetClaimDetailsController extends AbstractController
 
         // Validation champs obligatoires etape 3
         if ($data['currentStep'] === 'step_3') {
-            $requiredEstimateFields = ['currentEditor', 'remarks', 'parts', 'labours'];
+            $requiredEstimateFields = ['currentEditor', 'remarks', 'parts', 'labours', 'additionalLabours'];
 
             foreach ($requiredEstimateFields as $field) {
                 if (empty($data[$field])) {
@@ -249,7 +248,7 @@ class GetClaimDetailsController extends AbstractController
                 'p_current_step'    => $params['currentStep'],
                 'p_json_data'       => $params['json_data']
             ]);
-
+// dd($results);
             if($params['currentStep'] === 'step_3' && is_array($results)) {
                 foreach ($results as $res) {
                     $results = [
@@ -347,12 +346,11 @@ class GetClaimDetailsController extends AbstractController
             // }
 
             return new JsonResponse([
-                'status' => [
                     'status'    => 'success',
                     'code'      => 200,
                     'message'   => "{$recentStep} successfully completed",
                     'data'      => $results
-                ]
+                
             ]);
 
         } catch (\Throwable $th) {
@@ -394,6 +392,7 @@ class GetClaimDetailsController extends AbstractController
                 'p_claim_number'    => $params['claimNo'],
                 'p_email'           => $params['email']
             ]);
+            
 
             foreach ($results as $res) {
                 $resFormat = [
