@@ -259,7 +259,7 @@ class GetClaimDetailsController extends AbstractController
                             'make'                      => $res['make'],
                             'model'                     => $res['model'],
                             'condition_of_vehicle'      => $res['condition_of_vehicle'],    
-                            'chasisi_no'                => $res['chasisi_no'],
+                            'chassis_no'                => $res['chasisi_no'],
                             'point_of_impact'           => $res['point_of_impact'],
                             'place_of_survey'           => $res['place_of_survey'],
                             'is_the_vehicle_total_loss' => $res['is_the_vehicle_total_loss']

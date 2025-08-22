@@ -35,7 +35,6 @@ class GetClaimPartialInfoByNumberController extends AbstractController
                 'p_email'           => $params['email']
             ]);
             
-            
             return new JsonResponse([
                 'status'    => 'success',
                 'code'      => JsonResponse::HTTP_OK,

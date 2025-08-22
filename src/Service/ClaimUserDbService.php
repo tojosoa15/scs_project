@@ -379,57 +379,85 @@ class ClaimUserDbService
         return $stmt->executeQuery()->fetchAssociative();
     }
 
-    public function callGetClaimPartial(array $params): array
-    {
-        /** @var \PDO $pdo */
-        $pdo = $this->connection->getNativeConnection(); // Retourne un \PDO natif
-    
-        $stmt = $pdo->prepare("CALL GetClaimPartialInfo(:claim_number, :email)");
-        $stmt->bindValue(':claim_number', $params['p_claim_number']);
-        $stmt->bindValue(':email', $params['p_email']);
-        $stmt->execute();
-    
-        $summaries = [];
-    
-        // 1. vehicle et Survey Information
-        $vehicle_surveis = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+public function callGetClaimPartial(array $params): array
+{
+    /** @var \PDO $pdo */
+    $pdo = $this->connection->getNativeConnection();
 
-        foreach ($vehicle_surveis as $vehicle_survey) {
-            $summaries['vehicle_information']  = [
-                'claim_number'              => $vehicle_survey['claim_number'],
-                // 'status'                    => $vehicle_survey['status_name'],
-                'make'                      => $vehicle_survey['make'],
-                'model'                     => $vehicle_survey['model'],
-                'cc'                        => $vehicle_survey['cc'],
-                'fuel_type'                 => $vehicle_survey['fuel_type'],
-                'transmission'              => $vehicle_survey['transmission'],
-                'engine_no'                 => $vehicle_survey['engine_no'],
-                'chassis_no'                => $vehicle_survey['chasis_no'],
-                'vehicle_no'                => $vehicle_survey['vehicle_no'],
-            ];
-            $summaries['survey_information'] = [
-                'garage'                => $vehicle_survey['garage'],
-                'garage_address'        => $vehicle_survey['garage_address'],
-                'garage_contact_number' => $vehicle_survey['garage_contact_no'],
-                'eor_value'             => $vehicle_survey['eor_value']
-            ];
-        }
+    $stmt = $pdo->prepare("CALL GetClaimPartialInfo(:claim_number, :email)");
+    $stmt->bindValue(':claim_number', $params['p_claim_number']);
+    $stmt->bindValue(':email', $params['p_email']);
+    $stmt->execute();
 
-        // 2. Part info
-        if ($stmt->nextRowset()) {
-            $summaries['part_details'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        }
-    
-        // 3. Labour info
-        if ($stmt->nextRowset()) {
-            $summaries['labour_details'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        }
+    $summaries = [];
 
-        // 3. add Labour info
-        if ($stmt->nextRowset()) {
-            $summaries['additional_labour_details'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        }
-
-        return $summaries;
+    // 1. Vehicle & Survey Information
+    $vehicle_surveis = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    foreach ($vehicle_surveis as $vehicle_survey) {
+        $summaries['vehicle_information']  = [
+            'claim_number'   => $vehicle_survey['claim_number'],
+            'make'           => $vehicle_survey['make'],
+            'model'          => $vehicle_survey['model'],
+            'cc'             => $vehicle_survey['cc'],
+            'fuel_type'      => $vehicle_survey['fuel_type'],
+            'transmission'   => $vehicle_survey['transmission'],
+            'engine_no'      => $vehicle_survey['engine_no'],
+            'chassis_no'     => $vehicle_survey['chasis_no'],
+            'vehicle_no'     => $vehicle_survey['vehicle_no'],
+        ];
+        $summaries['survey_information'] = [
+            'garage'                => $vehicle_survey['garage'],
+            'garage_address'        => $vehicle_survey['garage_address'],
+            'garage_contact_number' => $vehicle_survey['garage_contact_no'],
+            'eor_value'             => $vehicle_survey['eor_value']
+        ];
     }
+
+    // 2. Part details
+    $partDetails = [];
+    if ($stmt->nextRowset()) {
+        $partDetails = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    // 3. Labour details
+    $labourDetails = [];
+    if ($stmt->nextRowset()) {
+        $labourDetails = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    // On regroupe labourDetails par part_detail_id
+    $labourGrouped = [];
+    foreach ($labourDetails as $labour) {
+        $pid = $labour['part_detail_id'];
+        $labourGrouped[$pid][] = $labour;
+    }
+
+    // Construire la structure imbriquée "data"
+   $summaries['repair_estimate'] = [];
+    foreach ($partDetails as $part) {
+        $pid = $part['part_detail_id'];
+
+        $summaries['repair_estimate'][] = [
+            'name'          => $part['part_name'],
+            'quantity'       => (int) $part['quantity'],
+            'part_details'  => [
+                'part_detail_id' => $part['part_detail_id'],
+                'supplier'       => $part['supplier'],
+                'quality'        => $part['quality'],
+                'cost_part'      => $part['cost_part'],
+                'discount_part'  => $part['discount_part'],
+                'vat_part'       => $part['vat_part'],
+                'part_total'     => $part['part_total'],
+            ],
+            'labour_details' => isset($labourGrouped[$pid]) ? $labourGrouped[$pid][0] : null
+        ];
+    }
+
+    // 4. Additional labour details
+    if ($stmt->nextRowset()) {
+        $summaries['additional_labour_details'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    return $summaries;
+}
 }
