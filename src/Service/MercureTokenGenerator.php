@@ -1,6 +1,7 @@
 <?php
 namespace App\Service;
 
+use App\Entity\ClaimUser\Notification;
 use Lcobucci\JWT\Configuration;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -37,20 +38,31 @@ class MercureTokenGenerator
         return $token->toString();
     }
 
-    public function publishToMercure(array $data, string $topic): void
+    public function publishToMercure(array $data, string $topic, Notification $notification): void
     {
+
         // IMPORTANT : on publie avec un JWT signé (pas le secret brut)
         $jwt = $this->generateToken([], [$topic]); // droit de publier sur ce topic
+        // return $jwt;  j'ai bien la génération du token
 
-        $this->httpClient->request('POST', $this->mercureUrl, [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $jwt,
-            ],
-            'body' => [
-                'topic' => $topic,
-                'data'  => json_encode($data),
-            ],
-            'timeout' => 2,
-        ]);
+        try {
+            $response = $this->httpClient->request('POST', $this->mercureUrl, [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $jwt,
+                ],
+                'body' => [
+                    'topic' => $topic,
+                    'data'  => json_encode($data),
+                ],
+                'timeout' => 5,
+            ]);
+
+            if ($response->getStatusCode() !== 200) {
+                throw new \Exception('Mercure hub returned status ' . $response->getStatusCode() . ': ' . $response->getContent(false));
+            }
+        } catch (\Exception $e) {
+            $notification->setStatus('failed');
+            // logger->error($e->getMessage());
+        }
     }
 }

@@ -569,7 +569,7 @@ class GetClaimDetailsController extends AbstractController
     {
         try {
             // Envoi de l'email avec le PDF en pièce jointe
-            // $this->emailService->sendSummaryWithAttachment($email, $pdfFilePath);
+            $this->emailService->sendSummaryWithAttachment($email, $pdfFilePath);
 
             $claimId = $this->claimUserEm->createQuery(
                 'SELECT c.id FROM App\Entity\ClaimUser\Claims c WHERE c.number = :claimNo'

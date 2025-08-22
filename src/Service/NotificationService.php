@@ -59,8 +59,6 @@ class NotificationService
         } catch (\Throwable $e) {
             // si la publication Mercure tombe en erreur -> status failed mais on ne casse pas tout
             $notification->setStatus('failed');
-            // (optionnel) logger l'erreur
-            // $this->logger->error('Mercure publish failed', ['exception' => $e]);
         }
 
         $this->entityManager->flush();
@@ -93,35 +91,11 @@ class NotificationService
      *
      * @param Notification $notification
      */
-    // private function sendPortalNotification(Notification $notification)
-    // {
-    //     $topic = sprintf('notifications/%d', $notification->getUsers()->getId());
-    //     // dd($notification->getType(), $notification->getContent(), $notification->getClaimNumber());
-    //     // dd($topic);
-    //     // $update = new Update(
-    //     //     $topic,
-    //     //     json_encode([
-    //     //         'id'            => $notification->getUsers()->getId(),
-    //     //         'type'          => $notification->getType(),
-    //     //         'content'       => $notification->getContent(),
-    //     //         'claimNumber'   => $notification->getClaimNumber(),
-    //     //         'createdAt'     => $notification->getCreatedAt()? $notification->getCreatedAt()->format('c') : null
-    //     //     ])
-    //     // );
-
-    //     // $this->mercureHub->publish($update);
-    //     $this->mercureTokenGenerator->publishToMercure([
-    //         'id'            => $notification->getUsers()->getId(),
-    //         'type'          => $notification->getType(),
-    //         'content'       => $notification->getContent(),
-    //         'claimNumber'   => $notification->getClaimNumber(),
-    //         'createdAt'     => $notification->getCreatedAt()? $notification->getCreatedAt()->format('c') : null
-    //     ], $topic);
-    // }
     private function sendPortalNotification(Notification $notification): void
     {
         $topic = sprintf('notifications/%d', $notification->getUsers()->getId());
 
+        
         $payload = [
             'id'          => $notification->getUsers()->getId(),
             'type'        => $notification->getType(),
@@ -131,7 +105,7 @@ class NotificationService
         ];
 
         // Publication via HTTP client + JWT signé
-        $this->mercureTokenGenerator->publishToMercure($payload, $topic);
+        $this->mercureTokenGenerator->publishToMercure($payload, $topic, $notification);
     }
 
     private function getEmailSubject(string $type): string

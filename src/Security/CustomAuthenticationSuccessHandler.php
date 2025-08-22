@@ -55,7 +55,7 @@ class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler
         return new JsonResponse([
             'status' => 'success',
             'code' => 200,  
-            'message' => 'Authentification réussie.',
+            'message' => 'Authentication successful.',
             'data' => [
                 'accessToken' => $jwt,
                 'refreshToken' => $refreshToken->getRefreshToken(),
