@@ -44,7 +44,12 @@ class MercureTokenGenerator
         // IMPORTANT : on publie avec un JWT signé (pas le secret brut)
         $jwt = $this->generateToken([], [$topic]); // droit de publier sur ce topic
         // return $jwt;  j'ai bien la génération du token
+        // dd($topic, $data, $jwt);
 
+         // Publication de la mise à jour
+         // https://mercure.rocks/docs/hub/publish
+         // https://symfony.com/doc/current/mercure.html#publishing-updates
+         //
         try {
             $response = $this->httpClient->request('POST', $this->mercureUrl, [
                 'headers' => [

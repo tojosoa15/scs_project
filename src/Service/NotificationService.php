@@ -94,7 +94,6 @@ class NotificationService
     private function sendPortalNotification(Notification $notification): void
     {
         $topic = sprintf('notifications/%d', $notification->getUsers()->getId());
-
         
         $payload = [
             'id'          => $notification->getUsers()->getId(),

@@ -48,7 +48,7 @@ class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler
 
         // Token JWT pour Mercure
         $mercureToken = $this->mercureTokenGenerator->generateToken(
-                subscribe: ["*"],   // ou "https://example.com/user/{$user->getId()}"
+                subscribe: ["notifications/5"],   // ou "https://example.com/user/{$user->getId()}"
                 publish: []         // vide si l’utilisateur ne peut pas publier
         );
 

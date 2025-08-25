@@ -529,6 +529,7 @@ class GetClaimDetailsController extends AbstractController
             $pdfFilePath = $this->summaryExportService->generatePdfToFile($results);
    
             $response = $this->sendMailAndNotification($email, $pdfFilePath, $claimNo);
+            // dd($response);
 
             if (!$response) {
                 return new JsonResponse(
@@ -569,7 +570,7 @@ class GetClaimDetailsController extends AbstractController
     {
         try {
             // Envoi de l'email avec le PDF en pièce jointe
-            $this->emailService->sendSummaryWithAttachment($email, $pdfFilePath);
+            // $this->emailService->sendSummaryWithAttachment($email, $pdfFilePath);
 
             $claimId = $this->claimUserEm->createQuery(
                 'SELECT c.id FROM App\Entity\ClaimUser\Claims c WHERE c.number = :claimNo'
@@ -600,9 +601,9 @@ class GetClaimDetailsController extends AbstractController
             $notification->setClaimNumber($claimNo);
 
             // Envoi de la notification via le service
-            $this->notificationService->sendNotification($notification);
+           $this->notificationService->sendNotification($notification);
             
-            return true;
+            return  true;
         } catch (\Exception $e) {
             // Log the error if needed
             return false;
