@@ -528,19 +528,19 @@ class GetClaimDetailsController extends AbstractController
             // Générer le PDF et le sauvegarder temporairement
             $pdfFilePath = $this->summaryExportService->generatePdfToFile($results);
    
-            $response = $this->sendMailAndNotification($email, $pdfFilePath, $claimNo);
-            // dd($response);
+            // $response = $this->sendMailAndNotification($email, $pdfFilePath, $claimNo);
+            $this->sendMailAndNotification($email, $pdfFilePath, $claimNo);
 
-            if (!$response) {
-                return new JsonResponse(
-                    [
-                        'status'    => 'error',
-                        'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
-                        'message'   => 'Failed to send email or create notification.'
-                    ],
-                    JsonResponse::HTTP_INTERNAL_SERVER_ERROR
-                );
-            }
+            // if (!$response) {
+            //     return new JsonResponse(
+            //         [
+            //             'status'    => 'error',
+            //             'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+            //             'message'   => 'Failed to send email or create notification.'
+            //         ],
+            //         JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+            //     );
+            // }
 
             return new JsonResponse([
                 'status'  => 'success',
@@ -570,7 +570,7 @@ class GetClaimDetailsController extends AbstractController
     {
         try {
             // Envoi de l'email avec le PDF en pièce jointe
-            // $this->emailService->sendSummaryWithAttachment($email, $pdfFilePath);
+            $this->emailService->sendSummaryWithAttachment($email, $pdfFilePath);
 
             $claimId = $this->claimUserEm->createQuery(
                 'SELECT c.id FROM App\Entity\ClaimUser\Claims c WHERE c.number = :claimNo'
@@ -601,9 +601,8 @@ class GetClaimDetailsController extends AbstractController
             $notification->setClaimNumber($claimNo);
 
             // Envoi de la notification via le service
-           $this->notificationService->sendNotification($notification);
-            
-            return  true;
+            $this->notificationService->sendNotification($notification);
+
         } catch (\Exception $e) {
             // Log the error if needed
             return false;

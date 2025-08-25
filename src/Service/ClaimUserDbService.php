@@ -390,29 +390,45 @@ class ClaimUserDbService
         $stmt->execute();
 
         $data = [];
-
         // 1. Vehicle & Survey Information
         $vehicle_surveis = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    
         foreach ($vehicle_surveis as $vehicle_survey) {
             $data['vehicle_information']  = [
-                'claim_number'   => $vehicle_survey['claim_number'],
-                'make'           => $vehicle_survey['make'],
-                'model'          => $vehicle_survey['model'],
-                'cc'             => $vehicle_survey['cc'],
-                'fuel_type'      => $vehicle_survey['fuel_type'],
-                'transmission'   => $vehicle_survey['transmission'],
-                'engine_no'      => $vehicle_survey['engine_no'],
-                'chassis_no'     => $vehicle_survey['chasis_no'],
-                'vehicle_no'     => $vehicle_survey['vehicle_no'],
+                'claim_number'              => $vehicle_survey['claim_number'],
+                'make'                      => $vehicle_survey['make'],
+                'model'                     => $vehicle_survey['model'],
+                'cc'                        => $vehicle_survey['cc'],
+                'fuel_type'                 => $vehicle_survey['fuel_type'],
+                'transmission'              => $vehicle_survey['transmission'],
+                'engine_no'                 => $vehicle_survey['engine_no'],
+                'chassis_no'                => $vehicle_survey['chasis_no'],
+                'vehicle_no'                => $vehicle_survey['vehicle_no'],
+                'color'                     => $vehicle_survey['color'],
+                'odometer_reading'          => $vehicle_survey['odometer_reading'],
+                'is_the_vehicle_total_loss' => $vehicle_survey['is_the_vehicle_total_loss'],
+                'condition_of_vehicle'      => $vehicle_survey['condition_of_vehicle'],
+                'place_of_survey'           => $vehicle_survey['place_of_survey'],
+                'point_of_impact'           => $vehicle_survey['point_of_impact'],
+                
+
             ];
             $data['survey_information'] = [
                 'garage'                => $vehicle_survey['garage'],
                 'garage_address'        => $vehicle_survey['garage_address'],
                 'garage_contact_number' => $vehicle_survey['garage_contact_no'],
-                'eor_value'             => $vehicle_survey['eor_value']
+                'eor_value'             => $vehicle_survey['eor_value'],
+                'invoice_number'        => $vehicle_survey['invoice_number'],
+                'survey_type'           => $vehicle_survey['survey_type'],
+                'date_of_survey'        => $vehicle_survey['date_of_survey'],
+                'time_of_survey'        => $vehicle_survey['time_of_survey'],
+                'pre_accident_valeur'   => $vehicle_survey['pre_accident_valeur'],
+                'showroom_price'        => $vehicle_survey['showroom_price'],
+                'wrech_value'           => $vehicle_survey['wrech_value'],
+                'excess_applicable'     => $vehicle_survey['excess_applicable']
+
             ];
         }
-
         // 2. Part details
         $partDetails = [];
         if ($stmt->nextRowset()) {

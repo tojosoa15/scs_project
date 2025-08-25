@@ -42,17 +42,17 @@ class NotificationService
         $this->entityManager->persist($notification);
 
         try {
-            switch ($notification->getChannel()) {
-                case 'email':
-                    $this->sendEmail($notification);
-                    break;
-                case 'sms':
-                    $this->sendSms($notification);
-                    break;
-                case 'portal':
-                    $this->sendPortalNotification($notification);
-                    break;
-            }
+            // switch ($notification->getChannel()) {
+            //     case 'email':
+            //         $this->sendEmail($notification);
+            //         break;
+            //     case 'sms':
+            //         $this->sendSms($notification);
+            //         break;
+            //     case 'portal':
+            //         $this->sendPortalNotification($notification);
+            //         break;
+            // }
 
             $notification->setStatus('sent');
             $notification->setSentAt(new \DateTime());
