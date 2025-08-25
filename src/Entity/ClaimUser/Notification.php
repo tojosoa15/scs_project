@@ -5,12 +5,36 @@ namespace App\Entity\ClaimUser;
 use Doctrine\ORM\Mapping as ORM;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\ApiResource as MetadataApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\QueryParameter;
+use App\Controller\NotificationManageController;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity
  * 
  */
+#[ApiResource(
+    operations: [
+        // Liste claim d'un utilisateur
+        new GetCollection(
+            uriTemplate: '/api/notifications',
+            controller: NotificationManageController::class . '::__invoke',
+            parameters: [ 
+                'id' => new QueryParameter()
+            ],
+        ), 
+        // Détail d'un claim 
+        new Get(
+            uriTemplate: '/api/notification',
+            controller: NotificationManageController::class . '::getAllNotifications',
+            parameters: [ 
+                'id' => new QueryParameter()
+            ]
+        )
+    ]
+)]
 #[ApiResource(mercure:true)]
 class Notification
 {

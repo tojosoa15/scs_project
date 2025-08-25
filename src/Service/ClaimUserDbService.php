@@ -479,4 +479,34 @@ class ClaimUserDbService
         return $data;
     }
 
+    /* Statistique cards paiements
+     * 
+     * @param array $params
+     * @return array
+     */
+    public function callCountNotifications(array $params): array
+    {
+        $sql = "CALL CountNotifications(?)";
+        
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['p_user_id']);
+        
+        return $stmt->executeQuery()->fetchAssociative();
+    }
+
+    /* Statistique cards paiements
+     * 
+     * @param array $params
+     * @return array
+     */
+    public function callGetListNotificationsById(array $params): array
+    {
+        $sql = "CALL GetListNotificationsById(?)";
+        
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindValue(1, $params['p_user_id']);
+        
+        return $stmt->executeQuery()->fetchAssociative();
+    }
+
 }
