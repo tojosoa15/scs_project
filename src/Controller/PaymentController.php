@@ -35,8 +35,8 @@ class PaymentController extends AbstractController
             $payments = $this->claimUserDbService->callGetPaiementListByUser([
                 'p_email'           => $params['email'],
                 'p_status'          => $params['status'] ?? null,
-                'p_invoice_no'      => $params['searchName'] ?? null,
-                'p_claim_number'    => $params['searchPhone'] ?? null,
+                'p_invoice_no'      => $params['invoiceNo'] ?? null,
+                'p_claim_number'    => $params['claimNo'] ?? null,
                 'p_sort_by'         => $params['sortBy'] ?? 'received_date-asc',
                 'p_page'            => (int)($params['page'] ?? 1),
                 'p_page_size'       => (int)($params['pageSize'] ?? 10)
