@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\ClaimUser\Claims;
+use App\Entity\ForexRate;
 use App\Entity\Fund;
 use App\Entity\NavFunds;
 use Carbon\Carbon;
@@ -142,4 +143,45 @@ class DashboardViewController extends AbstractController
         }
 
     }
+
+     /**
+     * Liste taux de change
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getForexRates(Request $request): JsonResponse
+    {
+        $forexRateFormat = [];
+
+        try {
+            $forexRate = $this->em->getRepository(ForexRate::class)->findAll();
+
+            foreach ($forexRate as $nav) {
+                $forexRateFormat[] = [
+                    'id'        => $nav->getId(),
+                    'codeName'  => $nav->getType(),
+                    'value'     => $nav->getValue()
+                ];
+            }
+
+            return new JsonResponse([
+                'status'    => 'success',
+                'code'      => JsonResponse::HTTP_OK,
+                'message'   => 'Successful list nav of the funds.',
+                'data'      => $forexRateFormat
+            ], JsonResponse::HTTP_OK);
+
+        } catch (\Exception $e) {
+            return new JsonResponse(
+                [
+                    'status' =>  'error',
+                    'code'  => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                    'message' => $e->getMessage()
+                ],
+                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
 }
