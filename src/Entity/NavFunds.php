@@ -2,6 +2,10 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\QueryParameter;
+use App\Controller\DashboardViewController;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -9,7 +13,19 @@ use Doctrine\ORM\Mapping as ORM;
  *
  * @ORM\Table(name="nav_funds")
  * @ORM\Entity
+ * @ORM\Entity(repositoryClass=App\Repository\NavFundsRepository::class)
  */
+#[ApiResource(
+    operations: [
+        new GetCollection(
+            uriTemplate: '/nav-funds',
+            controller: DashboardViewController::class . '::getAllNavFunds',
+            // parameters: [ 
+            //     'id' => new QueryParameter()
+            // ]
+        ),    
+    ],
+)]
 class NavFunds
 {
     /**

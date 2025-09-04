@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\QueryParameter;
+use App\Controller\DashboardViewController;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -11,10 +13,19 @@ use Doctrine\ORM\Mapping as ORM;
  *
  * @ORM\Table(name="fund")
  * @ORM\Entity
+ * @ORM\Entity(repositoryClass=App\Repository\FundRepository::class)
  */
 #[ApiResource(
     operations: [
-        new GetCollection(),    
+        new GetCollection(
+            uriTemplate: '/funds',
+            controller: DashboardViewController::class . '::getAllFundsByCustomer',
+            parameters: [ 
+                // 'id' => new QueryParameter(),
+                'fundName'  => new QueryParameter(),
+                'period'    => new QueryParameter()
+            ]
+        ),    
     ],
 )]
 class Fund
