@@ -2,7 +2,7 @@
 
 namespace App\Repository;
 
-use App\Entity\ForexRate;
+use App\Entity\Scs\ForexRate;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
