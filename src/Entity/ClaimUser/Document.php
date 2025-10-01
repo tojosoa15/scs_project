@@ -14,20 +14,6 @@ use ApiPlatform\Metadata\QueryParameter;
  * @ORM\Table(name="document")
  * @ORM\Entity
  */
-
-#[ApiResource(
-    operations: [
-        new Get(
-            uriTemplate: '/api/profile/documents/view',
-            controller: ProfileController::class . '::viewDocuments',
-            name: 'view_document',
-            parameters: [ 
-                'userId' => new QueryParameter(),
-                'documentId' => new QueryParameter(),
-            ]
-        ),
-    ]
-)]
 class Document
 {
     /**

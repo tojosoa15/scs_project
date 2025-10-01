@@ -7,6 +7,7 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\QueryParameter;
 use App\Controller\DocumentFundController;
+use App\Controller\ProfileController;
 use Doctrine\ORM\Mapping as ORM;
 use Dom\Document;
 
@@ -29,7 +30,7 @@ use Dom\Document;
                 'sortBy'            => new QueryParameter(),
             ]
         ),    
-         new Get(
+        new Get(
             uriTemplate: '/api/fund/documents/view',
             controller: DocumentFundController::class . '::viewFundDocuments',
             name: 'view_document',
@@ -37,6 +38,16 @@ use Dom\Document;
                 'documentId'    => new QueryParameter(),
             ]
         ), 
+
+        new Get(
+            uriTemplate: '/api/profile/documents/view',
+            controller: ProfileController::class . '::viewDocuments',
+            name: 'view_document',
+            parameters: [ 
+                'userId' => new QueryParameter(),
+                'documentId' => new QueryParameter(),
+            ]
+        ),
     ],
 )]
 class DocumentFund
