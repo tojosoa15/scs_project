@@ -132,7 +132,7 @@ class DocumentFundController extends AbstractController
             'view_url' => sprintf(
                 '%s/uploads/documents/%s',
                 $request->getSchemeAndHttpHost(),
-                $document->getDocName()
+                $document->getPath()
             )
         ];
 
