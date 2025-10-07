@@ -59,7 +59,7 @@ class PayementService
      * @param  Payment $payementBookingForm $bookingForm
      * @return array
      */
-    public function generateExcel($payements)
+    public function generateExcel($payements): StreamedResponse
     {
         // Création d'un nouveau spreadsheet
         $spreadsheet    = new Spreadsheet();

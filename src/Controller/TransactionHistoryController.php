@@ -162,88 +162,73 @@ class TransactionHistoryController extends AbstractController
     }
 
     /**
-     * Export des transactions
-     * 
-     * @param Request $request
-     */
-    public function transactionExport(Request $request)  {
-        $userId = $request->query->get('userId');
+ * Export des transactions (PDF ou Excel)
+ *
+ * @param Request $request
+ */
+public function transactionExport(Request $request)
+{
+    $userId = $request->query->get('userId');
+    $type = $request->query->get('type', 'pdf');
 
-        if (!$userId) {
-            return $this->json([
-                'status'  => 'error',
-                'code'    => JsonResponse::HTTP_BAD_REQUEST,
-                'message' => 'userId parameter is required',
-            ], JsonResponse::HTTP_BAD_REQUEST);
-        }
-
-        try {
-            $params = $request->query->all();
-
-           // Manage array or single string for fund name filter
-            // if (!empty($params['searchFundName']) && is_string($params['searchFundName'])) {
-            //     $params['searchFundName'] = array_map('trim', explode(',', $params['searchFundName']));
-            // } 
-            if (!empty($params['searchFundName']) && is_string($params['searchFundName'])) {
-                if (strpos($params['searchFundName'], ',') !== false) {
-                    // Plusieurs valeurs séparées par virgule → transforme en tableau
-                    $params['searchFundName'] = array_map('trim', explode(',', $params['searchFundName']));
-                } else {
-                    // Une seule valeur → laisse en string pour LIKE
-                    $params['searchFundName'] = trim($params['searchFundName']);
-                }
-            }
-
-            // Manage array for reference filter
-            // if (!empty($params['searchReference']) && is_string($params['searchReference'])) {
-            //     $params['searchReference'] = array_map('trim', explode(',', $params['searchReference']));
-            // }
-            if (!empty($params['searchReference']) && is_string($params['searchReference'])) {
-                if (strpos($params['searchReference'], ',') !== false) {
-                    // Plusieurs valeurs séparées par virgule → transforme en tableau
-                    $params['searchReference'] = array_map('trim', explode(',', $params['searchReference']));
-                } else {
-                    // Une seule valeur → laisse en string pour LIKE
-                    $params['searchReference'] = trim($params['searchReference']);
-                }
-            }
-
-            // Manage array for transaction type filter
-            if (!empty($params['searchTransactionType']) && is_string($params['searchTransactionType'])) {
-                $params['searchTransactionType'] = array_map('trim', explode(',', $params['searchTransactionType']));
-            }
-
-            // Manage array for currency filter
-            if (!empty($params['searchCurrency']) && is_string($params['searchCurrency'])) {
-                $params['searchCurrency'] = array_map('trim', explode(',', $params['searchCurrency']));
-            }
-
-            $transactions = $this->em
-                ->getRepository(Transaction::class)
-                ->findByUserIdWithFilters($params);
-
-            if (empty($transactions)) {
-                return $this->json([
-                    'status'  => 'success',
-                    'code'    => JsonResponse::HTTP_OK,
-                    'message' => 'No transaction found for this user.',
-                    'data'    => null,
-                ], JsonResponse::HTTP_OK);
-            }
-
-            return $this->transactionService->generatePdf($transactions);
-
-            throw new \Exception('Type d\'export pas renseigné');
-
-        } catch (\Exception $e) {
-            return new JsonResponse(
-                [
-                    'status'    => 'error',
-                    'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
-                    'message'   => $e->getMessage()
-                ],
-                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
-            );
-        }
+    if (!$userId) {
+        return $this->json([
+            'status'  => 'error',
+            'code'    => JsonResponse::HTTP_BAD_REQUEST,
+            'message' => 'userId parameter is required',
+        ], JsonResponse::HTTP_BAD_REQUEST);
     }
+
+    try {
+        $params = $request->query->all();
+
+        // Gérer les filtres multiples
+        $multiFields = ['searchFundName', 'searchReference', 'searchTransactionType', 'searchCurrency'];
+        foreach ($multiFields as $field) {
+            if (!empty($params[$field]) && is_string($params[$field])) {
+                if (strpos($params[$field], ',') !== false) {
+                    $params[$field] = array_map('trim', explode(',', $params[$field]));
+                } else {
+                    $params[$field] = trim($params[$field]);
+                }
+            }
+        }
+
+        // Récupération des transactions
+        $transactions = $this->em
+            ->getRepository(Transaction::class)
+            ->findByUserIdWithFilters($params);
+
+        if (empty($transactions)) {
+            return $this->json([
+                'status'  => 'success',
+                'code'    => JsonResponse::HTTP_OK,
+                'message' => 'No transaction found for this user.',
+                'data'    => null,
+            ], JsonResponse::HTTP_OK);
+        }
+
+        // 🔸 Export PDF ou Excel
+        if ($type === 'pdf') {
+            return $this->transactionService->generatePdf($transactions);
+        } elseif ($type === 'excel') {
+            return $this->transactionService->generateExcel($transactions);
+        } elseif ($type === 'csv') {
+            return $this->transactionService->generateCsv($transactions);
+        }
+
+        throw new \Exception("Type d'export non reconnu : $type");
+
+    } catch (\Exception $e) {
+        return new JsonResponse(
+            [
+                'status'    => 'error',
+                'code'      => JsonResponse::HTTP_INTERNAL_SERVER_ERROR,
+                'message'   => $e->getMessage()
+            ],
+            JsonResponse::HTTP_INTERNAL_SERVER_ERROR
+        );
+    }
+}
+
 }

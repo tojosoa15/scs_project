@@ -119,6 +119,11 @@ use Doctrine\ORM\Mapping as ORM;
                     required: false,
                     schema: ['type' => 'string']
                 ),
+                'type' => new QueryParameter(
+                    description: 'type de format d export',
+                    required: false,
+                    schema: ['type' => 'string']
+                ),
             ]
         ),
     ],

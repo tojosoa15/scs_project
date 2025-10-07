@@ -94,11 +94,6 @@ class TransactionRepository extends ServiceEntityRepository
                ->setParameter('cnNumber', '%'.$params['searchCnNumber'].'%');
         }
 
-        // Filtre par currency
-        // if (!empty($params['searchCurrency'])) {
-        //     $qb->andWhere('t.currency LIKE :currency')
-        //        ->setParameter('currency', '%'.$params['searchCurrency'].'%');
-        // }
 
         if (!empty($params['searchCurrency'])) {
             $qb->andWhere('t.currency IN  (:currency)')
@@ -118,7 +113,7 @@ class TransactionRepository extends ServiceEntityRepository
             ->setParameter('startDate', $startDate)
             ->setParameter('endDate', $endDate);
         }
-        
+
         // Tri
         if (!empty($params['sortBy'])) {
             [$field, $order] = explode('-', $params['sortBy']);
