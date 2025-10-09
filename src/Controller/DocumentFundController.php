@@ -125,11 +125,10 @@ class DocumentFundController extends AbstractController
         // $documents = $documentRepo->findDocumentById($documentId);
         $document = $documentRepo->find((int)$documentId);
 
-        $documentsArray = [];
+        
 
-        $documentsArray[] = [
-            'id'       => $document->getId(),
-            'view_url' => sprintf(
+        $data = [
+            'url' => sprintf(
                 '%s/uploads/documents/%s',
                 $request->getSchemeAndHttpHost(),
                 $document->getPath()
@@ -139,7 +138,7 @@ class DocumentFundController extends AbstractController
         return new JsonResponse([
             'status'    => 'success',
             'code'      => JsonResponse::HTTP_OK,
-            'documents' => $documentsArray
+            'data' => $data
         ], JsonResponse::HTTP_OK);
     }
 }

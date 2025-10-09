@@ -359,8 +359,7 @@ public function viewDocuments(Request $request, DocumentRepository $documentRepo
     }
 
     $data = [
-        'id'       => $document->getId(),
-        'view_url' => sprintf(
+        'url' => sprintf(
             '%s/uploads/documents/%s',
             $request->getSchemeAndHttpHost(),
             $document->getName()
