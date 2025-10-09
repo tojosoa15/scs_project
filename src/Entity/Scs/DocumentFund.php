@@ -40,9 +40,28 @@ use Dom\Document;
         ), 
 
         new Get(
+            uriTemplate: '/api/fund/documents/download',
+            controller: DocumentFundController::class . '::viewFundDocuments',
+            name: 'download_document',
+            parameters: [ 
+                'documentId'    => new QueryParameter(),
+            ]
+        ),
+
+        new Get(
             uriTemplate: '/api/profile/documents/view',
             controller: ProfileController::class . '::viewDocuments',
             name: 'view_document',
+            parameters: [ 
+                'userId' => new QueryParameter(),
+                'documentId' => new QueryParameter(),
+            ]
+        ),
+
+        new Get(
+            uriTemplate: '/api/profile/documents/download',
+            controller: ProfileController::class . '::viewDocuments',
+            name: 'download_document',
             parameters: [ 
                 'userId' => new QueryParameter(),
                 'documentId' => new QueryParameter(),
