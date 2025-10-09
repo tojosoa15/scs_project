@@ -49,7 +49,7 @@ use Dom\Document;
         ),
 
         new Get(
-            uriTemplate: '/api/profile/documents/view',
+            uriTemplate: '/api/profile/document/view',
             controller: ProfileController::class . '::viewDocuments',
             name: 'view',
             parameters: [ 
@@ -59,7 +59,7 @@ use Dom\Document;
         ),
 
         new Get(
-            uriTemplate: '/api/profile/documents/download',
+            uriTemplate: '/api/profile/document/download',
             controller: ProfileController::class . '::viewDocuments',
             name: 'download_document',
             parameters: [ 
