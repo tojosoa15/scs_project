@@ -55,8 +55,14 @@ class TransactionService
 
         $date           = (new \DateTime())->format('d_m_Y_H_i_s');
         $filename       = "transaction" . $date . ".pdf";
-        $pdf->stream($filename, ["Attachment" => true]);
-        exit();
+        // $pdf->stream($filename, ["Attachment" => true]);
+
+        $pdfContent = $pdf->output();
+
+        return new Response($pdfContent, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 
     
