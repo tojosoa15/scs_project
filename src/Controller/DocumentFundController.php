@@ -138,7 +138,7 @@ class DocumentFundController extends AbstractController
         return new JsonResponse([
             'status'    => 'success',
             'code'      => JsonResponse::HTTP_OK,
-            'data' => $data
+            'data'      => $data
         ], JsonResponse::HTTP_OK);
     }
 }
