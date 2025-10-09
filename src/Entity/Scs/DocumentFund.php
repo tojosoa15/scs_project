@@ -31,7 +31,7 @@ use Dom\Document;
             ]
         ),    
         new Get(
-            uriTemplate: '/api/fund/documents/view',
+            uriTemplate: '/api/document/view',
             controller: DocumentFundController::class . '::viewFundDocuments',
             name: 'view_document',
             parameters: [ 
@@ -40,9 +40,9 @@ use Dom\Document;
         ), 
 
         new Get(
-            uriTemplate: '/api/fund/documents/download',
+            uriTemplate: '/api/document/download',
             controller: DocumentFundController::class . '::viewFundDocuments',
-            name: 'download_document',
+            name: 'down',
             parameters: [ 
                 'documentId'    => new QueryParameter(),
             ]
@@ -51,7 +51,7 @@ use Dom\Document;
         new Get(
             uriTemplate: '/api/profile/documents/view',
             controller: ProfileController::class . '::viewDocuments',
-            name: 'view_document',
+            name: 'view',
             parameters: [ 
                 'userId' => new QueryParameter(),
                 'documentId' => new QueryParameter(),
